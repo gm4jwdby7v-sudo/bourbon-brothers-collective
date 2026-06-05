@@ -1,5 +1,8 @@
 import { test, expect, Page } from "@playwright/test";
 
+const SUPABASE_URL = "https://rjwbskhokscwmnndpoec.supabase.co";
+const STORAGE_KEY = "sb-rjwbskhokscwmnndpoec-auth-token";
+
 interface MockUser {
   id: string;
   email: string;
@@ -8,74 +11,97 @@ interface MockUser {
 }
 
 /**
- * Mock the Supabase auth client directly in the browser page.
- * This is more reliable than intercepting network requests because it
- * bypasses localStorage key format issues and ensures the app's hooks
- * see the desired auth state immediately.
+ * Mock Supabase auth state by injecting a fake session into localStorage
+ * and intercepting the getUser() API call.
  */
 async function mockAuth(page: Page, user: MockUser | null) {
-  await page.addInitScript((mockUser) => {
-    // Store the mock user on window so our later override can access it
-    (window as any).__mockAuthUser = mockUser;
-
-    // Override supabase.auth methods after the client initializes
-    const applyMock = () => {
-      const supabase = (window as any).supabase;
-      if (!supabase) {
-        // Supabase not yet initialized, try again shortly
-        setTimeout(applyMock, 50);
-        return;
-      }
-
-      supabase.auth.getUser = async () => {
-        const u = (window as any).__mockAuthUser;
-        if (!u) return { data: { user: null }, error: new Error("Unauthorized") };
-        return {
-          data: {
-            user: {
-              id: u.id,
-              email: u.email,
-              email_confirmed_at: u.email_confirmed_at ?? null,
-              confirmed_at: u.confirmed_at ?? null,
-              app_metadata: {},
-              user_metadata: {},
-              aud: "authenticated",
-              created_at: new Date().toISOString(),
-              role: "authenticated",
-              updated_at: new Date().toISOString(),
-            },
-          },
-          error: null,
-        };
-      };
-
-      supabase.auth.getSession = async () => {
-        const u = (window as any).__mockAuthUser;
-        if (!u) return { data: { session: null }, error: null };
-        return {
-          data: {
-            session: {
-              access_token: "fake-access-token",
-              refresh_token: "fake-refresh-token",
-              expires_in: 3600,
-              expires_at: Math.floor(Date.now() / 1000) + 3600,
-              token_type: "bearer",
-              user: {
-                id: u.id,
-                email: u.email,
-                email_confirmed_at: u.email_confirmed_at ?? null,
-                confirmed_at: u.confirmed_at ?? null,
-              },
-            },
-          },
-          error: null,
-        };
-      };
+  if (user) {
+    const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+    const fakeSession = {
+      access_token: "fake-access-token",
+      refresh_token: "fake-refresh-token",
+      expires_in: 3600,
+      expires_at: expiresAt,
+      token_type: "bearer",
+      user: {
+        id: user.id,
+        email: user.email,
+        email_confirmed_at: user.email_confirmed_at ?? null,
+        confirmed_at: user.confirmed_at ?? null,
+        app_metadata: {},
+        user_metadata: {},
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+        role: "authenticated",
+        updated_at: new Date().toISOString(),
+      },
     };
 
-    // Start trying to apply the mock
-    applyMock();
-  }, user);
+    await page.addInitScript((session, key) => {
+      localStorage.setItem(key, JSON.stringify(session));
+    }, fakeSession, STORAGE_KEY);
+  } else {
+    await page.addInitScript((key) => {
+      localStorage.removeItem(key);
+    }, STORAGE_KEY);
+  }
+
+  // Intercept getUser() API call
+  await page.route(`*/**/auth/v1/user`, async (route) => {
+    if (user) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: user.id,
+          email: user.email,
+          email_confirmed_at: user.email_confirmed_at ?? null,
+          confirmed_at: user.confirmed_at ?? null,
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          created_at: new Date().toISOString(),
+          role: "authenticated",
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    } else {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthorized" }),
+      });
+    }
+  });
+
+  // Intercept token refresh
+  await page.route(`*/**/auth/v1/token**`, async (route) => {
+    if (user) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          access_token: "fake-access-token",
+          refresh_token: "fake-refresh-token",
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: "bearer",
+          user: {
+            id: user.id,
+            email: user.email,
+            email_confirmed_at: user.email_confirmed_at ?? null,
+            confirmed_at: user.confirmed_at ?? null,
+          },
+        }),
+      });
+    } else {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthorized" }),
+      });
+    }
+  });
 }
 
 const GATED_PATHS = [
@@ -110,7 +136,6 @@ test.describe("authenticated but unverified users", () => {
         // No email_confirmed_at or confirmed_at
       });
       await page.goto(path);
-      await page.waitForTimeout(500); // let React re-render after mock applies
 
       // Should stay on the requested path but show verify email notice
       await expect(page).toHaveURL(path);
@@ -138,7 +163,6 @@ test.describe("verified users", () => {
         confirmed_at: "2024-01-01T00:00:00Z",
       });
       await page.goto(path);
-      await page.waitForTimeout(500); // let React re-render after mock applies
 
       // Should stay on the requested path
       await expect(page).toHaveURL(path);
