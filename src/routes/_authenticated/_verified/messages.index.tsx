@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bell, BellOff } from "lucide-react";
@@ -64,7 +64,10 @@ function MessagesPage() {
         <div>
           <h1 className="font-display text-3xl">Messages</h1>
           <p className="text-muted-foreground text-sm">
-            Send a direct message to another member.
+            Send a direct message to another member.{" "}
+            <Link to="/settings/notifications" className="underline" data-testid="notif-settings-link">
+              Notification settings
+            </Link>
           </p>
         </div>
         {status !== "unsupported" && (

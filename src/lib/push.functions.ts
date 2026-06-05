@@ -63,12 +63,35 @@ export const sendDmPush = createServerFn({ method: "POST" })
       .filter((id) => id !== senderId);
     if (recipientIds.length === 0) return { sent: 0 };
 
+    // Honor recipient notification preferences: skip those who disabled DM
+    // push or are currently in their quiet-hours window.
+    const { DEFAULT_PREFS, isInQuietHours } = await import(
+      "./notification-prefs"
+    );
+    const { data: prefsRows } = await supabaseAdmin
+      .from("notification_preferences")
+      .select(
+        "user_id, dm_push_enabled, quiet_hours_enabled, quiet_start, quiet_end, timezone",
+      )
+      .in("user_id", recipientIds);
+    const prefsByUser = new Map(
+      (prefsRows ?? []).map((row) => [row.user_id, row]),
+    );
+    const eligibleIds = recipientIds.filter((id) => {
+      const prefs = { ...DEFAULT_PREFS, ...(prefsByUser.get(id) ?? {}) };
+      if (!prefs.dm_push_enabled) return false;
+      if (isInQuietHours(prefs)) return false;
+      return true;
+    });
+    if (eligibleIds.length === 0) return { sent: 0 };
+
     const { data: tokenRows } = await supabaseAdmin
       .from("dm_push_tokens")
       .select("token")
-      .in("user_id", recipientIds);
+      .in("user_id", eligibleIds);
     const tokens = (tokenRows ?? []).map((r) => r.token);
     if (tokens.length === 0) return { sent: 0 };
+
 
     const senderName =
       senderProfile?.display_name ?? senderProfile?.username ?? "Someone";

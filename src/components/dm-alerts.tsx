@@ -3,6 +3,11 @@ import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  DEFAULT_PREFS,
+  isInQuietHours,
+  type NotificationPrefs,
+} from "@/lib/notification-prefs";
 
 interface DmMessagePayload {
   id: string;
@@ -15,16 +20,53 @@ interface DmMessagePayload {
 /**
  * Global subscriber that listens for new direct messages and shows an in-app
  * sonner toast (sender name + preview) when the recipient is the current user
- * and they are not already viewing that thread.
+ * and they are not already viewing that thread. Respects user notification
+ * preferences (in-app toggle + quiet hours).
  */
 export function DmAlerts() {
   const { user } = useAuth();
   const router = useRouter();
   const senderNameCache = useRef<Map<string, string>>(new Map());
+  const prefsRef = useRef<NotificationPrefs>(DEFAULT_PREFS);
 
   useEffect(() => {
     if (!user?.id) return;
     const viewerId = user.id;
+
+    // Load current notification preferences once on mount / sign-in.
+    supabase
+      .from("notification_preferences")
+      .select(
+        "dm_push_enabled, dm_inapp_enabled, quiet_hours_enabled, quiet_start, quiet_end, timezone",
+      )
+      .eq("user_id", viewerId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) prefsRef.current = { ...DEFAULT_PREFS, ...data };
+      });
+
+    // Live-update prefs when the user changes them in settings.
+    const prefsChannel = supabase
+      .channel(`notification-prefs-${viewerId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notification_preferences",
+          filter: `user_id=eq.${viewerId}`,
+        },
+        (payload) => {
+          if (payload.new) {
+            prefsRef.current = {
+              ...DEFAULT_PREFS,
+              ...(payload.new as Partial<NotificationPrefs>),
+            };
+          }
+        },
+      )
+      .subscribe();
+
 
     const channel = supabase
       .channel(`dm-alerts-${viewerId}`)
@@ -35,9 +77,15 @@ export function DmAlerts() {
           const msg = payload.new as DmMessagePayload;
           if (!msg || msg.sender_id === viewerId) return;
 
+          // Respect user preferences.
+          const prefs = prefsRef.current;
+          if (!prefs.dm_inapp_enabled) return;
+          if (isInQuietHours(prefs)) return;
+
           // Skip if user is currently viewing the thread.
           const currentPath = router.state.location.pathname;
           if (currentPath === `/messages/${msg.thread_id}`) return;
+
 
           // Resolve sender display name (cached).
           let senderName = senderNameCache.current.get(msg.sender_id);
@@ -72,6 +120,7 @@ export function DmAlerts() {
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(prefsChannel);
     };
   }, [user?.id, router]);
 

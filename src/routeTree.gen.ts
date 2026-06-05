@@ -16,6 +16,7 @@ import { Route as AuthenticatedVerifiedRouteRouteImport } from './routes/_authen
 import { Route as ApiPublicFirebaseConfigRouteImport } from './routes/api/public/firebase-config'
 import { Route as AuthenticatedVerifiedMessagesRouteImport } from './routes/_authenticated/_verified/messages'
 import { Route as AuthenticatedVerifiedMessagesIndexRouteImport } from './routes/_authenticated/_verified/messages.index'
+import { Route as AuthenticatedVerifiedSettingsNotificationsRouteImport } from './routes/_authenticated/_verified/settings.notifications'
 import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_authenticated/_verified/messages.new'
 import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './routes/_authenticated/_verified/messages.$threadId'
 import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
@@ -57,6 +58,12 @@ const AuthenticatedVerifiedMessagesIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
   } as any)
+const AuthenticatedVerifiedSettingsNotificationsRoute =
+  AuthenticatedVerifiedSettingsNotificationsRouteImport.update({
+    id: '/settings/notifications',
+    path: '/settings/notifications',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
 const AuthenticatedVerifiedMessagesNewRoute =
   AuthenticatedVerifiedMessagesNewRouteImport.update({
     id: '/new',
@@ -90,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
@@ -100,6 +108,7 @@ export interface FileRoutesByTo {
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/messages': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
@@ -114,6 +123,7 @@ export interface FileRoutesById {
   '/_authenticated/_verified/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/_authenticated/_verified/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/_authenticated/_verified/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/_authenticated/_verified/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/_authenticated/_verified/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/_authenticated/_verified/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
+    | '/settings/notifications'
     | '/messages/'
     | '/events/$eventId/checkout'
   fileRoutesByTo: FileRoutesByTo
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
+    | '/settings/notifications'
     | '/messages'
     | '/events/$eventId/checkout'
   id:
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_verified/forum/new'
     | '/_authenticated/_verified/messages/$threadId'
     | '/_authenticated/_verified/messages/new'
+    | '/_authenticated/_verified/settings/notifications'
     | '/_authenticated/_verified/messages/'
     | '/_authenticated/_verified/events/$eventId/checkout'
   fileRoutesById: FileRoutesById
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedMessagesIndexRouteImport
       parentRoute: typeof AuthenticatedVerifiedMessagesRoute
     }
+    '/_authenticated/_verified/settings/notifications': {
+      id: '/_authenticated/_verified/settings/notifications'
+      path: '/settings/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedVerifiedSettingsNotificationsRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
     '/_authenticated/_verified/messages/new': {
       id: '/_authenticated/_verified/messages/new'
       path: '/new'
@@ -267,6 +287,7 @@ const AuthenticatedVerifiedMessagesRouteWithChildren =
 interface AuthenticatedVerifiedRouteRouteChildren {
   AuthenticatedVerifiedMessagesRoute: typeof AuthenticatedVerifiedMessagesRouteWithChildren
   AuthenticatedVerifiedForumNewRoute: typeof AuthenticatedVerifiedForumNewRoute
+  AuthenticatedVerifiedSettingsNotificationsRoute: typeof AuthenticatedVerifiedSettingsNotificationsRoute
   AuthenticatedVerifiedEventsEventIdCheckoutRoute: typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 
@@ -275,6 +296,8 @@ const AuthenticatedVerifiedRouteRouteChildren: AuthenticatedVerifiedRouteRouteCh
     AuthenticatedVerifiedMessagesRoute:
       AuthenticatedVerifiedMessagesRouteWithChildren,
     AuthenticatedVerifiedForumNewRoute: AuthenticatedVerifiedForumNewRoute,
+    AuthenticatedVerifiedSettingsNotificationsRoute:
+      AuthenticatedVerifiedSettingsNotificationsRoute,
     AuthenticatedVerifiedEventsEventIdCheckoutRoute:
       AuthenticatedVerifiedEventsEventIdCheckoutRoute,
   }
