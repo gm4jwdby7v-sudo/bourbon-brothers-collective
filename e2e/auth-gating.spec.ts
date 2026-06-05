@@ -37,9 +37,9 @@ async function mockAuth(page: Page, user: MockUser | null) {
       },
     };
 
-    await page.addInitScript((session, key) => {
+    await page.addInitScript(({ session, key }: { session: unknown; key: string }) => {
       localStorage.setItem(key, JSON.stringify(session));
-    }, fakeSession, STORAGE_KEY);
+    }, { session: fakeSession, key: STORAGE_KEY });
   } else {
     await page.addInitScript((key) => {
       localStorage.removeItem(key);
