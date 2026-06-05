@@ -14,6 +14,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedVerifiedRouteRouteImport } from './routes/_authenticated/_verified/route'
 import { Route as AuthenticatedVerifiedMessagesRouteImport } from './routes/_authenticated/_verified/messages'
+import { Route as AuthenticatedVerifiedMessagesIndexRouteImport } from './routes/_authenticated/_verified/messages.index'
+import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_authenticated/_verified/messages.new'
+import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './routes/_authenticated/_verified/messages.$threadId'
 import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
 import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from './routes/_authenticated/_verified/events.$eventId.checkout'
 
@@ -42,6 +45,24 @@ const AuthenticatedVerifiedMessagesRoute =
     path: '/messages',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
+const AuthenticatedVerifiedMessagesIndexRoute =
+  AuthenticatedVerifiedMessagesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
+  } as any)
+const AuthenticatedVerifiedMessagesNewRoute =
+  AuthenticatedVerifiedMessagesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
+  } as any)
+const AuthenticatedVerifiedMessagesThreadIdRoute =
+  AuthenticatedVerifiedMessagesThreadIdRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
+  } as any)
 const AuthenticatedVerifiedForumNewRoute =
   AuthenticatedVerifiedForumNewRouteImport.update({
     id: '/forum/new',
@@ -58,15 +79,20 @@ const AuthenticatedVerifiedEventsEventIdCheckoutRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/messages': typeof AuthenticatedVerifiedMessagesRoute
+  '/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
+  '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
+  '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/messages': typeof AuthenticatedVerifiedMessagesRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
+  '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
+  '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/messages': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 export interface FileRoutesById {
@@ -75,8 +101,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/_verified': typeof AuthenticatedVerifiedRouteRouteWithChildren
-  '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRoute
+  '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/_authenticated/_verified/forum/new': typeof AuthenticatedVerifiedForumNewRoute
+  '/_authenticated/_verified/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
+  '/_authenticated/_verified/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/_authenticated/_verified/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/_authenticated/_verified/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 export interface FileRouteTypes {
@@ -86,9 +115,19 @@ export interface FileRouteTypes {
     | '/auth'
     | '/messages'
     | '/forum/new'
+    | '/messages/$threadId'
+    | '/messages/new'
+    | '/messages/'
     | '/events/$eventId/checkout'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/messages' | '/forum/new' | '/events/$eventId/checkout'
+  to:
+    | '/'
+    | '/auth'
+    | '/forum/new'
+    | '/messages/$threadId'
+    | '/messages/new'
+    | '/messages'
+    | '/events/$eventId/checkout'
   id:
     | '__root__'
     | '/'
@@ -97,6 +136,9 @@ export interface FileRouteTypes {
     | '/_authenticated/_verified'
     | '/_authenticated/_verified/messages'
     | '/_authenticated/_verified/forum/new'
+    | '/_authenticated/_verified/messages/$threadId'
+    | '/_authenticated/_verified/messages/new'
+    | '/_authenticated/_verified/messages/'
     | '/_authenticated/_verified/events/$eventId/checkout'
   fileRoutesById: FileRoutesById
 }
@@ -143,6 +185,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedMessagesRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
+    '/_authenticated/_verified/messages/': {
+      id: '/_authenticated/_verified/messages/'
+      path: '/'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof AuthenticatedVerifiedMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedVerifiedMessagesRoute
+    }
+    '/_authenticated/_verified/messages/new': {
+      id: '/_authenticated/_verified/messages/new'
+      path: '/new'
+      fullPath: '/messages/new'
+      preLoaderRoute: typeof AuthenticatedVerifiedMessagesNewRouteImport
+      parentRoute: typeof AuthenticatedVerifiedMessagesRoute
+    }
+    '/_authenticated/_verified/messages/$threadId': {
+      id: '/_authenticated/_verified/messages/$threadId'
+      path: '/$threadId'
+      fullPath: '/messages/$threadId'
+      preLoaderRoute: typeof AuthenticatedVerifiedMessagesThreadIdRouteImport
+      parentRoute: typeof AuthenticatedVerifiedMessagesRoute
+    }
     '/_authenticated/_verified/forum/new': {
       id: '/_authenticated/_verified/forum/new'
       path: '/forum/new'
@@ -160,15 +223,37 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedVerifiedMessagesRouteChildren {
+  AuthenticatedVerifiedMessagesThreadIdRoute: typeof AuthenticatedVerifiedMessagesThreadIdRoute
+  AuthenticatedVerifiedMessagesNewRoute: typeof AuthenticatedVerifiedMessagesNewRoute
+  AuthenticatedVerifiedMessagesIndexRoute: typeof AuthenticatedVerifiedMessagesIndexRoute
+}
+
+const AuthenticatedVerifiedMessagesRouteChildren: AuthenticatedVerifiedMessagesRouteChildren =
+  {
+    AuthenticatedVerifiedMessagesThreadIdRoute:
+      AuthenticatedVerifiedMessagesThreadIdRoute,
+    AuthenticatedVerifiedMessagesNewRoute:
+      AuthenticatedVerifiedMessagesNewRoute,
+    AuthenticatedVerifiedMessagesIndexRoute:
+      AuthenticatedVerifiedMessagesIndexRoute,
+  }
+
+const AuthenticatedVerifiedMessagesRouteWithChildren =
+  AuthenticatedVerifiedMessagesRoute._addFileChildren(
+    AuthenticatedVerifiedMessagesRouteChildren,
+  )
+
 interface AuthenticatedVerifiedRouteRouteChildren {
-  AuthenticatedVerifiedMessagesRoute: typeof AuthenticatedVerifiedMessagesRoute
+  AuthenticatedVerifiedMessagesRoute: typeof AuthenticatedVerifiedMessagesRouteWithChildren
   AuthenticatedVerifiedForumNewRoute: typeof AuthenticatedVerifiedForumNewRoute
   AuthenticatedVerifiedEventsEventIdCheckoutRoute: typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 
 const AuthenticatedVerifiedRouteRouteChildren: AuthenticatedVerifiedRouteRouteChildren =
   {
-    AuthenticatedVerifiedMessagesRoute: AuthenticatedVerifiedMessagesRoute,
+    AuthenticatedVerifiedMessagesRoute:
+      AuthenticatedVerifiedMessagesRouteWithChildren,
     AuthenticatedVerifiedForumNewRoute: AuthenticatedVerifiedForumNewRoute,
     AuthenticatedVerifiedEventsEventIdCheckoutRoute:
       AuthenticatedVerifiedEventsEventIdCheckoutRoute,
@@ -198,3 +283,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
