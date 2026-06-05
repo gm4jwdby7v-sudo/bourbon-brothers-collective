@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import hero from "@/assets/hero-bourbon.jpg";
 
 export function Hero() {
@@ -26,9 +27,11 @@ export function Hero() {
             retailers — all in one beautifully crafted home for bourbon lovers.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button size="lg" className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow">
-              Join the community <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <Link to="/auth">
+              <Button size="lg" className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow">
+                Join the community <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
             <Button size="lg" variant="outline" className="border-border/80">
               <Users className="mr-2 h-4 w-4" /> For retailers & distilleries
             </Button>

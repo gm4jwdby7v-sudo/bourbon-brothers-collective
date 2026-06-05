@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -115,11 +116,30 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    let mounted = true;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      if (!mounted) return;
+      const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+        router.invalidate();
+        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      });
+      // store unsubscribe on window cleanup
+      (window as unknown as { __bcAuthSub?: () => void }).__bcAuthSub = () => sub.subscription.unsubscribe();
+    });
+    return () => {
+      mounted = false;
+      (window as unknown as { __bcAuthSub?: () => void }).__bcAuthSub?.();
+    };
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster theme="dark" position="top-center" />
     </QueryClientProvider>
   );
 }
