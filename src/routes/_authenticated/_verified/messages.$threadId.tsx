@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { getThread, markThreadRead, sendMessage } from "@/lib/api/dm.functions";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/_verified/messages/$threadId")({
   head: () => ({ meta: [{ title: "Conversation — BourbonConnect" }] }),
@@ -23,32 +22,65 @@ interface MessageRow {
   body: string;
   created_at: string;
 }
+interface ThreadData {
+  participants: ParticipantRow[];
+  messages: MessageRow[];
+}
+
+async function fetchThread(threadId: string): Promise<ThreadData> {
+  const [participantsRes, messagesRes] = await Promise.all([
+    supabase
+      .from("dm_thread_participants")
+      .select("user_id, last_read_at")
+      .eq("thread_id", threadId),
+    supabase
+      .from("dm_messages")
+      .select("id, sender_id, body, created_at")
+      .eq("thread_id", threadId)
+      .order("created_at", { ascending: true }),
+  ]);
+  if (participantsRes.error) throw new Error(participantsRes.error.message);
+  if (messagesRes.error) throw new Error(messagesRes.error.message);
+  return {
+    participants: participantsRes.data ?? [],
+    messages: messagesRes.data ?? [],
+  };
+}
 
 function ThreadPage() {
   const { threadId } = Route.useParams();
+  const { user } = useAuth();
+  const viewerId = user?.id ?? "";
   const queryClient = useQueryClient();
-  const fetchThread = useServerFn(getThread);
-  const sendFn = useServerFn(sendMessage);
-  const markRead = useServerFn(markThreadRead);
-
   const queryKey = useMemo(() => ["dm-thread", threadId] as const, [threadId]);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey,
-    queryFn: () => fetchThread({ data: { threadId } }),
+    queryFn: () => fetchThread(threadId),
+    enabled: Boolean(viewerId),
   });
 
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
 
-  // Mark thread read on open and whenever new messages arrive.
+  const markRead = useCallback(async () => {
+    if (!viewerId) return;
+    await supabase
+      .from("dm_thread_participants")
+      .update({ last_read_at: new Date().toISOString() })
+      .eq("thread_id", threadId)
+      .eq("user_id", viewerId);
+  }, [threadId, viewerId]);
+
+  // Mark thread read whenever new messages arrive.
   useEffect(() => {
     if (!data) return;
-    markRead({ data: { threadId } }).catch(() => {});
-  }, [data?.messages.length, threadId, markRead, data]);
+    markRead().catch(() => {});
+  }, [data?.messages.length, markRead, data]);
 
-  // Realtime: new messages + participants' last_read_at updates.
+  // Realtime subscriptions
   useEffect(() => {
+    if (!viewerId) return;
     const channel = supabase
       .channel(`dm-thread-${threadId}`)
       .on(
@@ -56,7 +88,7 @@ function ThreadPage() {
         { event: "INSERT", schema: "public", table: "dm_messages", filter: `thread_id=eq.${threadId}` },
         (payload) => {
           const next = payload.new as MessageRow;
-          queryClient.setQueryData(queryKey, (prev: typeof data) => {
+          queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
             if (!prev) return prev;
             if (prev.messages.some((m) => m.id === next.id)) return prev;
             return { ...prev, messages: [...prev.messages, next] };
@@ -68,7 +100,7 @@ function ThreadPage() {
         { event: "UPDATE", schema: "public", table: "dm_thread_participants", filter: `thread_id=eq.${threadId}` },
         (payload) => {
           const next = payload.new as ParticipantRow;
-          queryClient.setQueryData(queryKey, (prev: typeof data) => {
+          queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
             if (!prev) return prev;
             return {
               ...prev,
@@ -83,18 +115,23 @@ function ThreadPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [threadId, queryClient, queryKey]);
+  }, [threadId, queryClient, queryKey, viewerId]);
 
   const send = async () => {
     const body = draft.trim();
-    if (!body || sending) return;
+    if (!body || sending || !viewerId) return;
     setSending(true);
     try {
-      const res = await sendFn({ data: { threadId, body } });
-      queryClient.setQueryData(queryKey, (prev: typeof data) => {
+      const { data: inserted, error: insErr } = await supabase
+        .from("dm_messages")
+        .insert({ thread_id: threadId, sender_id: viewerId, body })
+        .select("id, sender_id, body, created_at")
+        .single();
+      if (insErr) throw new Error(insErr.message);
+      queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
         if (!prev) return prev;
-        if (prev.messages.some((m) => m.id === res.message.id)) return prev;
-        return { ...prev, messages: [...prev.messages, res.message] };
+        if (prev.messages.some((m) => m.id === inserted.id)) return prev;
+        return { ...prev, messages: [...prev.messages, inserted as MessageRow] };
       });
       setDraft("");
     } finally {
@@ -102,7 +139,7 @@ function ThreadPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !viewerId) {
     return (
       <main className="max-w-3xl mx-auto px-6 py-12" data-testid="thread-loading">
         Loading conversation…
@@ -117,8 +154,6 @@ function ThreadPage() {
     );
   }
 
-  const viewerId = data.viewerId;
-  // Recipient = first participant who isn't the viewer (1:1 thread).
   const recipient = data.participants.find((p) => p.user_id !== viewerId) ?? null;
   const recipientLastReadMs = recipient ? new Date(recipient.last_read_at).getTime() : 0;
 
