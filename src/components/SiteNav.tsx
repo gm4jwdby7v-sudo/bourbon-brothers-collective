@@ -75,7 +75,7 @@ export function SiteNav() {
       {open && (
         <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3">
           {links.map((l) => (
-            <a key={l.label} href="#" className="block text-sm py-1">{l.label}</a>
+            <Link key={l.label} to={l.to} className="block text-sm py-1">{l.label}</Link>
           ))}
           <div className="pt-3 flex gap-2">
             {user ? (
