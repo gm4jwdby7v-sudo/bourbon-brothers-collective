@@ -160,12 +160,40 @@ function AuthPage() {
             <span className="font-display text-xl">BourbonConnect</span>
           </div>
           <h1 className="font-display text-3xl mb-2">
-            {mode === "signin" ? "Welcome back" : "Join the community"}
+            {pendingEmail ? "Check your inbox" : mode === "signin" ? "Welcome back" : "Join the community"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {mode === "signin" ? "Sign in to your account" : "Free to join · 21+ only"}
+            {pendingEmail
+              ? `We sent a verification link to ${pendingEmail}.`
+              : mode === "signin" ? "Sign in to your account" : "Free to join · 21+ only"}
           </p>
         </div>
+
+        {pendingEmail ? (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Click the link in the email to confirm your account. You must verify your email before
+              you can post in the forums or message other members.
+            </p>
+            <Button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
+            >
+              {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Resend verification email
+            </Button>
+            <button
+              type="button"
+              className="w-full text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => { setPendingEmail(null); setMode("signin"); }}
+            >
+              Back to sign in
+            </button>
+          </div>
+        ) : (
+
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
           <Button
