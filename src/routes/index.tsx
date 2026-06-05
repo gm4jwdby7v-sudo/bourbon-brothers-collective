@@ -7,6 +7,7 @@ import { Feed } from "@/components/Feed";
 import { Exchange } from "@/components/Exchange";
 import { Business } from "@/components/Business";
 import { CTA, Footer } from "@/components/CTA";
+import { VerifyEmailBanner } from "@/components/VerifyEmailGate";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,6 +26,7 @@ function Index() {
     <div className="min-h-screen">
       <AgeGate />
       <SiteNav />
+      <VerifyEmailBanner />
       <main>
         <Hero />
         <Features />
