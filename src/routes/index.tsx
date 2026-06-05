@@ -26,6 +26,7 @@ function Index() {
     <div className="min-h-screen">
       <AgeGate />
       <SiteNav />
+      <VerifyEmailBanner />
       <main>
         <Hero />
         <Features />
