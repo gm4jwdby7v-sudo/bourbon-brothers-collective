@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { sendDmPush } from "@/lib/push.functions";
 
 export const Route = createFileRoute("/_authenticated/_verified/messages/$threadId")({
   head: () => ({ meta: [{ title: "Conversation — BourbonConnect" }] }),
@@ -62,6 +64,8 @@ function ThreadPage() {
 
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const triggerPush = useServerFn(sendDmPush);
+
 
   const markRead = useCallback(async () => {
     if (!viewerId) return;
@@ -134,6 +138,10 @@ function ThreadPage() {
         return { ...prev, messages: [...prev.messages, inserted as MessageRow] };
       });
       setDraft("");
+      // Fire-and-forget background push to other participants.
+      triggerPush({ data: { threadId, body } }).catch((e) =>
+        console.warn("dm push failed", e),
+      );
     } finally {
       setSending(false);
     }
