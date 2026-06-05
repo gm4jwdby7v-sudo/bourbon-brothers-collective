@@ -13,11 +13,10 @@ import {
 
 const links = [
   { to: "/", label: "Community" },
-  { to: "/", label: "Discover" },
-  { to: "/", label: "Events" },
-  { to: "/", label: "Exchange" },
-  { to: "/", label: "Business" },
-];
+  { to: "/forum/new", label: "New post" },
+  { to: "/messages", label: "Messages" },
+  { to: "/events/featured/checkout", label: "Events" },
+] as const;
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
