@@ -250,6 +250,8 @@ function AuthPage() {
             )}
           </div>
         </div>
+        )}
+
 
         <p className="mt-6 text-[11px] text-muted-foreground text-center leading-relaxed">
           By continuing you confirm you are at least 21 years old and agree to drink responsibly.
