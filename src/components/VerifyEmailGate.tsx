@@ -44,6 +44,14 @@ export function VerifyEmailBanner() {
   );
 }
 
+export function VerifyEmailRequired({ email }: { email: string | null }) {
+  return (
+    <div className="rounded-xl border border-amber-500/30 bg-card p-6 shadow-soft">
+      <VerifyEmailNotice email={email} message="Confirm your email to access messaging, forums, and event checkout." />
+    </div>
+  );
+}
+
 function VerifyEmailNotice({
   email,
   compact = false,

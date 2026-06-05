@@ -13,11 +13,10 @@ import {
 
 const links = [
   { to: "/", label: "Community" },
-  { to: "/", label: "Discover" },
-  { to: "/", label: "Events" },
-  { to: "/", label: "Exchange" },
-  { to: "/", label: "Business" },
-];
+  { to: "/forum/new", label: "New post" },
+  { to: "/messages", label: "Messages" },
+  { to: "/events/featured/checkout", label: "Events" },
+] as const;
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
@@ -32,9 +31,9 @@ export function SiteNav() {
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           {links.map((l) => (
-            <a key={l.label} href="#" className="hover:text-foreground transition-colors">
+            <Link key={l.label} to={l.to} className="hover:text-foreground transition-colors">
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-3">
@@ -76,7 +75,7 @@ export function SiteNav() {
       {open && (
         <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3">
           {links.map((l) => (
-            <a key={l.label} href="#" className="block text-sm py-1">{l.label}</a>
+            <Link key={l.label} to={l.to} className="block text-sm py-1">{l.label}</Link>
           ))}
           <div className="pt-3 flex gap-2">
             {user ? (

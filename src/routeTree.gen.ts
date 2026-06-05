@@ -10,11 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedVerifiedRouteRouteImport } from './routes/_authenticated/_verified/route'
+import { Route as AuthenticatedVerifiedMessagesRouteImport } from './routes/_authenticated/_verified/messages'
+import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
+import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from './routes/_authenticated/_verified/events.$eventId.checkout'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,30 +31,78 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedVerifiedRouteRoute =
+  AuthenticatedVerifiedRouteRouteImport.update({
+    id: '/_verified',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedVerifiedMessagesRoute =
+  AuthenticatedVerifiedMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
+const AuthenticatedVerifiedForumNewRoute =
+  AuthenticatedVerifiedForumNewRouteImport.update({
+    id: '/forum/new',
+    path: '/forum/new',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
+const AuthenticatedVerifiedEventsEventIdCheckoutRoute =
+  AuthenticatedVerifiedEventsEventIdCheckoutRouteImport.update({
+    id: '/events/$eventId/checkout',
+    path: '/events/$eventId/checkout',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/messages': typeof AuthenticatedVerifiedMessagesRoute
+  '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
+  '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/messages': typeof AuthenticatedVerifiedMessagesRoute
+  '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
+  '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/_verified': typeof AuthenticatedVerifiedRouteRouteWithChildren
+  '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRoute
+  '/_authenticated/_verified/forum/new': typeof AuthenticatedVerifiedForumNewRoute
+  '/_authenticated/_verified/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/messages'
+    | '/forum/new'
+    | '/events/$eventId/checkout'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth'
-  id: '__root__' | '/' | '/auth'
+  to: '/' | '/auth' | '/messages' | '/forum/new' | '/events/$eventId/checkout'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/_verified'
+    | '/_authenticated/_verified/messages'
+    | '/_authenticated/_verified/forum/new'
+    | '/_authenticated/_verified/events/$eventId/checkout'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
 }
 
@@ -58,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,11 +129,70 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/_verified': {
+      id: '/_authenticated/_verified'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedVerifiedRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_verified/messages': {
+      id: '/_authenticated/_verified/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedVerifiedMessagesRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
+    '/_authenticated/_verified/forum/new': {
+      id: '/_authenticated/_verified/forum/new'
+      path: '/forum/new'
+      fullPath: '/forum/new'
+      preLoaderRoute: typeof AuthenticatedVerifiedForumNewRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
+    '/_authenticated/_verified/events/$eventId/checkout': {
+      id: '/_authenticated/_verified/events/$eventId/checkout'
+      path: '/events/$eventId/checkout'
+      fullPath: '/events/$eventId/checkout'
+      preLoaderRoute: typeof AuthenticatedVerifiedEventsEventIdCheckoutRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedVerifiedRouteRouteChildren {
+  AuthenticatedVerifiedMessagesRoute: typeof AuthenticatedVerifiedMessagesRoute
+  AuthenticatedVerifiedForumNewRoute: typeof AuthenticatedVerifiedForumNewRoute
+  AuthenticatedVerifiedEventsEventIdCheckoutRoute: typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
+}
+
+const AuthenticatedVerifiedRouteRouteChildren: AuthenticatedVerifiedRouteRouteChildren =
+  {
+    AuthenticatedVerifiedMessagesRoute: AuthenticatedVerifiedMessagesRoute,
+    AuthenticatedVerifiedForumNewRoute: AuthenticatedVerifiedForumNewRoute,
+    AuthenticatedVerifiedEventsEventIdCheckoutRoute:
+      AuthenticatedVerifiedEventsEventIdCheckoutRoute,
+  }
+
+const AuthenticatedVerifiedRouteRouteWithChildren =
+  AuthenticatedVerifiedRouteRoute._addFileChildren(
+    AuthenticatedVerifiedRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedVerifiedRouteRoute: typeof AuthenticatedVerifiedRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedVerifiedRouteRoute: AuthenticatedVerifiedRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
