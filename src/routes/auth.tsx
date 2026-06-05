@@ -42,13 +42,29 @@ function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
-  // Redirect away if already signed in
+  // Redirect away if already signed in AND email confirmed
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      const u = data.session?.user;
+      if (u && (u.email_confirmed_at || u.confirmed_at)) navigate({ to: "/" });
     });
   }, [navigate]);
+
+  async function handleResend() {
+    if (!pendingEmail) return;
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingEmail,
+      options: { emailRedirectTo: `${window.location.origin}/` },
+    });
+    setResending(false);
+    if (error) toast.error(error.message);
+    else toast.success("Verification email sent. Check your inbox.");
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -66,7 +82,7 @@ function AuthPage() {
           toast.error(parsed.error.issues[0].message);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
@@ -81,7 +97,12 @@ function AuthPage() {
           toast.error(error.message);
           return;
         }
-        toast.success("Welcome to the community. Check your email to confirm.");
+        // With email confirmation required, no session is returned yet.
+        if (!data.session) {
+          setPendingEmail(parsed.data.email);
+          toast.success("Check your email to confirm your account.");
+          return;
+        }
         navigate({ to: "/" });
       } else {
         const parsed = signInSchema.safeParse({
@@ -92,9 +113,15 @@ function AuthPage() {
           toast.error(parsed.error.issues[0].message);
           return;
         }
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) {
           toast.error(error.message);
+          return;
+        }
+        const u = data.user;
+        if (u && !u.email_confirmed_at && !u.confirmed_at) {
+          setPendingEmail(parsed.data.email);
+          toast.message("Please confirm your email to continue.");
           return;
         }
         navigate({ to: "/" });
@@ -103,6 +130,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   async function handleGoogle() {
     // Confirm 21+ for OAuth sign-ups too (we can't capture DOB before the redirect)
