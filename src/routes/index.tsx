@@ -1,29 +1,39 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AgeGate } from "@/components/AgeGate";
+import { SiteNav } from "@/components/SiteNav";
+import { Hero } from "@/components/Hero";
+import { Features } from "@/components/Features";
+import { Feed } from "@/components/Feed";
+import { Exchange } from "@/components/Exchange";
+import { Business } from "@/components/Business";
+import { CTA, Footer } from "@/components/CTA";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "BourbonConnect — The nationwide bourbon community" },
+      { name: "description", content: "Connect with bourbon collectors, hunt rare releases, log pours, and trade with licensed retailers — all in one place." },
+      { property: "og:title", content: "BourbonConnect — The nationwide bourbon community" },
+      { property: "og:description", content: "The premium community for bourbon enthusiasts, retailers, and distilleries." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen">
+      <AgeGate />
+      <SiteNav />
+      <main>
+        <Hero />
+        <Features />
+        <Feed />
+        <Exchange />
+        <Business />
+        <CTA />
+      </main>
+      <Footer />
     </div>
   );
 }
