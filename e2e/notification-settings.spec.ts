@@ -82,6 +82,8 @@ function nowUtcHour(): number {
 }
 
 test.describe("Notification settings page", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("loads default values when no row exists yet", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     await mockPrefsApi(page, { row: null });
