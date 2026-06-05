@@ -20,5 +20,9 @@ export function useAuth() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  return { session, user, loading, signOut: () => supabase.auth.signOut() };
+  const emailVerified = Boolean(
+    user && (user.email_confirmed_at || user.confirmed_at || user.app_metadata?.provider === "google")
+  );
+
+  return { session, user, loading, emailVerified, signOut: () => supabase.auth.signOut() };
 }
