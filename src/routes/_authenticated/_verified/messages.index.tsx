@@ -64,7 +64,10 @@ function MessagesPage() {
         <div>
           <h1 className="font-display text-3xl">Messages</h1>
           <p className="text-muted-foreground text-sm">
-            Send a direct message to another member.
+            Send a direct message to another member.{" "}
+            <Link to="/settings/notifications" className="underline" data-testid="notif-settings-link">
+              Notification settings
+            </Link>
           </p>
         </div>
         {status !== "unsupported" && (
