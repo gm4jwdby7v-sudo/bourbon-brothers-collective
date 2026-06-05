@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedVerifiedRouteRouteImport } from './routes/_authenticated/_verified/route'
+import { Route as ApiPublicFirebaseConfigRouteImport } from './routes/api/public/firebase-config'
 import { Route as AuthenticatedVerifiedMessagesRouteImport } from './routes/_authenticated/_verified/messages'
 import { Route as AuthenticatedVerifiedMessagesIndexRouteImport } from './routes/_authenticated/_verified/messages.index'
 import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_authenticated/_verified/messages.new'
@@ -39,6 +40,11 @@ const AuthenticatedVerifiedRouteRoute =
     id: '/_verified',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicFirebaseConfigRoute = ApiPublicFirebaseConfigRouteImport.update({
+  id: '/api/public/firebase-config',
+  path: '/api/public/firebase-config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedVerifiedMessagesRoute =
   AuthenticatedVerifiedMessagesRouteImport.update({
     id: '/messages',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
+  '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/_verified': typeof AuthenticatedVerifiedRouteRouteWithChildren
   '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
+  '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/_authenticated/_verified/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/_authenticated/_verified/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/_authenticated/_verified/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/messages'
+    | '/api/public/firebase-config'
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/api/public/firebase-config'
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/_verified'
     | '/_authenticated/_verified/messages'
+    | '/api/public/firebase-config'
     | '/_authenticated/_verified/forum/new'
     | '/_authenticated/_verified/messages/$threadId'
     | '/_authenticated/_verified/messages/new'
@@ -146,6 +158,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicFirebaseConfigRoute: typeof ApiPublicFirebaseConfigRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -177,6 +190,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedVerifiedRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/firebase-config': {
+      id: '/api/public/firebase-config'
+      path: '/api/public/firebase-config'
+      fullPath: '/api/public/firebase-config'
+      preLoaderRoute: typeof ApiPublicFirebaseConfigRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_verified/messages': {
       id: '/_authenticated/_verified/messages'
@@ -279,7 +299,18 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicFirebaseConfigRoute: ApiPublicFirebaseConfigRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
