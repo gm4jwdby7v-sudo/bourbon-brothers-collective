@@ -46,7 +46,9 @@ test.describe("existing DM thread gating", () => {
     await expect(page).toHaveURL(THREAD_PATH);
     await expect(page.getByRole("heading", { name: "Conversation" })).toBeVisible();
     await expect(page.getByTestId("thread-id")).toHaveText(/thread-123/);
-    for (const id of threadTestIds) {
+    // thread-messages is an empty <ul> in this scenario, so check existence not visibility.
+    await expect(page.getByTestId("thread-messages")).toHaveCount(1);
+    for (const id of threadTestIds.filter((t) => t !== "thread-messages")) {
       await expect(page.getByTestId(id)).toBeVisible();
     }
     await expect(
@@ -121,7 +123,7 @@ test.describe("DM unblocking after verification", () => {
     await page.reload();
 
     await expect(page.getByTestId("thread-root")).toBeVisible();
-    await expect(page.getByTestId("thread-messages")).toBeVisible();
+    await expect(page.getByTestId("thread-messages")).toHaveCount(1);
     await expect(page.getByTestId("reply-send")).toBeVisible();
   });
 
