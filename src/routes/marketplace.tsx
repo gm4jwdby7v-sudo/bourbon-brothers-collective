@@ -301,7 +301,7 @@ function MarketplacePage() {
   const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>(
     [],
   );
-  const [retailerNameFilter, setRetailerNameFilter] = useState<string>("all");
+  const [retailerNamesFilter, setRetailerNamesFilter] = useState<string[]>([]);
   const [query, setQuery] = useState("");
 
   // Unique retailer names (preserve first-seen order) + a representative listing
@@ -315,14 +315,16 @@ function MarketplacePage() {
     }));
   }, []);
 
-  const activeRetailerListing = useMemo(
+  const activeRetailerListings = useMemo(
     () =>
-      retailerNameFilter === "all"
-        ? null
-        : (retailerOptions.find((r) => r.name === retailerNameFilter)?.listing ??
-          null),
-    [retailerNameFilter, retailerOptions],
+      retailerNamesFilter.length === 0
+        ? []
+        : retailerOptions
+            .filter((r) => retailerNamesFilter.includes(r.name))
+            .map((r) => r.listing),
+    [retailerNamesFilter, retailerOptions],
   );
+
 
 
 
