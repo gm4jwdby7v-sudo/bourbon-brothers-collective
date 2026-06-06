@@ -13,6 +13,7 @@ import {
 
 const links = [
   { to: "/", label: "Community" },
+  { to: "/marketplace", label: "Marketplace" },
   { to: "/forum/new", label: "New post" },
   { to: "/messages", label: "Messages" },
   { to: "/events/featured/checkout", label: "Events" },

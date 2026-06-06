@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -22,6 +23,11 @@ import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './rou
 import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
 import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from './routes/_authenticated/_verified/events.$eventId.checkout'
 
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -92,6 +98,7 @@ const AuthenticatedVerifiedEventsEventIdCheckoutRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/marketplace': typeof MarketplaceRoute
   '/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/marketplace': typeof MarketplaceRoute
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/marketplace': typeof MarketplaceRoute
   '/_authenticated/_verified': typeof AuthenticatedVerifiedRouteRouteWithChildren
   '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/marketplace'
     | '/messages'
     | '/api/public/firebase-config'
     | '/forum/new'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/marketplace'
     | '/api/public/firebase-config'
     | '/forum/new'
     | '/messages/$threadId'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/marketplace'
     | '/_authenticated/_verified'
     | '/_authenticated/_verified/messages'
     | '/api/public/firebase-config'
@@ -171,11 +183,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  MarketplaceRoute: typeof MarketplaceRoute
   ApiPublicFirebaseConfigRoute: typeof ApiPublicFirebaseConfigRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  MarketplaceRoute: MarketplaceRoute,
   ApiPublicFirebaseConfigRoute: ApiPublicFirebaseConfigRoute,
 }
 export const routeTree = rootRouteImport
