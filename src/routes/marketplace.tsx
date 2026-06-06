@@ -208,6 +208,24 @@ function initialsFor(name: string): string {
   return (first + second).toUpperCase();
 }
 
+/** Retry an async operation with exponential backoff. */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  { maxAttempts = 3, delayMs = 400 }: { maxAttempts?: number; delayMs?: number } = {},
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt === maxAttempts) break;
+      await new Promise((res) => setTimeout(res, delayMs * attempt));
+    }
+  }
+  throw lastErr;
+}
+
 
 const LISTINGS: Listing[] = [
   {
