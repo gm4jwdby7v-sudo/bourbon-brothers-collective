@@ -520,6 +520,73 @@ function FiltersSidebar(props: FiltersProps) {
   const [retailerStateScope, setRetailerStateScope] = useState<string>("all");
   const [retailerEligibleOnly, setRetailerEligibleOnly] = useState(false);
 
+  // ─── Presets ────────────────────────────────────────────────────────────
+  type RetailerPreset = {
+    id: string;
+    name: string;
+    stateFilter: string[];
+    retailerSearch: string;
+    retailerSort: "asc" | "desc";
+    retailerStateScope: string;
+    retailerEligibleOnly: boolean;
+  };
+  const PRESETS_KEY = "marketplace.retailerPresets.v1";
+  const [presets, setPresets] = useState<RetailerPreset[]>([]);
+  const [activePresetId, setActivePresetId] = useState<string>("");
+  const [presetNameDraft, setPresetNameDraft] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PRESETS_KEY);
+      if (raw) setPresets(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const persistPresets = (next: RetailerPreset[]) => {
+    setPresets(next);
+    try {
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const applyPreset = (id: string) => {
+    const p = presets.find((x) => x.id === id);
+    if (!p) return;
+    setStateFilter(p.stateFilter);
+    setRetailerSearch(p.retailerSearch);
+    setRetailerSort(p.retailerSort);
+    setRetailerStateScope(p.retailerStateScope);
+    setRetailerEligibleOnly(p.retailerEligibleOnly);
+    setActivePresetId(id);
+  };
+
+  const saveCurrentAsPreset = () => {
+    const name = presetNameDraft.trim();
+    if (!name) return;
+    const preset: RetailerPreset = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name,
+      stateFilter,
+      retailerSearch,
+      retailerSort,
+      retailerStateScope,
+      retailerEligibleOnly,
+    };
+    persistPresets([...presets, preset]);
+    setActivePresetId(preset.id);
+    setPresetNameDraft("");
+  };
+
+  const deleteActivePreset = () => {
+    if (!activePresetId) return;
+    persistPresets(presets.filter((p) => p.id !== activePresetId));
+    setActivePresetId("");
+  };
+
   const visibleRetailers = useMemo(() => {
     const q = retailerSearch.trim().toLowerCase();
     let filtered = q
@@ -605,6 +672,71 @@ function FiltersSidebar(props: FiltersProps) {
       </div>
 
       <FilterGroup label="Retailers (compare)">
+        <div className="space-y-2 rounded-md border border-dashed border-border/60 p-2">
+          <div className="flex items-center gap-2">
+            <Label
+              htmlFor="retailer-preset-select"
+              className="text-[11px] text-muted-foreground"
+            >
+              Preset:
+            </Label>
+            <select
+              id="retailer-preset-select"
+              value={activePresetId}
+              onChange={(e) => {
+                const id = e.target.value;
+                if (id) applyPreset(id);
+                else setActivePresetId("");
+              }}
+              className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+              data-testid="retailer-preset-select"
+            >
+              <option value="">— Select preset —</option>
+              {presets.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            {activePresetId && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-1.5 text-xs text-muted-foreground hover:text-destructive"
+                onClick={deleteActivePreset}
+                data-testid="retailer-preset-delete"
+                title="Delete preset"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Name this preset…"
+              className="h-8 flex-1 text-xs"
+              value={presetNameDraft}
+              onChange={(e) => setPresetNameDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  saveCurrentAsPreset();
+                }
+              }}
+              data-testid="retailer-preset-name-input"
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 px-2 text-xs"
+              onClick={saveCurrentAsPreset}
+              disabled={!presetNameDraft.trim()}
+              data-testid="retailer-preset-save"
+            >
+              Save
+            </Button>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <Label
             htmlFor="retailer-state-scope"
