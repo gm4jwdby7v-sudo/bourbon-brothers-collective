@@ -405,17 +405,18 @@ function MarketplacePage() {
             setAvailabilityFilter={setAvailabilityFilter}
             complianceFilter={complianceFilter}
             setComplianceFilter={setComplianceFilter}
-            retailerNameFilter={retailerNameFilter}
-            setRetailerNameFilter={setRetailerNameFilter}
+            retailerNamesFilter={retailerNamesFilter}
+            setRetailerNamesFilter={setRetailerNamesFilter}
             retailerOptions={retailerOptions}
-            activeRetailerListing={activeRetailerListing}
+            activeRetailerListings={activeRetailerListings}
             activeFilterCount={activeFilterCount}
             onClear={() => {
               setStateFilter([]);
               setRetailerFilter([]);
               setAvailabilityFilter([]);
               setComplianceFilter([]);
-              setRetailerNameFilter("all");
+              setRetailerNamesFilter([]);
+
             }}
           />
 
