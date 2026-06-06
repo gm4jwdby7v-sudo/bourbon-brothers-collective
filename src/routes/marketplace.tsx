@@ -4,10 +4,29 @@ import { SiteNav } from "@/components/SiteNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, MapPin, ShieldAlert, ShieldCheck, Store, X } from "lucide-react";
+import {
+  Check,
+  FileText,
+  MapPin,
+  Scale,
+  ShieldAlert,
+  ShieldCheck,
+  Store,
+  X,
+} from "lucide-react";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
