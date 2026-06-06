@@ -515,6 +515,14 @@ function FiltersSidebar(props: FiltersProps) {
   const toggle = <T extends string>(arr: T[], v: T) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
+  const [retailerSearch, setRetailerSearch] = useState("");
+
+  const visibleRetailers = useMemo(() => {
+    const q = retailerSearch.trim().toLowerCase();
+    if (!q) return retailerOptions;
+    return retailerOptions.filter((r) => r.name.toLowerCase().includes(q));
+  }, [retailerSearch, retailerOptions]);
+
   // Per-state, per-retailer compliance for the currently-selected retailers.
   // Shape: { [stateCode]: Array<{ name, initials, status }> }
   const stateStatusByRetailer = useMemo(() => {
@@ -570,8 +578,15 @@ function FiltersSidebar(props: FiltersProps) {
       </div>
 
       <FilterGroup label="Retailers (compare)">
+        <Input
+          placeholder="Search retailers…"
+          className="h-8 text-xs"
+          value={retailerSearch}
+          onChange={(e) => setRetailerSearch(e.target.value)}
+          data-testid="retailer-search-input"
+        />
         <div className="space-y-2">
-          {retailerOptions.map((r) => {
+          {visibleRetailers.map((r) => {
             const checked = retailerNamesFilter.includes(r.name);
             return (
               <label
@@ -597,6 +612,9 @@ function FiltersSidebar(props: FiltersProps) {
               </label>
             );
           })}
+          {visibleRetailers.length === 0 && (
+            <p className="text-xs text-muted-foreground">No retailers match.</p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -604,7 +622,14 @@ function FiltersSidebar(props: FiltersProps) {
             variant="ghost"
             className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
             onClick={() =>
-              setRetailerNamesFilter(retailerOptions.map((r) => r.name))
+              setRetailerNamesFilter(
+                Array.from(
+                  new Set([
+                    ...retailerNamesFilter,
+                    ...visibleRetailers.map((r) => r.name),
+                  ]),
+                ),
+              )
             }
             data-testid="marketplace-select-all-retailers"
           >
