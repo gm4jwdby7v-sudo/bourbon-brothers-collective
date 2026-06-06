@@ -90,25 +90,14 @@ test.describe("Notification settings page", () => {
     await page.goto("/settings/notifications");
 
     await expect(page.getByTestId("notif-settings-root")).toBeVisible();
-    await expect(page.getByTestId("toggle-dm-push")).toHaveAttribute(
-      "data-state",
-      "checked",
-    );
-    await expect(page.getByTestId("toggle-dm-inapp")).toHaveAttribute(
-      "data-state",
-      "checked",
-    );
-    await expect(page.getByTestId("toggle-quiet")).toHaveAttribute(
-      "data-state",
-      "unchecked",
-    );
+    await expect(page.getByTestId("toggle-dm-push")).toHaveAttribute("data-state", "checked");
+    await expect(page.getByTestId("toggle-dm-inapp")).toHaveAttribute("data-state", "checked");
+    await expect(page.getByTestId("toggle-quiet")).toHaveAttribute("data-state", "unchecked");
     // Time inputs are hidden while quiet hours are disabled.
     await expect(page.getByTestId("quiet-start")).toHaveCount(0);
   });
 
-  test("loads existing prefs from server and reflects them in toggles", async ({
-    page,
-  }) => {
+  test("loads existing prefs from server and reflects them in toggles", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     await mockPrefsApi(page, {
       row: defaultRow({
@@ -122,25 +111,14 @@ test.describe("Notification settings page", () => {
     });
     await page.goto("/settings/notifications");
 
-    await expect(page.getByTestId("toggle-dm-push")).toHaveAttribute(
-      "data-state",
-      "unchecked",
-    );
-    await expect(page.getByTestId("toggle-dm-inapp")).toHaveAttribute(
-      "data-state",
-      "checked",
-    );
-    await expect(page.getByTestId("toggle-quiet")).toHaveAttribute(
-      "data-state",
-      "checked",
-    );
+    await expect(page.getByTestId("toggle-dm-push")).toHaveAttribute("data-state", "unchecked");
+    await expect(page.getByTestId("toggle-dm-inapp")).toHaveAttribute("data-state", "checked");
+    await expect(page.getByTestId("toggle-quiet")).toHaveAttribute("data-state", "checked");
     await expect(page.getByTestId("quiet-start")).toHaveValue("23:00");
     await expect(page.getByTestId("quiet-end")).toHaveValue("06:00");
   });
 
-  test("toggling quiet hours reveals the time/timezone inputs", async ({
-    page,
-  }) => {
+  test("toggling quiet hours reveals the time/timezone inputs", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     await mockPrefsApi(page, { row: null });
     await page.goto("/settings/notifications");
@@ -168,9 +146,7 @@ test.describe("Notification settings page", () => {
     });
     await page.goto("/settings/notifications");
 
-    await expect(page.getByTestId("quiet-status")).toContainText(
-      /currently in quiet hours/i,
-    );
+    await expect(page.getByTestId("quiet-status")).toContainText(/currently in quiet hours/i);
   });
 
   test("quiet-hours hint says 'outside quiet hours' when now is outside the window", async ({
@@ -188,14 +164,10 @@ test.describe("Notification settings page", () => {
     });
     await page.goto("/settings/notifications");
 
-    await expect(page.getByTestId("quiet-status")).toContainText(
-      /outside quiet hours/i,
-    );
+    await expect(page.getByTestId("quiet-status")).toContainText(/outside quiet hours/i);
   });
 
-  test("cross-midnight quiet window covering now is treated as in-quiet", async ({
-    page,
-  }) => {
+  test("cross-midnight quiet window covering now is treated as in-quiet", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     const h = nowUtcHour();
     // start = h-1, end = h-2 → start > end → window wraps midnight and covers now.
@@ -209,14 +181,10 @@ test.describe("Notification settings page", () => {
     });
     await page.goto("/settings/notifications");
 
-    await expect(page.getByTestId("quiet-status")).toContainText(
-      /currently in quiet hours/i,
-    );
+    await expect(page.getByTestId("quiet-status")).toContainText(/currently in quiet hours/i);
   });
 
-  test("saving persists all toggle states (push off, in-app off, quiet on)", async ({
-    page,
-  }) => {
+  test("saving persists all toggle states (push off, in-app off, quiet on)", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     const state: PrefsState = { row: null };
     await mockPrefsApi(page, state);
@@ -242,9 +210,7 @@ test.describe("Notification settings page", () => {
     });
   });
 
-  test("disabling quiet hours after enabling collapses the inputs again", async ({
-    page,
-  }) => {
+  test("disabling quiet hours after enabling collapses the inputs again", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     await mockPrefsApi(page, {
       row: defaultRow({ quiet_hours_enabled: true }),

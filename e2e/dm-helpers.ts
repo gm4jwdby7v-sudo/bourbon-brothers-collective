@@ -50,9 +50,12 @@ export async function mockAuth(page: Page, user: MockUser | null) {
       { session, key: STORAGE_KEY },
     );
   } else {
-    await page.addInitScript(({ key }: { key: string }) => {
-      localStorage.removeItem(key);
-    }, { key: STORAGE_KEY });
+    await page.addInitScript(
+      ({ key }: { key: string }) => {
+        localStorage.removeItem(key);
+      },
+      { key: STORAGE_KEY },
+    );
   }
 
   await page.route(`*/**/auth/v1/user`, async (route) => {

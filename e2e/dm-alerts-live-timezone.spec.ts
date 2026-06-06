@@ -66,9 +66,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -90,17 +88,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -113,9 +107,7 @@ function pad(n: number) {
 test.describe("Live timezone change → DmAlerts quiet hours (no refresh)", () => {
   test.describe.configure({ mode: "serial" });
 
-  test("changing timezone immediately moves 'now' out of the quiet window", async ({
-    page,
-  }) => {
+  test("changing timezone immediately moves 'now' out of the quiet window", async ({ page }) => {
     await mockAuth(page, VERIFIED);
 
     // Build a tight quiet window in UTC that brackets the current UTC hour,
@@ -160,27 +152,24 @@ test.describe("Live timezone change → DmAlerts quiet hours (no refresh)", () =
 
     // Same quiet window, new tz → "now" is outside → toast appears.
     await injectDm(page, "After tz change — should toast");
-    await expect(
-      page.getByText("After tz change — should toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("After tz change — should toast")).toBeVisible({ timeout: 5_000 });
   });
 
-  test("changing timezone immediately moves 'now' into the quiet window", async ({
-    page,
-  }) => {
+  test("changing timezone immediately moves 'now' into the quiet window", async ({ page }) => {
     await mockAuth(page, VERIFIED);
 
     // Quiet window centered on current Auckland hour. In UTC that won't
     // cover "now" (offsets are 12–13h apart), so we start outside quiet.
-    const aucklandHour = Number(
-      new Intl.DateTimeFormat("en-US", {
-        hour: "2-digit",
-        hour12: false,
-        timeZone: "Pacific/Auckland",
-      })
-        .formatToParts(new Date())
-        .find((p) => p.type === "hour")?.value ?? "0",
-    ) % 24;
+    const aucklandHour =
+      Number(
+        new Intl.DateTimeFormat("en-US", {
+          hour: "2-digit",
+          hour12: false,
+          timeZone: "Pacific/Auckland",
+        })
+          .formatToParts(new Date())
+          .find((p) => p.type === "hour")?.value ?? "0",
+      ) % 24;
     const quietStart = pad(aucklandHour - 1);
     const quietEnd = pad(aucklandHour + 1);
 
@@ -217,8 +206,6 @@ test.describe("Live timezone change → DmAlerts quiet hours (no refresh)", () =
     // Now Auckland local time sits inside the window → suppressed.
     await injectDm(page, "After tz → into quiet — suppressed");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("After tz → into quiet — suppressed"),
-    ).toHaveCount(0);
+    await expect(page.getByText("After tz → into quiet — suppressed")).toHaveCount(0);
   });
 });

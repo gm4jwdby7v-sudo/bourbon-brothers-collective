@@ -11,8 +11,18 @@ function seedState(): DmState {
       { user_id: "u-other", last_read_at: new Date(0).toISOString() },
     ],
     messages: [
-      { id: "seed-1", sender_id: "u-other", body: "Hey, are you going to the tasting?", created_at: new Date(Date.now() - 60000).toISOString() },
-      { id: "seed-2", sender_id: VERIFIED.id, body: "Yes — see you there!", created_at: new Date(Date.now() - 30000).toISOString() },
+      {
+        id: "seed-1",
+        sender_id: "u-other",
+        body: "Hey, are you going to the tasting?",
+        created_at: new Date(Date.now() - 60000).toISOString(),
+      },
+      {
+        id: "seed-2",
+        sender_id: VERIFIED.id,
+        body: "Yes — see you there!",
+        created_at: new Date(Date.now() - 30000).toISOString(),
+      },
     ],
   };
 }

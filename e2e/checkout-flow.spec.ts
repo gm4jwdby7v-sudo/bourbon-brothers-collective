@@ -36,17 +36,24 @@ async function mockAuth(page: Page, user: MockUser | null) {
       ({ session, key }: { session: unknown; key: string }) => {
         localStorage.setItem(key, JSON.stringify(session));
       },
-      { session, key: STORAGE_KEY }
+      { session, key: STORAGE_KEY },
     );
   } else {
-    await page.addInitScript(({ key }: { key: string }) => {
-      localStorage.removeItem(key);
-    }, { key: STORAGE_KEY });
+    await page.addInitScript(
+      ({ key }: { key: string }) => {
+        localStorage.removeItem(key);
+      },
+      { key: STORAGE_KEY },
+    );
   }
 
   await page.route(`*/**/auth/v1/user`, async (route) => {
     if (!user) {
-      await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ message: "Unauthorized" }) });
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthorized" }),
+      });
       return;
     }
     await route.fulfill({
@@ -69,7 +76,11 @@ async function mockAuth(page: Page, user: MockUser | null) {
 
   await page.route(`*/**/auth/v1/token**`, async (route) => {
     if (!user) {
-      await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ message: "Unauthorized" }) });
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthorized" }),
+      });
       return;
     }
     await route.fulfill({
@@ -110,7 +121,10 @@ test.describe("event checkout flow — verified user", () => {
 
     // Step 2: Attendee
     await expect(page.getByTestId("step-panel-attendee")).toBeVisible();
-    await expect(page.getByTestId("step-indicator-attendee")).toHaveAttribute("data-active", "true");
+    await expect(page.getByTestId("step-indicator-attendee")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
 
     // Cannot advance without name
     await expect(page.getByTestId("next-button")).toBeDisabled();
@@ -127,7 +141,9 @@ test.describe("event checkout flow — verified user", () => {
 
     // Step 4: Confirmation
     await expect(page.getByTestId("confirmation-heading")).toBeVisible();
-    await expect(page.getByText(/Your seat for event evt_999 is confirmed, Ada Lovelace/)).toBeVisible();
+    await expect(
+      page.getByText(/Your seat for event evt_999 is confirmed, Ada Lovelace/),
+    ).toBeVisible();
   });
 
   test("back button returns to previous step", async ({ page }) => {
@@ -155,7 +171,7 @@ test.describe("event checkout flow — unverified user is blocked", () => {
 
     await expect(page).toHaveURL(EVENT_PATH);
     await expect(
-      page.getByText(/Confirm your email to access messaging, forums, and event checkout/)
+      page.getByText(/Confirm your email to access messaging, forums, and event checkout/),
     ).toBeVisible();
 
     // No checkout step UI rendered
@@ -182,7 +198,7 @@ test.describe("verification gate unblocks checkout after email confirms", () => 
     });
     await page.goto(EVENT_PATH);
     await expect(
-      page.getByText(/Confirm your email to access messaging, forums, and event checkout/)
+      page.getByText(/Confirm your email to access messaging, forums, and event checkout/),
     ).toBeVisible();
     await expect(page.getByTestId("next-button")).toHaveCount(0);
 

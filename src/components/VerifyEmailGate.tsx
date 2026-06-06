@@ -47,7 +47,10 @@ export function VerifyEmailBanner() {
 export function VerifyEmailRequired({ email }: { email: string | null }) {
   return (
     <div className="rounded-xl border border-amber-500/30 bg-card p-6 shadow-soft">
-      <VerifyEmailNotice email={email} message="Confirm your email to access messaging, forums, and event checkout." />
+      <VerifyEmailNotice
+        email={email}
+        message="Confirm your email to access messaging, forums, and event checkout."
+      />
     </div>
   );
 }
@@ -91,7 +94,11 @@ function VerifyEmailNotice({
             {message ?? "Confirm your email to unlock the community"}
           </div>
           <div className="text-muted-foreground text-xs mt-0.5">
-            {email ? <>We sent a link to <span className="text-foreground">{email}</span>.</> : null}
+            {email ? (
+              <>
+                We sent a link to <span className="text-foreground">{email}</span>.
+              </>
+            ) : null}
           </div>
         </div>
       </div>

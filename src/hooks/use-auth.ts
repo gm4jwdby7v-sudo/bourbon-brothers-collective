@@ -21,7 +21,8 @@ export function useAuth() {
   }, []);
 
   const emailVerified = Boolean(
-    user && (user.email_confirmed_at || user.confirmed_at || user.app_metadata?.provider === "google")
+    user &&
+    (user.email_confirmed_at || user.confirmed_at || user.app_metadata?.provider === "google"),
   );
 
   return { session, user, loading, emailVerified, signOut: () => supabase.auth.signOut() };

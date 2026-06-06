@@ -66,7 +66,6 @@ function ThreadPage() {
   const [sending, setSending] = useState(false);
   const triggerPush = useServerFn(sendDmPush);
 
-
   const markRead = useCallback(async () => {
     if (!viewerId) return;
     await supabase
@@ -89,7 +88,12 @@ function ThreadPage() {
       .channel(`dm-thread-${threadId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "dm_messages", filter: `thread_id=eq.${threadId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "dm_messages",
+          filter: `thread_id=eq.${threadId}`,
+        },
         (payload) => {
           const next = payload.new as MessageRow;
           queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
@@ -101,7 +105,12 @@ function ThreadPage() {
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "dm_thread_participants", filter: `thread_id=eq.${threadId}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "dm_thread_participants",
+          filter: `thread_id=eq.${threadId}`,
+        },
         (payload) => {
           const next = payload.new as ParticipantRow;
           queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
@@ -139,9 +148,7 @@ function ThreadPage() {
       });
       setDraft("");
       // Fire-and-forget background push to other participants.
-      triggerPush({ data: { threadId, body } }).catch((e) =>
-        console.warn("dm push failed", e),
-      );
+      triggerPush({ data: { threadId, body } }).catch((e) => console.warn("dm push failed", e));
     } finally {
       setSending(false);
     }
@@ -204,7 +211,10 @@ function ThreadPage() {
           );
         })}
       </ul>
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3" data-testid="thread-reply">
+      <div
+        className="rounded-xl border border-border bg-card p-4 space-y-3"
+        data-testid="thread-reply"
+      >
         <Textarea
           data-testid="reply-body"
           placeholder="Write a reply…"

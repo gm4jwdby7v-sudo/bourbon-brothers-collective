@@ -64,9 +64,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -88,17 +86,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -145,9 +139,9 @@ test.describe("Offline during quiet-hours boundary with delayed prefs update", (
     // new prefs (10:00–11:30) would suppress, but we haven't received them.
     await page.clock.setFixedTime(new Date("2025-04-01T11:00:00Z"));
     await injectDm(page, "11:00 — offline, old end boundary toasts");
-    await expect(
-      page.getByText("11:00 — offline, old end boundary toasts"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("11:00 — offline, old end boundary toasts")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // 11:15 UTC still offline — old prefs say outside → toast.
     await page.clock.setFixedTime(new Date("2025-04-01T11:15:00Z"));
@@ -164,9 +158,7 @@ test.describe("Offline during quiet-hours boundary with delayed prefs update", (
     // Same 11:15 UTC, now under NEW prefs (10:00–11:30) → suppressed.
     await injectDm(page, "11:15 — post-reconnect suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:15 — post-reconnect suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:15 — post-reconnect suppress")).toHaveCount(0);
 
     // New end boundary is exact: 11:29 suppressed, 11:30 toasts.
     await page.clock.setFixedTime(new Date("2025-04-01T11:29:00Z"));
@@ -176,8 +168,6 @@ test.describe("Offline during quiet-hours boundary with delayed prefs update", (
 
     await page.clock.setFixedTime(new Date("2025-04-01T11:30:00Z"));
     await injectDm(page, "11:30 — new end boundary toast");
-    await expect(
-      page.getByText("11:30 — new end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("11:30 — new end boundary toast")).toBeVisible({ timeout: 5_000 });
   });
 });

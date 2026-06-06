@@ -1,10 +1,23 @@
 import { test, expect } from "@playwright/test";
-import { mockAuth, mockDmThreadApi, STATIC_THREAD_ID, UNVERIFIED, VERIFIED, type DmState } from "./dm-helpers";
+import {
+  mockAuth,
+  mockDmThreadApi,
+  STATIC_THREAD_ID,
+  UNVERIFIED,
+  VERIFIED,
+  type DmState,
+} from "./dm-helpers";
 
 const THREAD_PATH = `/messages/${STATIC_THREAD_ID}`;
 const NEW_PATH = "/messages/new";
 
-const threadTestIds = ["thread-root", "thread-messages", "thread-reply", "reply-body", "reply-send"];
+const threadTestIds = [
+  "thread-root",
+  "thread-messages",
+  "thread-reply",
+  "reply-body",
+  "reply-send",
+];
 const dmTestIds = ["dm-composer-root", "dm-composer", "dm-recipient", "dm-body", "dm-send"];
 
 function emptyState(): DmState {
@@ -51,9 +64,7 @@ test.describe("existing DM thread gating", () => {
     for (const id of threadTestIds.filter((t) => t !== "thread-messages")) {
       await expect(page.getByTestId(id)).toBeVisible();
     }
-    await expect(
-      page.getByText(/Confirm your email to access messaging/),
-    ).not.toBeVisible();
+    await expect(page.getByText(/Confirm your email to access messaging/)).not.toBeVisible();
   });
 });
 
@@ -87,9 +98,7 @@ test.describe("DM composer gating", () => {
     for (const id of dmTestIds) {
       await expect(page.getByTestId(id)).toBeVisible();
     }
-    await expect(
-      page.getByText(/Confirm your email to access messaging/),
-    ).not.toBeVisible();
+    await expect(page.getByText(/Confirm your email to access messaging/)).not.toBeVisible();
   });
 });
 

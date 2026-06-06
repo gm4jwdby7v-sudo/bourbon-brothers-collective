@@ -64,9 +64,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -88,17 +86,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -142,9 +136,7 @@ test.describe("Burst of offline prefs updates → latest wins after reconnect", 
     // While offline at 11:05 UTC: old window says outside → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:05:00Z"));
     await injectDm(page, "11:05 — offline old prefs toast");
-    await expect(
-      page.getByText("11:05 — offline old prefs toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("11:05 — offline old prefs toast")).toBeVisible({ timeout: 5_000 });
 
     // Reconnect; three queued prefs broadcasts arrive in quick succession.
     await setOffline(page, false);
@@ -157,32 +149,26 @@ test.describe("Burst of offline prefs updates → latest wins after reconnect", 
     // Latest window is 10:00–12:00. At 11:05 → suppressed.
     await injectDm(page, "11:05 — latest prefs suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:05 — latest prefs suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:05 — latest prefs suppress")).toHaveCount(0);
 
     // Older queued windows (ended 11:15, 11:30) must NOT govern: at 11:45
     // they'd toast, but the latest (12:00) keeps it suppressed.
     await page.clock.setFixedTime(new Date("2025-05-01T11:45:00Z"));
     await injectDm(page, "11:45 — latest prefs suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:45 — latest prefs suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:45 — latest prefs suppress")).toHaveCount(0);
 
     // Boundary of the LATEST window: 11:59 inside → suppressed, 12:00 outside → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:59:00Z"));
     await injectDm(page, "11:59 — latest window suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:59 — latest window suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:59 — latest window suppress")).toHaveCount(0);
 
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:00Z"));
     await injectDm(page, "12:00 — latest end boundary toast");
-    await expect(
-      page.getByText("12:00 — latest end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("12:00 — latest end boundary toast")).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test("out-of-order delivery: latest update applied even if a stale one arrives last", async ({
@@ -218,15 +204,13 @@ test.describe("Burst of offline prefs updates → latest wins after reconnect", 
     await page.clock.setFixedTime(new Date("2025-05-01T11:45:00Z"));
     await injectDm(page, "11:45 — resync to latest suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:45 — resync to latest suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:45 — resync to latest suppress")).toHaveCount(0);
 
     // 12:00 boundary exact toast.
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:00Z"));
     await injectDm(page, "12:00 — latest end boundary toast");
-    await expect(
-      page.getByText("12:00 — latest end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("12:00 — latest end boundary toast")).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });

@@ -15,11 +15,22 @@ export function Exchange() {
       <div className="grid lg:grid-cols-2 gap-16 items-center">
         <div className="relative order-2 lg:order-1">
           <div className="absolute -inset-6 bg-gradient-amber opacity-20 blur-3xl rounded-3xl" />
-          <img src={bottles} alt="Bourbon bottles flat lay" className="relative rounded-2xl border border-border shadow-soft w-full" loading="lazy" width={1200} height={800} />
+          <img
+            src={bottles}
+            alt="Bourbon bottles flat lay"
+            className="relative rounded-2xl border border-border shadow-soft w-full"
+            loading="lazy"
+            width={1200}
+            height={800}
+          />
         </div>
         <div className="order-1 lg:order-2">
-          <div className="text-xs uppercase tracking-[0.3em] text-primary mb-3">The Bourbon Exchange</div>
-          <h2 className="font-display text-4xl md:text-5xl mb-6">Sell your finds. <span className="italic text-gradient-copper">Legally.</span></h2>
+          <div className="text-xs uppercase tracking-[0.3em] text-primary mb-3">
+            The Bourbon Exchange
+          </div>
+          <h2 className="font-display text-4xl md:text-5xl mb-6">
+            Sell your finds. <span className="italic text-gradient-copper">Legally.</span>
+          </h2>
           <p className="text-muted-foreground text-lg leading-relaxed mb-8">
             Built with compliance at its core. The Exchange connects collectors with a verified
             network of licensed retailers who handle every transaction within the bounds of state

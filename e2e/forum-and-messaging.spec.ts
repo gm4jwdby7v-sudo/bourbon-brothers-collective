@@ -35,17 +35,24 @@ async function mockAuth(page: Page, user: MockUser | null) {
       ({ session, key }: { session: unknown; key: string }) => {
         localStorage.setItem(key, JSON.stringify(session));
       },
-      { session, key: STORAGE_KEY }
+      { session, key: STORAGE_KEY },
     );
   } else {
-    await page.addInitScript(({ key }: { key: string }) => {
-      localStorage.removeItem(key);
-    }, { key: STORAGE_KEY });
+    await page.addInitScript(
+      ({ key }: { key: string }) => {
+        localStorage.removeItem(key);
+      },
+      { key: STORAGE_KEY },
+    );
   }
 
   await page.route(`*/**/auth/v1/user`, async (route) => {
     if (!user) {
-      await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ message: "Unauthorized" }) });
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthorized" }),
+      });
       return;
     }
     await route.fulfill({
@@ -68,7 +75,11 @@ async function mockAuth(page: Page, user: MockUser | null) {
 
   await page.route(`*/**/auth/v1/token**`, async (route) => {
     if (!user) {
-      await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ message: "Unauthorized" }) });
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthorized" }),
+      });
       return;
     }
     await route.fulfill({
@@ -111,7 +122,7 @@ test.describe("messages screen gating", () => {
 
     await expect(page).toHaveURL(PATH);
     await expect(
-      page.getByText(/Confirm your email to access messaging, forums, and event checkout/)
+      page.getByText(/Confirm your email to access messaging, forums, and event checkout/),
     ).toBeVisible();
 
     await expect(page.getByTestId("messages-root")).toHaveCount(0);
@@ -136,9 +147,7 @@ test.describe("messages screen gating", () => {
     await expect(page.getByTestId("message-body")).toBeVisible();
     await expect(page.getByTestId("send-button")).toBeVisible();
 
-    await expect(
-      page.getByText(/Confirm your email to access messaging/)
-    ).not.toBeVisible();
+    await expect(page.getByText(/Confirm your email to access messaging/)).not.toBeVisible();
   });
 });
 
@@ -162,7 +171,7 @@ test.describe("forum composer screen gating", () => {
 
     await expect(page).toHaveURL(PATH);
     await expect(
-      page.getByText(/Confirm your email to access messaging, forums, and event checkout/)
+      page.getByText(/Confirm your email to access messaging, forums, and event checkout/),
     ).toBeVisible();
 
     await expect(page.getByTestId("forum-new-root")).toHaveCount(0);
@@ -189,9 +198,7 @@ test.describe("forum composer screen gating", () => {
     await expect(page.getByTestId("forum-body")).toBeVisible();
     await expect(page.getByTestId("publish-button")).toBeVisible();
 
-    await expect(
-      page.getByText(/Confirm your email to access messaging/)
-    ).not.toBeVisible();
+    await expect(page.getByText(/Confirm your email to access messaging/)).not.toBeVisible();
   });
 });
 
@@ -203,7 +210,7 @@ test.describe("unblocking after verification", () => {
     });
     await page.goto("/messages");
     await expect(
-      page.getByText(/Confirm your email to access messaging, forums, and event checkout/)
+      page.getByText(/Confirm your email to access messaging, forums, and event checkout/),
     ).toBeVisible();
     await expect(page.getByTestId("message-body")).toHaveCount(0);
 
@@ -228,7 +235,7 @@ test.describe("unblocking after verification", () => {
     });
     await page.goto("/forum/new");
     await expect(
-      page.getByText(/Confirm your email to access messaging, forums, and event checkout/)
+      page.getByText(/Confirm your email to access messaging, forums, and event checkout/),
     ).toBeVisible();
     await expect(page.getByTestId("forum-body")).toHaveCount(0);
 

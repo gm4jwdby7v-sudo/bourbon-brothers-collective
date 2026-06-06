@@ -64,9 +64,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -88,17 +86,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -143,16 +137,14 @@ test.describe("Duplicate prefs updates while offline → newest version after re
     // Cross old boundary while offline: 11:00 → old prefs say outside, toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:00:00Z"));
     await injectDm(page, "11:00 — offline old end boundary toasts");
-    await expect(
-      page.getByText("11:00 — offline old end boundary toasts"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("11:00 — offline old end boundary toasts")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // 11:15 still offline → old prefs still say outside, toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:15:00Z"));
     await injectDm(page, "11:15 — offline still toasts");
-    await expect(
-      page.getByText("11:15 — offline still toasts"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("11:15 — offline still toasts")).toBeVisible({ timeout: 5_000 });
 
     // Reconnect. The missed update is delivered multiple times (duplicates).
     await setOffline(page, false);
@@ -169,23 +161,19 @@ test.describe("Duplicate prefs updates while offline → newest version after re
     // Same 11:15 UTC, now under new prefs (10:00–12:00) → suppressed.
     await injectDm(page, "11:15 — post-reconnect latest suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:15 — post-reconnect latest suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:15 — post-reconnect latest suppress")).toHaveCount(0);
 
     // New boundary: 11:59 inside → suppressed, 12:00 outside → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:59:00Z"));
     await injectDm(page, "11:59 — latest window suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:59 — latest window suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:59 — latest window suppress")).toHaveCount(0);
 
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:00Z"));
     await injectDm(page, "12:00 — latest end boundary toast");
-    await expect(
-      page.getByText("12:00 — latest end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("12:00 — latest end boundary toast")).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test("duplicate old version then latest version while offline; newest wins after reconnect", async ({
@@ -219,9 +207,7 @@ test.describe("Duplicate prefs updates while offline → newest version after re
     // While offline at 11:05 → old prefs outside → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:05:00Z"));
     await injectDm(page, "11:05 — offline old prefs toast");
-    await expect(
-      page.getByText("11:05 — offline old prefs toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("11:05 — offline old prefs toast")).toBeVisible({ timeout: 5_000 });
 
     // Reconnect. Deliver duplicates of v1, then v2, then v3 — all after reconnect.
     await setOffline(page, false);
@@ -236,32 +222,24 @@ test.describe("Duplicate prefs updates while offline → newest version after re
     // 11:05 under latest v3 (10:00–12:00) → suppressed.
     await injectDm(page, "11:05 — latest v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:05 — latest v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:05 — latest v3 suppress")).toHaveCount(0);
 
     // 11:30 is outside v1 (11:15) and v2 (11:45), but inside v3 (12:00)
     // → must be suppressed by the latest version.
     await page.clock.setFixedTime(new Date("2025-05-01T11:30:00Z"));
     await injectDm(page, "11:30 — latest v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:30 — latest v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:30 — latest v3 suppress")).toHaveCount(0);
 
     // 11:44 is outside v1/v2 but inside v3 → suppressed.
     await page.clock.setFixedTime(new Date("2025-05-01T11:44:00Z"));
     await injectDm(page, "11:44 — latest v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:44 — latest v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:44 — latest v3 suppress")).toHaveCount(0);
 
     // New end boundary exact: 12:00 → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:00Z"));
     await injectDm(page, "12:00 — v3 end boundary toast");
-    await expect(
-      page.getByText("12:00 — v3 end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("12:00 — v3 end boundary toast")).toBeVisible({ timeout: 5_000 });
   });
 });

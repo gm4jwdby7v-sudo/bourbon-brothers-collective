@@ -162,9 +162,7 @@ describe("verified users", () => {
     it(`renders ${path}`, async () => {
       await renderAt(path);
       expect(screen.getByText(pageHeading)).toBeInTheDocument();
-      expect(
-        screen.queryByText(/Confirm your email to access messaging/i),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/Confirm your email to access messaging/i)).not.toBeInTheDocument();
     });
   }
 });

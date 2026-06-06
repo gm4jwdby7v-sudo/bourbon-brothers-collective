@@ -114,9 +114,7 @@ export async function sendFcmToTokens(opts: {
         if (
           res.status === 404 ||
           res.status === 400 ||
-          /UNREGISTERED|INVALID_ARGUMENT|registration-token-not-registered/i.test(
-            text,
-          )
+          /UNREGISTERED|INVALID_ARGUMENT|registration-token-not-registered/i.test(text)
         ) {
           failedTokens.push(token);
         }

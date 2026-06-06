@@ -65,9 +65,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -93,18 +91,14 @@ async function broadcastBurst(page: Page, rows: PrefsRow[]) {
   // in one tick after reconnect.
   await page.evaluate((rows) => {
     for (const row of rows) {
-      window.dispatchEvent(
-        new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-      );
+      window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
     }
   }, rows);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -131,9 +125,7 @@ test.describe("Burst of duplicate prefs updates under clock skew → final lates
 
     await injectDm(page, "real 09:00 (device 09:30) — baseline suppress");
     await page.waitForTimeout(400);
-    await expect(
-      page.getByText("real 09:00 (device 09:30) — baseline suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 09:00 (device 09:30) — baseline suppress")).toHaveCount(0);
 
     // Five monotonically-newer versions; the final v5 must govern.
     // Boundary fires when DEVICE wall hits quiet_end. With +30m skew,
@@ -187,17 +179,17 @@ test.describe("Burst of duplicate prefs updates under clock skew → final lates
     await page.clock.setFixedTime(skew("2025-05-01T09:45:00Z"));
     await injectDm(page, "real 09:45 (device 10:15) — v5 suppress past v1 end");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 09:45 (device 10:15) — v5 suppress past v1 end"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 09:45 (device 10:15) — v5 suppress past v1 end")).toHaveCount(
+      0,
+    );
 
     // Real 11:00 (device 11:30) — past v2 and v3 ends, inside v5 → suppress.
     await page.clock.setFixedTime(skew("2025-05-01T11:00:00Z"));
     await injectDm(page, "real 11:00 (device 11:30) — v5 suppress past v3 end");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 11:00 (device 11:30) — v5 suppress past v3 end"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 11:00 (device 11:30) — v5 suppress past v3 end")).toHaveCount(
+      0,
+    );
 
     // A second burst arrives later with v5 reissued last, sandwiched
     // by every stale version repeatedly. v5 must remain the latest.
@@ -225,24 +217,22 @@ test.describe("Burst of duplicate prefs updates under clock skew → final lates
     await page.clock.setFixedTime(skew("2025-05-01T11:30:00Z"));
     await injectDm(page, "real 11:30 (device 12:00) — v5 suppress past v4 end");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 11:30 (device 12:00) — v5 suppress past v4 end"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 11:30 (device 12:00) — v5 suppress past v4 end")).toHaveCount(
+      0,
+    );
 
     // Real 11:59:59 (device 12:29:59) — inside v5 → suppress.
     await page.clock.setFixedTime(skew("2025-05-01T11:59:59Z"));
     await injectDm(page, "real 11:59:59 (device 12:29:59) — v5 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 11:59:59 (device 12:29:59) — v5 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 11:59:59 (device 12:29:59) — v5 suppress")).toHaveCount(0);
 
     // Real 12:00:00 (device 12:30:00) — exact v5 end boundary → toast.
     await page.clock.setFixedTime(skew("2025-05-01T12:00:00Z"));
     await injectDm(page, "real 12:00 (device 12:30) — v5 end transition toast");
-    await expect(
-      page.getByText("real 12:00 (device 12:30) — v5 end transition toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 12:00 (device 12:30) — v5 end transition toast")).toBeVisible(
+      { timeout: 5_000 },
+    );
 
     // One more jumbled burst after the boundary; v5 still last → still outside.
     await broadcastBurst(page, [v1, v2, v3, v4, v5, v4, v3, v2, v1, v5]);
@@ -250,8 +240,8 @@ test.describe("Burst of duplicate prefs updates under clock skew → final lates
 
     await page.clock.setFixedTime(skew("2025-05-01T12:00:01Z"));
     await injectDm(page, "real 12:00:01 (device 12:30:01) — past v5 end toast");
-    await expect(
-      page.getByText("real 12:00:01 (device 12:30:01) — past v5 end toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 12:00:01 (device 12:30:01) — past v5 end toast")).toBeVisible(
+      { timeout: 5_000 },
+    );
   });
 });

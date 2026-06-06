@@ -12,11 +12,23 @@ function NewForumPost() {
   return (
     <main className="max-w-3xl mx-auto px-6 py-12 space-y-6" data-testid="forum-new-root">
       <h1 className="font-display text-3xl">Start a discussion</h1>
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3" data-testid="forum-composer">
+      <div
+        className="rounded-xl border border-border bg-card p-4 space-y-3"
+        data-testid="forum-composer"
+      >
         <Input data-testid="forum-title" placeholder="Title" />
-        <Textarea data-testid="forum-body" placeholder="Share your tasting notes, questions, or hunt tips…" rows={8} />
+        <Textarea
+          data-testid="forum-body"
+          placeholder="Share your tasting notes, questions, or hunt tips…"
+          rows={8}
+        />
         <div className="flex justify-end">
-          <Button data-testid="publish-button" className="bg-gradient-amber text-primary-foreground">Publish</Button>
+          <Button
+            data-testid="publish-button"
+            className="bg-gradient-amber text-primary-foreground"
+          >
+            Publish
+          </Button>
         </div>
       </div>
     </main>

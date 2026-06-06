@@ -59,9 +59,7 @@ async function mockApis(page: Page, prefs: PrefsRow) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -83,9 +81,7 @@ async function injectDm(page: Page, body: string) {
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -121,9 +117,7 @@ test.describe("DmAlerts quiet hours across a DST transition (no refresh)", () =>
     await expect(page.getByText("After DST — suppressed")).toHaveCount(0);
   });
 
-  test("fall-back correctly re-evaluates quiet window for the same mount", async ({
-    page,
-  }) => {
+  test("fall-back correctly re-evaluates quiet window for the same mount", async ({ page }) => {
     // US fall-back: 2025-11-02, 02:00 EDT → 01:00 EST.
     // Quiet window 01:30–02:30 America/New_York.
     //
@@ -131,19 +125,14 @@ test.describe("DmAlerts quiet hours across a DST transition (no refresh)", () =>
     await page.clock.install({ time: new Date("2025-11-02T05:45:00Z") });
 
     await mockAuth(page, VERIFIED);
-    await mockApis(
-      page,
-      row({ quiet_start: "01:30", quiet_end: "02:30" }),
-    );
+    await mockApis(page, row({ quiet_start: "01:30", quiet_end: "02:30" }));
 
     await page.goto("/");
     await waitForPrefsGet(page);
 
     await injectDm(page, "Before fall-back — suppressed");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("Before fall-back — suppressed"),
-    ).toHaveCount(0);
+    await expect(page.getByText("Before fall-back — suppressed")).toHaveCount(0);
 
     // 2025-11-02 06:45 UTC → 01:45 EST (UTC-5) after fall-back. The wall
     // clock has actually moved BACK, but the window still covers 01:45 local,
@@ -152,8 +141,6 @@ test.describe("DmAlerts quiet hours across a DST transition (no refresh)", () =>
     await page.clock.setFixedTime(new Date("2025-11-02T07:45:00Z"));
 
     await injectDm(page, "After fall-back — should toast");
-    await expect(
-      page.getByText("After fall-back — should toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("After fall-back — should toast")).toBeVisible({ timeout: 5_000 });
   });
 });

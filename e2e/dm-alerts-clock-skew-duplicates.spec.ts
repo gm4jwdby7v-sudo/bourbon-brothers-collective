@@ -65,9 +65,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -89,17 +87,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -133,9 +127,7 @@ test.describe("Device clock skew + duplicate prefs updates → latest quiet_end 
 
     await injectDm(page, "real 09:00 (device 09:45) — baseline suppress");
     await page.waitForTimeout(400);
-    await expect(
-      page.getByText("real 09:00 (device 09:45) — baseline suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 09:00 (device 09:45) — baseline suppress")).toHaveCount(0);
 
     // Three monotonically-newer versions, each with a different quiet_end.
     // The boundary fires when DEVICE time hits quiet_end. Because the device
@@ -166,16 +158,14 @@ test.describe("Device clock skew + duplicate prefs updates → latest quiet_end 
     await page.clock.setFixedTime(skew("2025-05-01T09:14:59Z"));
     await injectDm(page, "real 09:14:59 (device 09:59:59) — v1 suppress");
     await page.waitForTimeout(400);
-    await expect(
-      page.getByText("real 09:14:59 (device 09:59:59) — v1 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 09:14:59 (device 09:59:59) — v1 suppress")).toHaveCount(0);
 
     // Real 09:15:00 → device 10:00:00 → v1 end boundary exact → toast.
     await page.clock.setFixedTime(skew("2025-05-01T09:15:00Z"));
     await injectDm(page, "real 09:15 (device 10:00) — v1 end toast");
-    await expect(
-      page.getByText("real 09:15 (device 10:00) — v1 end toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 09:15 (device 10:00) — v1 end toast")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // ── Phase B: v2 dups interleaved with stale v1 dup. Boundary device 11:00 ↔ real 10:15.
     await broadcastPrefsUpdate(page, v2);
@@ -187,24 +177,20 @@ test.describe("Device clock skew + duplicate prefs updates → latest quiet_end 
     // Same real 09:15 (device 10:00) — now under v2 (ends 11:00) → suppress despite v1 dup.
     await injectDm(page, "real 09:15 (device 10:00) — v2 latest suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 09:15 (device 10:00) — v2 latest suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 09:15 (device 10:00) — v2 latest suppress")).toHaveCount(0);
 
     // Real 10:14:59 → device 10:59:59 → inside v2 → suppress.
     await page.clock.setFixedTime(skew("2025-05-01T10:14:59Z"));
     await injectDm(page, "real 10:14:59 (device 10:59:59) — v2 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 10:14:59 (device 10:59:59) — v2 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 10:14:59 (device 10:59:59) — v2 suppress")).toHaveCount(0);
 
     // Real 10:15:00 → device 11:00:00 → v2 end boundary exact → toast.
     await page.clock.setFixedTime(skew("2025-05-01T10:15:00Z"));
     await injectDm(page, "real 10:15 (device 11:00) — v2 end toast");
-    await expect(
-      page.getByText("real 10:15 (device 11:00) — v2 end toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 10:15 (device 11:00) — v2 end toast")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // ── Phase C: v3 dups jumbled with stale v1/v2. Boundary device 12:00 ↔ real 11:15.
     await broadcastPrefsUpdate(page, v3);
@@ -217,24 +203,20 @@ test.describe("Device clock skew + duplicate prefs updates → latest quiet_end 
     // Same real 10:15 (device 11:00) — under v3 (ends 12:00) → suppress.
     await injectDm(page, "real 10:15 (device 11:00) — v3 latest suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 10:15 (device 11:00) — v3 latest suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 10:15 (device 11:00) — v3 latest suppress")).toHaveCount(0);
 
     // Real 11:14:59 → device 11:59:59 → inside v3 → suppress.
     await page.clock.setFixedTime(skew("2025-05-01T11:14:59Z"));
     await injectDm(page, "real 11:14:59 (device 11:59:59) — v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 11:14:59 (device 11:59:59) — v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 11:14:59 (device 11:59:59) — v3 suppress")).toHaveCount(0);
 
     // Real 11:15:00 → device 12:00:00 → v3 end boundary exact → toast.
     await page.clock.setFixedTime(skew("2025-05-01T11:15:00Z"));
     await injectDm(page, "real 11:15 (device 12:00) — v3 end toast");
-    await expect(
-      page.getByText("real 11:15 (device 12:00) — v3 end toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 11:15 (device 12:00) — v3 end toast")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Final jumbled flurry — v3 still governs.
     await broadcastPrefsUpdate(page, v2);
@@ -247,8 +229,8 @@ test.describe("Device clock skew + duplicate prefs updates → latest quiet_end 
     // Real 11:15:01 → device 12:00:01 → past v3 end → toast.
     await page.clock.setFixedTime(skew("2025-05-01T11:15:01Z"));
     await injectDm(page, "real 11:15:01 (device 12:00:01) — past v3 toast");
-    await expect(
-      page.getByText("real 11:15:01 (device 12:00:01) — past v3 toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 11:15:01 (device 12:00:01) — past v3 toast")).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });

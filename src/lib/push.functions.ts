@@ -38,19 +38,14 @@ export const sendDmPush = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { sendFcmToTokens, getAccessToken } = await import("./push.server");
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Verify sender is a participant (RLS would also catch this, but be explicit).
     const senderId = context.userId;
 
     // Fetch recipients (other participants) and the sender's display name in parallel.
     const [{ data: participants }, { data: senderProfile }] = await Promise.all([
-      supabaseAdmin
-        .from("dm_thread_participants")
-        .select("user_id")
-        .eq("thread_id", data.threadId),
+      supabaseAdmin.from("dm_thread_participants").select("user_id").eq("thread_id", data.threadId),
       supabaseAdmin
         .from("profiles")
         .select("display_name, username")
@@ -58,25 +53,17 @@ export const sendDmPush = createServerFn({ method: "POST" })
         .maybeSingle(),
     ]);
 
-    const recipientIds = (participants ?? [])
-      .map((p) => p.user_id)
-      .filter((id) => id !== senderId);
+    const recipientIds = (participants ?? []).map((p) => p.user_id).filter((id) => id !== senderId);
     if (recipientIds.length === 0) return { sent: 0 };
 
     // Honor recipient notification preferences: skip those who disabled DM
     // push or are currently in their quiet-hours window.
-    const { DEFAULT_PREFS, isInQuietHours } = await import(
-      "./notification-prefs"
-    );
+    const { DEFAULT_PREFS, isInQuietHours } = await import("./notification-prefs");
     const { data: prefsRows } = await supabaseAdmin
       .from("notification_preferences")
-      .select(
-        "user_id, dm_push_enabled, quiet_hours_enabled, quiet_start, quiet_end, timezone",
-      )
+      .select("user_id, dm_push_enabled, quiet_hours_enabled, quiet_start, quiet_end, timezone")
       .in("user_id", recipientIds);
-    const prefsByUser = new Map(
-      (prefsRows ?? []).map((row) => [row.user_id, row]),
-    );
+    const prefsByUser = new Map((prefsRows ?? []).map((row) => [row.user_id, row]));
     const eligibleIds = recipientIds.filter((id) => {
       const prefs = { ...DEFAULT_PREFS, ...(prefsByUser.get(id) ?? {}) };
       if (!prefs.dm_push_enabled) return false;
@@ -92,11 +79,8 @@ export const sendDmPush = createServerFn({ method: "POST" })
     const tokens = (tokenRows ?? []).map((r) => r.token);
     if (tokens.length === 0) return { sent: 0 };
 
-
-    const senderName =
-      senderProfile?.display_name ?? senderProfile?.username ?? "Someone";
-    const preview =
-      data.body.length > 80 ? `${data.body.slice(0, 80)}…` : data.body;
+    const senderName = senderProfile?.display_name ?? senderProfile?.username ?? "Someone";
+    const preview = data.body.length > 80 ? `${data.body.slice(0, 80)}…` : data.body;
 
     const accessToken = await getAccessToken();
     const { successCount, failedTokens } = await sendFcmToTokens({
@@ -109,10 +93,7 @@ export const sendDmPush = createServerFn({ method: "POST" })
 
     // Best-effort cleanup of invalid tokens.
     if (failedTokens.length > 0) {
-      await supabaseAdmin
-        .from("dm_push_tokens")
-        .delete()
-        .in("token", failedTokens);
+      await supabaseAdmin.from("dm_push_tokens").delete().in("token", failedTokens);
     }
 
     return { sent: successCount };

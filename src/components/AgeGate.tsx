@@ -37,7 +37,8 @@ export function AgeGate() {
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-6 leading-relaxed">
-          Please drink responsibly. All transactions facilitated through licensed retailers in compliance with state and federal law.
+          Please drink responsibly. All transactions facilitated through licensed retailers in
+          compliance with state and federal law.
         </p>
       </div>
     </div>

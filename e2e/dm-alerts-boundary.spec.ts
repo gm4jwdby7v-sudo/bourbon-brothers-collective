@@ -51,9 +51,7 @@ async function mockApis(page: Page, prefs: PrefsRow) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -75,18 +73,14 @@ async function injectDm(page: Page, body: string) {
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
 }
 
 test.describe("DmAlerts switches suppression exactly at quiet-hour boundaries (no refresh)", () => {
-  test("toggles suppression ON at quiet_start and OFF at quiet_end", async ({
-    page,
-  }) => {
+  test("toggles suppression ON at quiet_start and OFF at quiet_end", async ({ page }) => {
     // Quiet window 10:00–11:00 UTC (does not cross midnight).
     await page.clock.install({ time: new Date("2025-01-15T09:59:00Z") });
 
@@ -122,19 +116,14 @@ test.describe("DmAlerts switches suppression exactly at quiet-hour boundaries (n
     });
   });
 
-  test("cross-midnight window toggles suppression ON at start and OFF at end", async ({
-    page,
-  }) => {
+  test("cross-midnight window toggles suppression ON at start and OFF at end", async ({ page }) => {
     // Quiet window 22:00–07:00 UTC (crosses midnight).
     // We start at 21:59, cross to 22:00 (ON), then 06:59 (still ON),
     // then 07:00 (OFF).
     await page.clock.install({ time: new Date("2025-01-15T21:59:00Z") });
 
     await mockAuth(page, VERIFIED);
-    await mockApis(
-      page,
-      row({ quiet_start: "22:00", quiet_end: "07:00" }),
-    );
+    await mockApis(page, row({ quiet_start: "22:00", quiet_end: "07:00" }));
 
     await page.goto("/");
     await waitForPrefsGet(page);

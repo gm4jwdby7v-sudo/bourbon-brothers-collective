@@ -13,9 +13,16 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "BourbonConnect — The nationwide bourbon community" },
-      { name: "description", content: "Connect with bourbon collectors, hunt rare releases, log pours, and trade with licensed retailers — all in one place." },
+      {
+        name: "description",
+        content:
+          "Connect with bourbon collectors, hunt rare releases, log pours, and trade with licensed retailers — all in one place.",
+      },
       { property: "og:title", content: "BourbonConnect — The nationwide bourbon community" },
-      { property: "og:description", content: "The premium community for bourbon enthusiasts, retailers, and distilleries." },
+      {
+        property: "og:description",
+        content: "The premium community for bourbon enthusiasts, retailers, and distilleries.",
+      },
     ],
   }),
   component: Index,

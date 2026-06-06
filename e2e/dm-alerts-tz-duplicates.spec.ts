@@ -65,9 +65,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -89,17 +87,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -121,9 +115,7 @@ test.describe("Duplicate prefs updates across timezone offsets → latest quiet_
 
     await injectDm(page, "09:30 — baseline UTC suppress");
     await page.waitForTimeout(400);
-    await expect(page.getByText("09:30 — baseline UTC suppress")).toHaveCount(
-      0,
-    );
+    await expect(page.getByText("09:30 — baseline UTC suppress")).toHaveCount(0);
 
     // Three monotonically-newer versions with different timezones, each
     // chosen so the local quiet_end maps to a distinct UTC boundary.
@@ -168,9 +160,9 @@ test.describe("Duplicate prefs updates across timezone offsets → latest quiet_
 
     await page.clock.setFixedTime(new Date("2025-05-01T10:00:00Z"));
     await injectDm(page, "UTC 10:00 — v1 end boundary toast");
-    await expect(
-      page.getByText("UTC 10:00 — v1 end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("UTC 10:00 — v1 end boundary toast")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // ── Phase B: v2 duplicates (latest = v2, EDT 06:00–07:00 = UTC 10:00–11:00),
     // interleaved with stale v1 dups.
@@ -183,9 +175,7 @@ test.describe("Duplicate prefs updates across timezone offsets → latest quiet_
     // UTC 10:00:00 — now inside v2 (EDT 06:00) → must suppress despite v1 dup.
     await injectDm(page, "UTC 10:00 — v2 latest suppress");
     await page.waitForTimeout(500);
-    await expect(page.getByText("UTC 10:00 — v2 latest suppress")).toHaveCount(
-      0,
-    );
+    await expect(page.getByText("UTC 10:00 — v2 latest suppress")).toHaveCount(0);
 
     // UTC 10:59:59 — inside v2 → suppress.
     await page.clock.setFixedTime(new Date("2025-05-01T10:59:59Z"));
@@ -196,9 +186,9 @@ test.describe("Duplicate prefs updates across timezone offsets → latest quiet_
     // UTC 11:00:00 — EDT 07:00 exact end boundary under v2 → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:00:00Z"));
     await injectDm(page, "UTC 11:00 — v2 EDT end boundary toast");
-    await expect(
-      page.getByText("UTC 11:00 — v2 EDT end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("UTC 11:00 — v2 EDT end boundary toast")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // ── Phase C: v3 duplicates (latest = v3, JST 19:00–21:00 = UTC 10:00–12:00),
     // jumbled with stale v1 and v2 dups.
@@ -212,9 +202,7 @@ test.describe("Duplicate prefs updates across timezone offsets → latest quiet_
     // UTC 11:00 — outside v1 and v2 boundaries, but inside v3 (JST 20:00) → suppress.
     await injectDm(page, "UTC 11:00 — v3 latest suppress");
     await page.waitForTimeout(500);
-    await expect(page.getByText("UTC 11:00 — v3 latest suppress")).toHaveCount(
-      0,
-    );
+    await expect(page.getByText("UTC 11:00 — v3 latest suppress")).toHaveCount(0);
 
     // UTC 11:59:59 — JST 20:59:59 inside v3 → suppress.
     await page.clock.setFixedTime(new Date("2025-05-01T11:59:59Z"));
@@ -225,9 +213,9 @@ test.describe("Duplicate prefs updates across timezone offsets → latest quiet_
     // UTC 12:00 — JST 21:00 exact end boundary under v3 → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:00Z"));
     await injectDm(page, "UTC 12:00 — v3 JST end boundary toast");
-    await expect(
-      page.getByText("UTC 12:00 — v3 JST end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("UTC 12:00 — v3 JST end boundary toast")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Final jumbled flurry — v3 must still govern.
     await broadcastPrefsUpdate(page, v2);
@@ -239,8 +227,8 @@ test.describe("Duplicate prefs updates across timezone offsets → latest quiet_
 
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:01Z"));
     await injectDm(page, "UTC 12:00:01 — past v3 end toast");
-    await expect(
-      page.getByText("UTC 12:00:01 — past v3 end toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("UTC 12:00:01 — past v3 end toast")).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });

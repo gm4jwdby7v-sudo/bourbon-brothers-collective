@@ -66,9 +66,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -95,17 +93,13 @@ async function injectDm(page: Page, body: string) {
  */
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -151,14 +145,10 @@ test.describe("Live notification settings → DmAlerts (no refresh)", () => {
     // Stay on settings page (no refresh, no navigation away).
     await injectDm(page, "Second message — should NOT toast");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("Second message — should NOT toast"),
-    ).toHaveCount(0);
+    await expect(page.getByText("Second message — should NOT toast")).toHaveCount(0);
   });
 
-  test("turning in-app alerts back on immediately re-enables toasts", async ({
-    page,
-  }) => {
+  test("turning in-app alerts back on immediately re-enables toasts", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     const state: PrefsState = { row: defaultRow({ dm_inapp_enabled: false }) };
     await mockApis(page, state);
@@ -179,14 +169,10 @@ test.describe("Live notification settings → DmAlerts (no refresh)", () => {
     await broadcastPrefsUpdate(page, state.lastWrite!);
 
     await injectDm(page, "After re-enable — should toast");
-    await expect(
-      page.getByText("After re-enable — should toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("After re-enable — should toast")).toBeVisible({ timeout: 5_000 });
   });
 
-  test("enabling quiet hours covering now immediately suppresses toasts", async ({
-    page,
-  }) => {
+  test("enabling quiet hours covering now immediately suppresses toasts", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     const state: PrefsState = { row: defaultRow({ dm_inapp_enabled: true }) };
     await mockApis(page, state);
@@ -219,8 +205,6 @@ test.describe("Live notification settings → DmAlerts (no refresh)", () => {
 
     await injectDm(page, "Mid-quiet hours — suppressed");
     await page.waitForTimeout(500);
-    await expect(page.getByText("Mid-quiet hours — suppressed")).toHaveCount(
-      0,
-    );
+    await expect(page.getByText("Mid-quiet hours — suppressed")).toHaveCount(0);
   });
 });
