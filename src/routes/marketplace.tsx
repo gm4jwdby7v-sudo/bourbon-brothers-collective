@@ -888,6 +888,14 @@ function FiltersSidebar(props: FiltersProps) {
               ? "Synced to your account — available on any device."
               : "Saved on this device. Sign in to sync presets across devices."}
           </p>
+          {presetSyncError && (
+            <p
+              className="text-[10px] text-destructive"
+              data-testid="retailer-preset-sync-error"
+            >
+              {presetSyncError}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Label
