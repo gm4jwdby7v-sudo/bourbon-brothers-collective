@@ -61,14 +61,18 @@ export const setReviewModeration = createServerFn({ method: "POST" })
     await requireModerator(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // On rejection, remove the file from storage too
+    // Fetch review for owner + email and to detect appeal context
+    const { data: row } = await supabaseAdmin
+      .from("bourbon_reviews")
+      .select("id, user_id, bottle_name, image_url, image_moderation_status")
+      .eq("id", data.reviewId)
+      .single();
+    if (!row) throw new Error("Review not found");
+    const wasAppeal = row.image_moderation_status === "pending"; // resubmit resets to pending
+    const ownerId = row.user_id;
+
     if (data.decision === "rejected") {
-      const { data: row } = await supabaseAdmin
-        .from("bourbon_reviews")
-        .select("image_url")
-        .eq("id", data.reviewId)
-        .single();
-      if (row?.image_url) {
+      if (row.image_url) {
         await supabaseAdmin.storage.from("review-images").remove([row.image_url]);
       }
       const { error } = await supabaseAdmin
@@ -82,19 +86,77 @@ export const setReviewModeration = createServerFn({ method: "POST" })
         })
         .eq("id", data.reviewId);
       if (error) throw new Error(error.message);
-      return { ok: true };
+    } else {
+      const { error } = await supabaseAdmin
+        .from("bourbon_reviews")
+        .update({
+          image_moderation_status: "approved",
+          image_moderation_reason: data.reason ?? null,
+          image_moderated_at: new Date().toISOString(),
+          image_moderated_by: context.userId,
+        })
+        .eq("id", data.reviewId);
+      if (error) throw new Error(error.message);
     }
 
-    const { error } = await supabaseAdmin
-      .from("bourbon_reviews")
-      .update({
-        image_moderation_status: "approved",
-        image_moderation_reason: data.reason ?? null,
-        image_moderated_at: new Date().toISOString(),
-        image_moderated_by: context.userId,
-      })
-      .eq("id", data.reviewId);
-    if (error) throw new Error(error.message);
+    // Notify the owner (in-app + best-effort email)
+    const approved = data.decision === "approved";
+    const title = approved
+      ? wasAppeal
+        ? "Your appealed photo was approved"
+        : "Your review photo was approved"
+      : wasAppeal
+        ? "Your appealed photo was rejected"
+        : "Your review photo was rejected";
+    const body = approved
+      ? `Your photo for "${row.bottle_name}" is now live on the public feed.`
+      : `Your photo for "${row.bottle_name}" was removed${data.reason ? `: ${data.reason}` : "."} You can upload a new one.`;
+    const link = approved ? "/reviews" : `/reviews/${row.id}/appeal`;
+
+    await supabaseAdmin.from("notifications").insert({
+      user_id: ownerId,
+      type: approved ? "review_image_approved" : "review_image_rejected",
+      title,
+      body,
+      link,
+    });
+
+    // Best-effort email via Lovable Emails if configured
+    try {
+      const { data: userResp } = await supabaseAdmin.auth.admin.getUserById(ownerId);
+      const email = userResp?.user?.email;
+      if (email) {
+        const { getRequestHost } = await import("@tanstack/react-start/server");
+        let origin = "";
+        try {
+          origin = `https://${getRequestHost()}`;
+        } catch {
+          origin = process.env.SITE_URL ?? "";
+        }
+        await fetch(`${origin}/lovable/email/transactional/send`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""}`,
+          },
+          body: JSON.stringify({
+            templateName: "review-moderation-decision",
+            recipientEmail: email,
+            idempotencyKey: `review-mod-${row.id}-${Date.now()}`,
+            templateData: {
+              bottleName: row.bottle_name,
+              approved,
+              wasAppeal,
+              reason: data.reason ?? null,
+              link: origin ? `${origin}${link}` : link,
+            },
+          }),
+        }).catch(() => {});
+      }
+    } catch {
+      /* email is best effort; in-app already fired */
+    }
+
     return { ok: true };
   });
 
