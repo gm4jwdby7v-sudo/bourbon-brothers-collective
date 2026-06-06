@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Store, X } from "lucide-react";
+import { Check, MapPin, ShieldAlert, ShieldCheck, Store, X } from "lucide-react";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
