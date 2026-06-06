@@ -586,6 +586,7 @@ function ListingCard({
       <LegalDetailsModal
         listing={listing}
         states={eligibilityStates}
+        selectedStates={selectedStates}
         filtered={selectedStates.length > 0}
       />
     </Dialog>
