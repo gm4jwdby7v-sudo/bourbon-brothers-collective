@@ -518,6 +518,7 @@ function FiltersSidebar(props: FiltersProps) {
   const [retailerSearch, setRetailerSearch] = useState("");
   const [retailerSort, setRetailerSort] = useState<"asc" | "desc">("asc");
   const [retailerStateScope, setRetailerStateScope] = useState<string>("all");
+  const [retailerEligibleOnly, setRetailerEligibleOnly] = useState(false);
 
   const visibleRetailers = useMemo(() => {
     const q = retailerSearch.trim().toLowerCase();
@@ -529,13 +530,25 @@ function FiltersSidebar(props: FiltersProps) {
         r.listing.shipsTo.includes(retailerStateScope),
       );
     }
+    if (retailerEligibleOnly && stateFilter.length > 0) {
+      filtered = filtered.filter((r) =>
+        stateFilter.some((s) => r.listing.shipsTo.includes(s)),
+      );
+    }
     filtered.sort((a, b) =>
       retailerSort === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name),
     );
     return filtered;
-  }, [retailerSearch, retailerOptions, retailerSort, retailerStateScope]);
+  }, [
+    retailerSearch,
+    retailerOptions,
+    retailerSort,
+    retailerStateScope,
+    retailerEligibleOnly,
+    stateFilter,
+  ]);
 
   // Per-state, per-retailer compliance for the currently-selected retailers.
   // Shape: { [stateCode]: Array<{ name, initials, status }> }
