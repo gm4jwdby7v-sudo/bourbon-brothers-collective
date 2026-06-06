@@ -756,7 +756,27 @@ function FiltersSidebar(props: FiltersProps) {
               </label>
             );
           })}
-
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setStateFilter(STATES.map((s) => s.code))}
+            data-testid="marketplace-select-all-states"
+          >
+            Select all
+          </Button>
+          <span className="text-[10px] text-muted-foreground">|</span>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setStateFilter([])}
+            data-testid="marketplace-clear-states"
+          >
+            Clear selection
+          </Button>
         </div>
       </FilterGroup>
 
@@ -780,27 +800,6 @@ function FiltersSidebar(props: FiltersProps) {
               </label>
             );
           })}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => setStateFilter(STATES.map((s) => s.code))}
-            data-testid="marketplace-select-all-states"
-          >
-            Select all
-          </Button>
-          <span className="text-[10px] text-muted-foreground">|</span>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => setStateFilter([])}
-            data-testid="marketplace-clear-states"
-          >
-            Clear selection
-          </Button>
         </div>
       </FilterGroup>
 
