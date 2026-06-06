@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +27,11 @@ import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from '
 const MarketplaceRoute = MarketplaceRouteImport.update({
   id: '/marketplace',
   path: '/marketplace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscoverRoute = DiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -98,6 +104,7 @@ const AuthenticatedVerifiedEventsEventIdCheckoutRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
   '/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
   '/_authenticated/_verified': typeof AuthenticatedVerifiedRouteRouteWithChildren
   '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/discover'
     | '/marketplace'
     | '/messages'
     | '/api/public/firebase-config'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/discover'
     | '/marketplace'
     | '/api/public/firebase-config'
     | '/forum/new'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/discover'
     | '/marketplace'
     | '/_authenticated/_verified'
     | '/_authenticated/_verified/messages'
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DiscoverRoute: typeof DiscoverRoute
   MarketplaceRoute: typeof MarketplaceRoute
   ApiPublicFirebaseConfigRoute: typeof ApiPublicFirebaseConfigRoute
 }
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/marketplace'
       fullPath: '/marketplace'
       preLoaderRoute: typeof MarketplaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discover': {
+      id: '/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof DiscoverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -342,6 +362,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  DiscoverRoute: DiscoverRoute,
   MarketplaceRoute: MarketplaceRoute,
   ApiPublicFirebaseConfigRoute: ApiPublicFirebaseConfigRoute,
 }
