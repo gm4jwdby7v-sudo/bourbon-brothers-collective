@@ -759,12 +759,23 @@ function LegalDetailsModal({
         {states.map((code) => {
           const isActive = code === validActive;
           const allowed = listing.shipsTo.includes(code);
+          const law = STATE_LAW[code];
+          const status = allowed
+            ? law?.monthlyBottleLimit != null
+              ? "Limited"
+              : "Eligible"
+            : "Not eligible";
+          const statusTone = allowed
+            ? law?.monthlyBottleLimit != null
+              ? "bg-amber-500/20 text-amber-300"
+              : "bg-emerald-500/20 text-emerald-300"
+            : "bg-destructive/20 text-destructive";
           return (
             <button
               key={code}
               onClick={() => setActiveState(code)}
               className={cn(
-                "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 isActive
                   ? "border-primary bg-primary text-primary-foreground"
                   : allowed
@@ -773,6 +784,14 @@ function LegalDetailsModal({
               )}
             >
               {code}
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
+                  isActive ? "bg-primary-foreground/20 text-primary-foreground" : statusTone,
+                )}
+              >
+                {status}
+              </span>
             </button>
           );
         })}
