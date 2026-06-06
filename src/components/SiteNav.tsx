@@ -13,9 +13,9 @@ import {
 
 const links = [
   { to: "/", label: "Community", params: undefined },
+  { to: "/reviews", label: "Reviews", params: undefined },
   { to: "/discover", label: "Discover", params: undefined },
   { to: "/marketplace", label: "Marketplace", params: undefined },
-  { to: "/forum/new", label: "New post", params: undefined },
   { to: "/messages", label: "Messages", params: undefined },
   { to: "/events/$eventId/checkout", label: "Events", params: { eventId: "featured" } },
 ] as const;
