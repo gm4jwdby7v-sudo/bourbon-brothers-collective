@@ -521,6 +521,8 @@ function FiltersSidebar(props: FiltersProps) {
   const [retailerEligibleOnly, setRetailerEligibleOnly] = useState(false);
 
   // ─── Presets ────────────────────────────────────────────────────────────
+  // Signed-in users sync presets to the backend; guests fall back to
+  // localStorage so the feature still works without an account.
   type RetailerPreset = {
     id: string;
     name: string;
@@ -531,21 +533,52 @@ function FiltersSidebar(props: FiltersProps) {
     retailerEligibleOnly: boolean;
   };
   const PRESETS_KEY = "marketplace.retailerPresets.v1";
+  const { user } = useAuth();
+  const isSignedIn = Boolean(user);
   const [presets, setPresets] = useState<RetailerPreset[]>([]);
   const [activePresetId, setActivePresetId] = useState<string>("");
   const [presetNameDraft, setPresetNameDraft] = useState("");
+  const [presetsSyncing, setPresetsSyncing] = useState(false);
+
+  const fromRow = (r: RetailerPresetRow): RetailerPreset => ({
+    id: r.id,
+    name: r.name,
+    stateFilter: r.state_filter,
+    retailerSearch: r.retailer_search,
+    retailerSort: r.retailer_sort,
+    retailerStateScope: r.retailer_state_scope,
+    retailerEligibleOnly: r.retailer_eligible_only,
+  });
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(PRESETS_KEY);
-      if (raw) setPresets(JSON.parse(raw));
-    } catch {
-      // ignore
+    let cancelled = false;
+    if (!isSignedIn) {
+      try {
+        const raw = localStorage.getItem(PRESETS_KEY);
+        setPresets(raw ? JSON.parse(raw) : []);
+      } catch {
+        setPresets([]);
+      }
+      return;
     }
-  }, []);
+    setPresetsSyncing(true);
+    listRetailerPresets()
+      .then(({ presets: rows }) => {
+        if (cancelled) return;
+        setPresets(rows.map(fromRow));
+      })
+      .catch(() => {
+        if (!cancelled) setPresets([]);
+      })
+      .finally(() => {
+        if (!cancelled) setPresetsSyncing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
 
-  const persistPresets = (next: RetailerPreset[]) => {
-    setPresets(next);
+  const persistLocal = (next: RetailerPreset[]) => {
     try {
       localStorage.setItem(PRESETS_KEY, JSON.stringify(next));
     } catch {
@@ -564,9 +597,32 @@ function FiltersSidebar(props: FiltersProps) {
     setActivePresetId(id);
   };
 
-  const saveCurrentAsPreset = () => {
+  const saveCurrentAsPreset = async () => {
     const name = presetNameDraft.trim();
     if (!name) return;
+    if (isSignedIn) {
+      setPresetsSyncing(true);
+      try {
+        const { preset } = await createRetailerPreset({
+          data: {
+            name,
+            state_filter: stateFilter,
+            retailer_search: retailerSearch,
+            retailer_sort: retailerSort,
+            retailer_state_scope: retailerStateScope,
+            retailer_eligible_only: retailerEligibleOnly,
+          },
+        });
+        setPresets((cur) => [...cur, fromRow(preset)]);
+        setActivePresetId(preset.id);
+        setPresetNameDraft("");
+      } catch (e) {
+        console.error("Failed to save preset", e);
+      } finally {
+        setPresetsSyncing(false);
+      }
+      return;
+    }
     const preset: RetailerPreset = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       name,
@@ -576,14 +632,32 @@ function FiltersSidebar(props: FiltersProps) {
       retailerStateScope,
       retailerEligibleOnly,
     };
-    persistPresets([...presets, preset]);
+    const next = [...presets, preset];
+    setPresets(next);
+    persistLocal(next);
     setActivePresetId(preset.id);
     setPresetNameDraft("");
   };
 
-  const deleteActivePreset = () => {
+  const deleteActivePreset = async () => {
     if (!activePresetId) return;
-    persistPresets(presets.filter((p) => p.id !== activePresetId));
+    const id = activePresetId;
+    if (isSignedIn) {
+      setPresetsSyncing(true);
+      try {
+        await deleteRetailerPreset({ data: { id } });
+        setPresets((cur) => cur.filter((p) => p.id !== id));
+        setActivePresetId("");
+      } catch (e) {
+        console.error("Failed to delete preset", e);
+      } finally {
+        setPresetsSyncing(false);
+      }
+      return;
+    }
+    const next = presets.filter((p) => p.id !== id);
+    setPresets(next);
+    persistLocal(next);
     setActivePresetId("");
   };
 
