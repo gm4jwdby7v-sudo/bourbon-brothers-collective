@@ -183,6 +183,45 @@ export type Database = {
         }
         Relationships: []
       }
+      retailer_presets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          retailer_eligible_only: boolean
+          retailer_search: string
+          retailer_sort: string
+          retailer_state_scope: string
+          state_filter: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          retailer_eligible_only?: boolean
+          retailer_search?: string
+          retailer_sort?: string
+          retailer_state_scope?: string
+          state_filter?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          retailer_eligible_only?: boolean
+          retailer_search?: string
+          retailer_sort?: string
+          retailer_state_scope?: string
+          state_filter?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
