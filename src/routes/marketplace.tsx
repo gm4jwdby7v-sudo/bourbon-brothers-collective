@@ -291,6 +291,9 @@ function MarketplacePage() {
   const [availabilityFilter, setAvailabilityFilter] = useState<Availability[]>(
     [],
   );
+  const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>(
+    [],
+  );
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -313,12 +316,29 @@ function MarketplacePage() {
         !availabilityFilter.includes(l.availability)
       )
         return false;
+      if (complianceFilter.length > 0) {
+        const statesToCheck =
+          stateFilter.length > 0 ? stateFilter : STATES.map((s) => s.code);
+        const matches = statesToCheck.some((code) =>
+          complianceFilter.includes(getComplianceStatus(l, code)),
+        );
+        if (!matches) return false;
+      }
       return true;
     });
-  }, [query, stateFilter, retailerFilter, availabilityFilter]);
+  }, [
+    query,
+    stateFilter,
+    retailerFilter,
+    availabilityFilter,
+    complianceFilter,
+  ]);
 
   const activeFilterCount =
-    stateFilter.length + retailerFilter.length + availabilityFilter.length;
+    stateFilter.length +
+    retailerFilter.length +
+    availabilityFilter.length +
+    complianceFilter.length;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
