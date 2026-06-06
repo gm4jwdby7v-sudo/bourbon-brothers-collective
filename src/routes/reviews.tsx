@@ -143,13 +143,18 @@ function ReviewsPage() {
               return (
                 <li key={r.id}>
                   <Card className="h-full overflow-hidden border-border/60 bg-card/80">
-                    {imgUrl && (
+                    {imgUrl && r.image_moderation_status === "approved" && (
                       <img
                         src={imgUrl}
                         alt={r.bottle_name}
                         loading="lazy"
                         className="h-56 w-full object-cover"
                       />
+                    )}
+                    {r.image_url && r.image_moderation_status !== "approved" && (
+                      <div className="flex h-32 w-full items-center justify-center bg-muted/30 text-xs text-muted-foreground">
+                        Photo pending moderation
+                      </div>
                     )}
                     <CardContent className="space-y-3 p-5">
                       <div className="flex items-center gap-3">
