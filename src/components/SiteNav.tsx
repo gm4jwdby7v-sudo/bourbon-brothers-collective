@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const links = [
-  { to: "/", label: "Community" },
-  { to: "/marketplace", label: "Marketplace" },
-  { to: "/forum/new", label: "New post" },
-  { to: "/messages", label: "Messages" },
-  { to: "/events/featured/checkout", label: "Events" },
+  { to: "/", label: "Community", params: undefined },
+  { to: "/marketplace", label: "Marketplace", params: undefined },
+  { to: "/forum/new", label: "New post", params: undefined },
+  { to: "/messages", label: "Messages", params: undefined },
+  { to: "/events/$eventId/checkout", label: "Events", params: { eventId: "featured" } },
 ] as const;
 
 export function SiteNav() {
