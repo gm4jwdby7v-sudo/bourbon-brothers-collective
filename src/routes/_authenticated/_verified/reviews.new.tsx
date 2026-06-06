@@ -103,19 +103,33 @@ function NewReviewPage() {
       const imagePath = file ? await uploadImage() : null;
       if (file && !imagePath) return; // upload failed, toast already shown
 
-      const { error } = await supabase.from("bourbon_reviews").insert({
-        user_id: user.id,
-        bottle_name: bottleName.trim(),
-        distillery_id: distilleryId || null,
-        rating,
-        body: body.trim(),
-        image_url: imagePath,
-      });
-      if (error) {
+      const { data: inserted, error } = await supabase
+        .from("bourbon_reviews")
+        .insert({
+          user_id: user.id,
+          bottle_name: bottleName.trim(),
+          distillery_id: distilleryId || null,
+          rating,
+          body: body.trim(),
+          image_url: imagePath,
+        })
+        .select("id")
+        .single();
+      if (error || !inserted) {
         toast.error("Couldn't post your review. Please try again.");
         return;
       }
-      toast.success("Review posted.");
+
+      if (imagePath) {
+        // Run AI moderation in the background; don't block the user.
+        const { moderateReviewImage } = await import("@/lib/moderation.functions");
+        void moderateReviewImage({ data: { reviewId: inserted.id } }).catch(() => {
+          /* best-effort: moderator queue will catch it */
+        });
+        toast.success("Review posted. Your photo is in moderation and will appear shortly.");
+      } else {
+        toast.success("Review posted.");
+      }
       void navigate({ to: "/reviews" });
     } finally {
       setSubmitting(false);
