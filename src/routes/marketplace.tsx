@@ -476,10 +476,11 @@ interface FiltersProps {
   setAvailabilityFilter: (v: Availability[]) => void;
   complianceFilter: ComplianceStatus[];
   setComplianceFilter: (v: ComplianceStatus[]) => void;
-  retailerNameFilter: string;
-  setRetailerNameFilter: (v: string) => void;
+  retailerNamesFilter: string[];
+  setRetailerNamesFilter: (v: string[]) => void;
   retailerOptions: { name: string; listing: Listing }[];
-  activeRetailerListing: Listing | null;
+  activeRetailerListings: Listing[];
+
   activeFilterCount: number;
   onClear: () => void;
 }
