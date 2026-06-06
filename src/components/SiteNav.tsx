@@ -32,7 +32,7 @@ export function SiteNav() {
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           {links.map((l) => (
-            <Link key={l.label} to={l.to} className="hover:text-foreground transition-colors">
+            <Link key={l.label} to={l.to} params={l.params as never} className="hover:text-foreground transition-colors">
               {l.label}
             </Link>
           ))}
