@@ -501,10 +501,10 @@ function FiltersSidebar(props: FiltersProps) {
     setAvailabilityFilter,
     complianceFilter,
     setComplianceFilter,
-    retailerNameFilter,
-    setRetailerNameFilter,
+    retailerNamesFilter,
+    setRetailerNamesFilter,
     retailerOptions,
-    activeRetailerListing,
+    activeRetailerListings,
     activeFilterCount,
     onClear,
   } = props;
@@ -512,30 +512,39 @@ function FiltersSidebar(props: FiltersProps) {
   const toggle = <T extends string>(arr: T[], v: T) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
-  // Per-state compliance for the currently-selected retailer (if any).
-  const stateStatusForRetailer = useMemo(() => {
-    if (!activeRetailerListing) return null;
-    const map: Record<string, ComplianceStatus> = {};
+  // Per-state, per-retailer compliance for the currently-selected retailers.
+  // Shape: { [stateCode]: Array<{ name, initials, status }> }
+  const stateStatusByRetailer = useMemo(() => {
+    if (activeRetailerListings.length === 0) return null;
+    const map: Record<
+      string,
+      { name: string; initials: string; status: ComplianceStatus }[]
+    > = {};
     for (const s of STATES) {
-      map[s.code] = getComplianceStatus(activeRetailerListing, s.code);
+      map[s.code] = activeRetailerListings.map((listing) => ({
+        name: listing.retailer,
+        initials: initialsFor(listing.retailer),
+        status: getComplianceStatus(listing, s.code),
+      }));
     }
     return map;
-  }, [activeRetailerListing]);
+  }, [activeRetailerListings]);
 
-  // Compliance counts (number of states matching each status) for the selected
-  // retailer. When no retailer is chosen, shows nothing.
+  // Compliance counts summed across (state × selected retailer) pairs so
+  // multi-retailer comparison shows total coverage per status bucket.
   const complianceCounts = useMemo(() => {
-    if (!stateStatusForRetailer) return null;
+    if (!stateStatusByRetailer) return null;
     const counts: Record<ComplianceStatus, number> = {
       eligible: 0,
       limited: 0,
       not_eligible: 0,
     };
-    for (const code of Object.keys(stateStatusForRetailer)) {
-      counts[stateStatusForRetailer[code]]++;
+    for (const code of Object.keys(stateStatusByRetailer)) {
+      for (const entry of stateStatusByRetailer[code]) counts[entry.status]++;
     }
     return counts;
-  }, [stateStatusForRetailer]);
+  }, [stateStatusByRetailer]);
+
 
   return (
     <aside
