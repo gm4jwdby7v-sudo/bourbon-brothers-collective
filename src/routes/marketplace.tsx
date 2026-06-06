@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { SiteNav } from "@/components/SiteNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -692,6 +693,16 @@ function LegalDetailsModal({
   states: string[];
   filtered: boolean;
 }) {
+  const [activeState, setActiveState] = useState(states[0] ?? "");
+
+  // If the states list changes (e.g. filter applied), ensure activeState is valid
+  const validActive = states.includes(activeState) ? activeState : states[0] ?? "";
+
+  const activeLaw = STATE_LAW[validActive];
+  const activeAllowed = listing.shipsTo.includes(validActive);
+  const activeStateName =
+    STATES.find((s) => s.code === validActive)?.name ?? validActive;
+
   return (
     <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col">
       <DialogHeader>
@@ -709,79 +720,140 @@ function LegalDetailsModal({
         </DialogDescription>
       </DialogHeader>
 
+      {/* State selector */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {states.map((code) => {
+          const isActive = code === validActive;
+          const allowed = listing.shipsTo.includes(code);
+          return (
+            <button
+              key={code}
+              onClick={() => setActiveState(code)}
+              className={cn(
+                "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                isActive
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : allowed
+                    ? "border-border bg-muted text-muted-foreground hover:text-foreground"
+                    : "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20"
+              )}
+            >
+              {code}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected state detail */}
+      <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+        <div className="flex items-center gap-2">
+          {activeAllowed ? (
+            <Check className="h-5 w-5 shrink-0 text-primary" />
+          ) : (
+            <X className="h-5 w-5 shrink-0 text-destructive" />
+          )}
+          <h4 className="text-base font-semibold">
+            {activeStateName} ({validActive})
+          </h4>
+          {!activeAllowed && (
+            <Badge
+              variant="outline"
+              className="border-destructive/40 bg-destructive/10 text-destructive"
+            >
+              Not licensed
+            </Badge>
+          )}
+        </div>
+
+        {activeAllowed && activeLaw && (
+          <div className="mt-3 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {activeLaw.monthlyBottleLimit != null ? (
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/30 bg-amber-500/10 text-amber-300"
+                >
+                  Limit {activeLaw.monthlyBottleLimit} btl
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="border-primary/30 bg-primary/10 text-primary"
+                >
+                  No bottle limit
+                </Badge>
+              )}
+              {activeLaw.adultSignatureRequired && (
+                <Badge
+                  variant="outline"
+                  className="border-border bg-muted text-muted-foreground"
+                >
+                  Adult signature required
+                </Badge>
+              )}
+              {activeLaw.idRequired && (
+                <Badge
+                  variant="outline"
+                  className="border-border bg-muted text-muted-foreground"
+                >
+                  Government-issued ID required
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {activeLaw.note}
+            </p>
+          </div>
+        )}
+
+        {!activeAllowed && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            {listing.retailer} is not licensed to ship to {validActive}.
+          </p>
+        )}
+      </div>
+
+      {/* Full reference list */}
       <ScrollArea className="-mr-4 flex-1 pr-4">
-        <div className="space-y-5">
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          All states
+        </p>
+        <div className="space-y-3">
           {states.map((code, idx) => {
             const allowed = listing.shipsTo.includes(code);
             const law = STATE_LAW[code];
             const stateName =
               STATES.find((s) => s.code === code)?.name ?? code;
             return (
-              <div key={code} className="space-y-2">
+              <div key={code} className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   {allowed ? (
-                    <Check className="h-4 w-4 shrink-0 text-primary" />
+                    <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                   ) : (
-                    <X className="h-4 w-4 shrink-0 text-destructive" />
+                    <X className="h-3.5 w-3.5 shrink-0 text-destructive" />
                   )}
-                  <span className="font-medium">
+                  <span className="text-sm font-medium">
                     {stateName} ({code})
                   </span>
                   {!allowed && (
                     <Badge
                       variant="outline"
-                      className="border-destructive/40 bg-destructive/10 text-xs text-destructive"
+                      className="h-4 border-destructive/40 bg-destructive/10 text-[10px] text-destructive"
                     >
                       Not licensed
                     </Badge>
                   )}
                 </div>
-
                 {allowed && law && (
-                  <div className="ml-6 space-y-2 rounded-md border border-border/60 bg-background/40 p-3">
-                    <div className="flex flex-wrap gap-2">
-                      {law.monthlyBottleLimit != null ? (
-                        <Badge
-                          variant="outline"
-                          className="border-amber-500/30 bg-amber-500/10 text-amber-300"
-                        >
-                          Limit {law.monthlyBottleLimit} btl
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="border-primary/30 bg-primary/10 text-primary"
-                        >
-                          No bottle limit
-                        </Badge>
-                      )}
-                      {law.adultSignatureRequired && (
-                        <Badge
-                          variant="outline"
-                          className="border-border bg-muted text-muted-foreground"
-                        >
-                          Adult signature
-                        </Badge>
-                      )}
-                      {law.idRequired && (
-                        <Badge
-                          variant="outline"
-                          className="border-border bg-muted text-muted-foreground"
-                        >
-                          ID required
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{law.note}</p>
-                  </div>
+                  <p className="ml-5 text-xs text-muted-foreground">
+                    {law.note}
+                  </p>
                 )}
-
                 {!allowed && (
-                  <p className="ml-6 text-sm text-muted-foreground">
+                  <p className="ml-5 text-xs text-muted-foreground">
                     {listing.retailer} is not licensed to ship to {code}.
                   </p>
                 )}
-
                 {idx < states.length - 1 && <Separator />}
               </div>
             );
@@ -789,7 +861,7 @@ function LegalDetailsModal({
         </div>
       </ScrollArea>
 
-      <div className="mt-4 flex items-start gap-2 rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+      <div className="mt-2 flex items-start gap-2 rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
           These details are summaries for convenience and are NOT legal advice.
