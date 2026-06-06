@@ -520,6 +520,73 @@ function FiltersSidebar(props: FiltersProps) {
   const [retailerStateScope, setRetailerStateScope] = useState<string>("all");
   const [retailerEligibleOnly, setRetailerEligibleOnly] = useState(false);
 
+  // ─── Presets ────────────────────────────────────────────────────────────
+  type RetailerPreset = {
+    id: string;
+    name: string;
+    stateFilter: string[];
+    retailerSearch: string;
+    retailerSort: "asc" | "desc";
+    retailerStateScope: string;
+    retailerEligibleOnly: boolean;
+  };
+  const PRESETS_KEY = "marketplace.retailerPresets.v1";
+  const [presets, setPresets] = useState<RetailerPreset[]>([]);
+  const [activePresetId, setActivePresetId] = useState<string>("");
+  const [presetNameDraft, setPresetNameDraft] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PRESETS_KEY);
+      if (raw) setPresets(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const persistPresets = (next: RetailerPreset[]) => {
+    setPresets(next);
+    try {
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const applyPreset = (id: string) => {
+    const p = presets.find((x) => x.id === id);
+    if (!p) return;
+    setStateFilter(p.stateFilter);
+    setRetailerSearch(p.retailerSearch);
+    setRetailerSort(p.retailerSort);
+    setRetailerStateScope(p.retailerStateScope);
+    setRetailerEligibleOnly(p.retailerEligibleOnly);
+    setActivePresetId(id);
+  };
+
+  const saveCurrentAsPreset = () => {
+    const name = presetNameDraft.trim();
+    if (!name) return;
+    const preset: RetailerPreset = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name,
+      stateFilter,
+      retailerSearch,
+      retailerSort,
+      retailerStateScope,
+      retailerEligibleOnly,
+    };
+    persistPresets([...presets, preset]);
+    setActivePresetId(preset.id);
+    setPresetNameDraft("");
+  };
+
+  const deleteActivePreset = () => {
+    if (!activePresetId) return;
+    persistPresets(presets.filter((p) => p.id !== activePresetId));
+    setActivePresetId("");
+  };
+
   const visibleRetailers = useMemo(() => {
     const q = retailerSearch.trim().toLowerCase();
     let filtered = q
