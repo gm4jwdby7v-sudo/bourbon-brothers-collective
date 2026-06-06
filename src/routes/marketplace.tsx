@@ -19,13 +19,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+
 import {
   Check,
   FileText,
@@ -199,6 +194,14 @@ function getComplianceStatus(
   return "eligible";
 }
 
+function initialsFor(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? "";
+  const second = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
+  return (first + second).toUpperCase();
+}
+
+
 const LISTINGS: Listing[] = [
   {
     id: "l-1",
@@ -301,7 +304,7 @@ function MarketplacePage() {
   const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>(
     [],
   );
-  const [retailerNameFilter, setRetailerNameFilter] = useState<string>("all");
+  const [retailerNamesFilter, setRetailerNamesFilter] = useState<string[]>([]);
   const [query, setQuery] = useState("");
 
   // Unique retailer names (preserve first-seen order) + a representative listing
@@ -315,21 +318,26 @@ function MarketplacePage() {
     }));
   }, []);
 
-  const activeRetailerListing = useMemo(
+  const activeRetailerListings = useMemo(
     () =>
-      retailerNameFilter === "all"
-        ? null
-        : (retailerOptions.find((r) => r.name === retailerNameFilter)?.listing ??
-          null),
-    [retailerNameFilter, retailerOptions],
+      retailerNamesFilter.length === 0
+        ? []
+        : retailerOptions
+            .filter((r) => retailerNamesFilter.includes(r.name))
+            .map((r) => r.listing),
+    [retailerNamesFilter, retailerOptions],
   );
+
 
 
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return LISTINGS.filter((l) => {
-      if (retailerNameFilter !== "all" && l.retailer !== retailerNameFilter)
+      if (
+        retailerNamesFilter.length > 0 &&
+        !retailerNamesFilter.includes(l.retailer)
+      )
         return false;
       if (q && !`${l.name} ${l.retailer}`.toLowerCase().includes(q))
         return false;
@@ -364,7 +372,7 @@ function MarketplacePage() {
     retailerFilter,
     availabilityFilter,
     complianceFilter,
-    retailerNameFilter,
+    retailerNamesFilter,
   ]);
 
   const activeFilterCount =
@@ -372,7 +380,8 @@ function MarketplacePage() {
     retailerFilter.length +
     availabilityFilter.length +
     complianceFilter.length +
-    (retailerNameFilter !== "all" ? 1 : 0);
+    retailerNamesFilter.length;
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -399,17 +408,18 @@ function MarketplacePage() {
             setAvailabilityFilter={setAvailabilityFilter}
             complianceFilter={complianceFilter}
             setComplianceFilter={setComplianceFilter}
-            retailerNameFilter={retailerNameFilter}
-            setRetailerNameFilter={setRetailerNameFilter}
+            retailerNamesFilter={retailerNamesFilter}
+            setRetailerNamesFilter={setRetailerNamesFilter}
             retailerOptions={retailerOptions}
-            activeRetailerListing={activeRetailerListing}
+            activeRetailerListings={activeRetailerListings}
             activeFilterCount={activeFilterCount}
             onClear={() => {
               setStateFilter([]);
               setRetailerFilter([]);
               setAvailabilityFilter([]);
               setComplianceFilter([]);
-              setRetailerNameFilter("all");
+              setRetailerNamesFilter([]);
+
             }}
           />
 
@@ -469,10 +479,11 @@ interface FiltersProps {
   setAvailabilityFilter: (v: Availability[]) => void;
   complianceFilter: ComplianceStatus[];
   setComplianceFilter: (v: ComplianceStatus[]) => void;
-  retailerNameFilter: string;
-  setRetailerNameFilter: (v: string) => void;
+  retailerNamesFilter: string[];
+  setRetailerNamesFilter: (v: string[]) => void;
   retailerOptions: { name: string; listing: Listing }[];
-  activeRetailerListing: Listing | null;
+  activeRetailerListings: Listing[];
+
   activeFilterCount: number;
   onClear: () => void;
 }
@@ -493,10 +504,10 @@ function FiltersSidebar(props: FiltersProps) {
     setAvailabilityFilter,
     complianceFilter,
     setComplianceFilter,
-    retailerNameFilter,
-    setRetailerNameFilter,
+    retailerNamesFilter,
+    setRetailerNamesFilter,
     retailerOptions,
-    activeRetailerListing,
+    activeRetailerListings,
     activeFilterCount,
     onClear,
   } = props;
@@ -504,30 +515,39 @@ function FiltersSidebar(props: FiltersProps) {
   const toggle = <T extends string>(arr: T[], v: T) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
-  // Per-state compliance for the currently-selected retailer (if any).
-  const stateStatusForRetailer = useMemo(() => {
-    if (!activeRetailerListing) return null;
-    const map: Record<string, ComplianceStatus> = {};
+  // Per-state, per-retailer compliance for the currently-selected retailers.
+  // Shape: { [stateCode]: Array<{ name, initials, status }> }
+  const stateStatusByRetailer = useMemo(() => {
+    if (activeRetailerListings.length === 0) return null;
+    const map: Record<
+      string,
+      { name: string; initials: string; status: ComplianceStatus }[]
+    > = {};
     for (const s of STATES) {
-      map[s.code] = getComplianceStatus(activeRetailerListing, s.code);
+      map[s.code] = activeRetailerListings.map((listing) => ({
+        name: listing.retailer,
+        initials: initialsFor(listing.retailer),
+        status: getComplianceStatus(listing, s.code),
+      }));
     }
     return map;
-  }, [activeRetailerListing]);
+  }, [activeRetailerListings]);
 
-  // Compliance counts (number of states matching each status) for the selected
-  // retailer. When no retailer is chosen, shows nothing.
+  // Compliance counts summed across (state × selected retailer) pairs so
+  // multi-retailer comparison shows total coverage per status bucket.
   const complianceCounts = useMemo(() => {
-    if (!stateStatusForRetailer) return null;
+    if (!stateStatusByRetailer) return null;
     const counts: Record<ComplianceStatus, number> = {
       eligible: 0,
       limited: 0,
       not_eligible: 0,
     };
-    for (const code of Object.keys(stateStatusForRetailer)) {
-      counts[stateStatusForRetailer[code]]++;
+    for (const code of Object.keys(stateStatusByRetailer)) {
+      for (const entry of stateStatusByRetailer[code]) counts[entry.status]++;
     }
     return counts;
-  }, [stateStatusForRetailer]);
+  }, [stateStatusByRetailer]);
+
 
   return (
     <aside
@@ -549,31 +569,42 @@ function FiltersSidebar(props: FiltersProps) {
         )}
       </div>
 
-      <FilterGroup label="Retailer">
-        <Select
-          value={retailerNameFilter}
-          onValueChange={setRetailerNameFilter}
-        >
-          <SelectTrigger
-            className="h-9 text-sm"
-            data-testid="filter-retailer-name"
-          >
-            <SelectValue placeholder="All retailers" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All retailers</SelectItem>
-            {retailerOptions.map((r) => (
-              <SelectItem key={r.name} value={r.name}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {activeRetailerListing && (
+      <FilterGroup label="Retailers (compare)">
+        <div className="space-y-2">
+          {retailerOptions.map((r) => {
+            const checked = retailerNamesFilter.includes(r.name);
+            return (
+              <label
+                key={r.name}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={() =>
+                    setRetailerNamesFilter(toggle(retailerNamesFilter, r.name))
+                  }
+                  data-testid={`filter-retailer-name-${r.name}`}
+                />
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="inline-flex h-4 w-5 items-center justify-center rounded-sm bg-muted text-[9px] font-bold text-foreground/80"
+                    aria-hidden
+                  >
+                    {initialsFor(r.name)}
+                  </span>
+                  {r.name}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        {activeRetailerListings.length > 0 && (
           <p className="text-[11px] text-muted-foreground">
-            Showing compliance for{" "}
-            <span className="text-foreground">{activeRetailerListing.retailer}</span>
-            .
+            Comparing{" "}
+            <span className="text-foreground">
+              {activeRetailerListings.length}
+            </span>{" "}
+            retailer{activeRetailerListings.length === 1 ? "" : "s"}.
           </p>
         )}
       </FilterGroup>
@@ -582,7 +613,7 @@ function FiltersSidebar(props: FiltersProps) {
         <div className="grid grid-cols-2 gap-2">
           {STATES.map((s) => {
             const checked = stateFilter.includes(s.code);
-            const status = stateStatusForRetailer?.[s.code];
+            const entries = stateStatusByRetailer?.[s.code];
             return (
               <label
                 key={s.code}
@@ -597,25 +628,27 @@ function FiltersSidebar(props: FiltersProps) {
                 />
                 <span className="flex items-center gap-1.5">
                   {s.code}
-                  {status && (
-                    <span
-                      className={cn(
-                        "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
-                        COMPLIANCE_TONE[status],
-                      )}
-                      title={COMPLIANCE_STATUS_LABEL[status]}
-                    >
-                      {status === "eligible"
-                        ? "OK"
-                        : status === "limited"
-                          ? "LMT"
-                          : "NO"}
+                  {entries && entries.length > 0 && (
+                    <span className="flex items-center gap-0.5">
+                      {entries.map((e) => (
+                        <span
+                          key={e.name}
+                          className={cn(
+                            "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
+                            COMPLIANCE_TONE[e.status],
+                          )}
+                          title={`${e.name}: ${COMPLIANCE_STATUS_LABEL[e.status]}`}
+                        >
+                          {e.initials}
+                        </span>
+                      ))}
                     </span>
                   )}
                 </span>
               </label>
             );
           })}
+
         </div>
       </FilterGroup>
 
