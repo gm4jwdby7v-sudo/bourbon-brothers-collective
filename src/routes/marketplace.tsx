@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Store, X } from "lucide-react";
+import { Check, MapPin, ShieldAlert, ShieldCheck, Store, X } from "lucide-react";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
@@ -85,6 +85,65 @@ const STATES: { code: string; name: string }[] = [
   { code: "WA", name: "Washington" },
   { code: "TN", name: "Tennessee" },
 ];
+
+/**
+ * Per-state shipping limitations applied at the destination. Real data would
+ * come from a compliance service; these notes are representative summaries
+ * for filter-aware UI and are NOT legal advice.
+ */
+interface StateLaw {
+  /** Cap on a single shipment, in 750ml-equivalent bottles. null = no cap. */
+  monthlyBottleLimit: number | null;
+  /** True when the destination requires an adult signature on delivery. */
+  adultSignatureRequired: boolean;
+  /** Short legal note shown on the eligibility row. */
+  note: string;
+}
+
+const STATE_LAW: Record<string, StateLaw> = {
+  CA: {
+    monthlyBottleLimit: null,
+    adultSignatureRequired: true,
+    note: "Direct-to-consumer allowed via licensed retailer. Adult signature required.",
+  },
+  FL: {
+    monthlyBottleLimit: 12,
+    adultSignatureRequired: true,
+    note: "Limit 12 bottles per shipment. Adult signature required.",
+  },
+  IL: {
+    monthlyBottleLimit: 9,
+    adultSignatureRequired: true,
+    note: "Limit 9L per month per address. Retailer must hold an IL shipper's license.",
+  },
+  KY: {
+    monthlyBottleLimit: null,
+    adultSignatureRequired: true,
+    note: "In-state shipments only from KY-licensed retailers. Adult signature required.",
+  },
+  NY: {
+    monthlyBottleLimit: 36,
+    adultSignatureRequired: true,
+    note: "Limit 36 bottles per year per address. Adult signature required.",
+  },
+  TX: {
+    monthlyBottleLimit: 3,
+    adultSignatureRequired: true,
+    note: "Limit 3 gallons per month per address. TX permit required.",
+  },
+  WA: {
+    monthlyBottleLimit: null,
+    adultSignatureRequired: true,
+    note: "Direct-to-consumer allowed for licensed out-of-state retailers.",
+  },
+  TN: {
+    monthlyBottleLimit: 12,
+    adultSignatureRequired: true,
+    note: "Limit 12 bottles per shipment. Retailer must hold a TN direct-shipper license.",
+  },
+};
+
+
 
 const LISTINGS: Listing[] = [
   {
@@ -278,7 +337,7 @@ function MarketplacePage() {
               >
                 {filtered.map((l) => (
                   <li key={l.id}>
-                    <ListingCard listing={l} />
+                    <ListingCard listing={l} selectedStates={stateFilter} />
                   </li>
                 ))}
               </ul>
@@ -429,7 +488,18 @@ function FilterGroup({
 
 // ─── Listing card ─────────────────────────────────────────────────────────
 
-function ListingCard({ listing }: { listing: Listing }) {
+function ListingCard({
+  listing,
+  selectedStates,
+}: {
+  listing: Listing;
+  selectedStates: string[];
+}) {
+  // When the user has selected states, surface per-state eligibility for
+  // exactly those states. Otherwise show every state the retailer ships to.
+  const eligibilityStates =
+    selectedStates.length > 0 ? selectedStates : listing.shipsTo;
+
   return (
     <Card className="h-full border-border bg-card/60 transition-colors hover:border-primary/40">
       <CardContent className="flex h-full flex-col gap-3 p-5">
@@ -454,14 +524,22 @@ function ListingCard({ listing }: { listing: Listing }) {
 
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="h-3 w-3" /> {listing.basedIn}
-          <span className="opacity-60">·</span>
-          Ships to {listing.shipsTo.join(", ")}
         </p>
+
+        <EligibilityPanel
+          listing={listing}
+          states={eligibilityStates}
+          filtered={selectedStates.length > 0}
+        />
 
         <div className="mt-auto flex items-end justify-between pt-2">
           <div>
-            <p className="font-display text-xl">${listing.priceUsd.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">{listing.proof} proof</p>
+            <p className="font-display text-xl">
+              ${listing.priceUsd.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {listing.proof} proof
+            </p>
           </div>
           <Button size="sm" variant="outline">
             View
@@ -471,3 +549,94 @@ function ListingCard({ listing }: { listing: Listing }) {
     </Card>
   );
 }
+
+function EligibilityPanel({
+  listing,
+  states,
+  filtered,
+}: {
+  listing: Listing;
+  states: string[];
+  filtered: boolean;
+}) {
+  return (
+    <div
+      className="rounded-md border border-border/60 bg-background/40 p-3"
+      data-testid={`eligibility-${listing.id}`}
+    >
+      <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        <ShieldCheck className="h-3 w-3" />
+        {filtered ? "Eligibility for selected states" : "Ships to"}
+      </p>
+      <ul className="space-y-1.5">
+        {states.map((code) => {
+          const allowed = listing.shipsTo.includes(code);
+          const law = STATE_LAW[code];
+          return (
+            <li
+              key={code}
+              className="flex items-start gap-2 text-xs"
+              data-testid={`eligibility-${listing.id}-${code}`}
+            >
+              {allowed ? (
+                <Check
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary"
+                  aria-label="Eligible"
+                />
+              ) : (
+                <X
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive"
+                  aria-label="Not eligible"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-medium text-foreground">{code}</span>
+                  {allowed ? (
+                    law?.monthlyBottleLimit != null ? (
+                      <Badge
+                        variant="outline"
+                        className="h-4 border-amber-500/30 bg-amber-500/10 px-1.5 text-[10px] text-amber-300"
+                      >
+                        Limit {law.monthlyBottleLimit} btl
+                      </Badge>
+                    ) : null
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="h-4 border-destructive/40 bg-destructive/10 px-1.5 text-[10px] text-destructive"
+                    >
+                      Not licensed
+                    </Badge>
+                  )}
+                  {allowed && law?.adultSignatureRequired && (
+                    <Badge
+                      variant="outline"
+                      className="h-4 border-border bg-muted px-1.5 text-[10px] text-muted-foreground"
+                    >
+                      Adult signature
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                  {allowed
+                    ? (law?.note ??
+                      "Direct-to-consumer shipping allowed by retailer.")
+                    : `${listing.retailer} is not licensed to ship to ${code}.`}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {filtered && (
+        <p className="mt-2 flex items-start gap-1 text-[10px] leading-snug text-muted-foreground">
+          <ShieldAlert className="mt-0.5 h-3 w-3 shrink-0" />
+          Compliance details are summaries, not legal advice. Confirm at
+          checkout.
+        </p>
+      )}
+    </div>
+  );
+}
+
