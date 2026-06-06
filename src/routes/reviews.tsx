@@ -36,6 +36,7 @@ interface ReviewRow {
   rating: number;
   body: string;
   image_url: string | null;
+  image_moderation_status: "pending" | "approved" | "rejected" | "auto_flagged" | null;
   created_at: string;
   distillery: { name: string } | null;
   author: { display_name: string | null; username: string | null; avatar_url: string | null } | null;
@@ -66,7 +67,7 @@ function ReviewsPage() {
       const { data, error } = await supabase
         .from("bourbon_reviews")
         .select(
-          "id, user_id, bottle_name, rating, body, image_url, created_at, distillery:places(name), author:profiles(display_name, username, avatar_url)",
+          "id, user_id, bottle_name, rating, body, image_url, image_moderation_status, created_at, distillery:places(name), author:profiles(display_name, username, avatar_url)",
         )
         .order("created_at", { ascending: false })
         .limit(60);
@@ -78,7 +79,11 @@ function ReviewsPage() {
       const rows = (data ?? []) as unknown as ReviewRow[];
       setReviews(rows);
 
-      const paths = rows.map((r) => r.image_url).filter((p): p is string => Boolean(p));
+      // Only show photos that passed moderation
+      const paths = rows
+        .filter((r) => r.image_moderation_status === "approved")
+        .map((r) => r.image_url)
+        .filter((p): p is string => Boolean(p));
       if (paths.length) {
         const urls = await getReviewImageUrls(paths);
         if (cancelled) return;
@@ -138,13 +143,18 @@ function ReviewsPage() {
               return (
                 <li key={r.id}>
                   <Card className="h-full overflow-hidden border-border/60 bg-card/80">
-                    {imgUrl && (
+                    {imgUrl && r.image_moderation_status === "approved" && (
                       <img
                         src={imgUrl}
                         alt={r.bottle_name}
                         loading="lazy"
                         className="h-56 w-full object-cover"
                       />
+                    )}
+                    {r.image_url && r.image_moderation_status !== "approved" && (
+                      <div className="flex h-32 w-full items-center justify-center bg-muted/30 text-xs text-muted-foreground">
+                        Photo pending moderation
+                      </div>
                     )}
                     <CardContent className="space-y-3 p-5">
                       <div className="flex items-center gap-3">
