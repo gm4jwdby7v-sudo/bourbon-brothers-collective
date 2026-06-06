@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { SiteNav } from "@/components/SiteNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
