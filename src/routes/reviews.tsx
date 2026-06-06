@@ -151,11 +151,25 @@ function ReviewsPage() {
                         className="h-56 w-full object-cover"
                       />
                     )}
-                    {r.image_url && r.image_moderation_status !== "approved" && (
-                      <div className="flex h-32 w-full items-center justify-center bg-muted/30 text-xs text-muted-foreground">
-                        Photo pending moderation
+                    {r.image_moderation_status === "rejected" && user?.id === r.user_id && (
+                      <div className="flex h-32 w-full flex-col items-center justify-center gap-2 bg-destructive/10 text-xs text-destructive">
+                        <span>Photo was rejected by moderation</span>
+                        <Link
+                          to="/reviews/$reviewId/appeal"
+                          params={{ reviewId: r.id }}
+                          className="rounded-md border border-destructive/40 px-2.5 py-1 font-medium hover:bg-destructive/20"
+                        >
+                          Appeal & upload new photo
+                        </Link>
                       </div>
                     )}
+                    {r.image_url &&
+                      r.image_moderation_status !== "approved" &&
+                      r.image_moderation_status !== "rejected" && (
+                        <div className="flex h-32 w-full items-center justify-center bg-muted/30 text-xs text-muted-foreground">
+                          Photo pending moderation
+                        </div>
+                      )}
                     <CardContent className="space-y-3 p-5">
                       <div className="flex items-center gap-3">
                         {r.author?.avatar_url ? (
