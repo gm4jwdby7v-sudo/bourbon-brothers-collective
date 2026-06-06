@@ -539,6 +539,31 @@ function FiltersSidebar(props: FiltersProps) {
           })}
         </div>
       </FilterGroup>
+
+      <FilterGroup label="Compliance status">
+        <div className="space-y-2">
+          {(Object.keys(COMPLIANCE_STATUS_LABEL) as ComplianceStatus[]).map(
+            (c) => {
+              const checked = complianceFilter.includes(c);
+              return (
+                <label
+                  key={c}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() =>
+                      setComplianceFilter(toggle(complianceFilter, c))
+                    }
+                    data-testid={`filter-compliance-${c}`}
+                  />
+                  <span>{COMPLIANCE_STATUS_LABEL[c]}</span>
+                </label>
+              );
+            },
+          )}
+        </div>
+      </FilterGroup>
     </aside>
   );
 }
