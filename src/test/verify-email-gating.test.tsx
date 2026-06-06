@@ -64,18 +64,18 @@ function buildRouter(initialPath: string) {
   const messages = createRoute({
     getParentRoute: () => verifiedLayout,
     path: "/messages",
-    component: MessagesRoute.options.component as never,
-  });
+    component: MessagesRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
   const forumNew = createRoute({
     getParentRoute: () => verifiedLayout,
     path: "/forum/new",
-    component: ForumNewRoute.options.component as never,
-  });
+    component: ForumNewRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
   const checkout = createRoute({
     getParentRoute: () => verifiedLayout,
     path: "/events/$eventId/checkout",
-    component: CheckoutRoute.options.component as never,
-  });
+    component: CheckoutRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
 
   const routeTree = rootRoute.addChildren([
     authRoute,
