@@ -363,11 +363,14 @@ function MarketplacePage() {
             setRetailerFilter={setRetailerFilter}
             availabilityFilter={availabilityFilter}
             setAvailabilityFilter={setAvailabilityFilter}
+            complianceFilter={complianceFilter}
+            setComplianceFilter={setComplianceFilter}
             activeFilterCount={activeFilterCount}
             onClear={() => {
               setStateFilter([]);
               setRetailerFilter([]);
               setAvailabilityFilter([]);
+              setComplianceFilter([]);
             }}
           />
 
