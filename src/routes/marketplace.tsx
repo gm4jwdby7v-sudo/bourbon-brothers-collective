@@ -20,6 +20,13 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Check,
   FileText,
   MapPin,
@@ -294,11 +301,36 @@ function MarketplacePage() {
   const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>(
     [],
   );
+  const [retailerNameFilter, setRetailerNameFilter] = useState<string>("all");
   const [query, setQuery] = useState("");
+
+  // Unique retailer names (preserve first-seen order) + a representative listing
+  // per retailer so the sidebar can show that retailer's per-state compliance.
+  const retailerOptions = useMemo(() => {
+    const seen = new Map<string, Listing>();
+    for (const l of LISTINGS) if (!seen.has(l.retailer)) seen.set(l.retailer, l);
+    return Array.from(seen.entries()).map(([name, listing]) => ({
+      name,
+      listing,
+    }));
+  }, []);
+
+  const activeRetailerListing = useMemo(
+    () =>
+      retailerNameFilter === "all"
+        ? null
+        : (retailerOptions.find((r) => r.name === retailerNameFilter)?.listing ??
+          null),
+    [retailerNameFilter, retailerOptions],
+  );
+
+
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return LISTINGS.filter((l) => {
+      if (retailerNameFilter !== "all" && l.retailer !== retailerNameFilter)
+        return false;
       if (q && !`${l.name} ${l.retailer}`.toLowerCase().includes(q))
         return false;
       if (
@@ -332,13 +364,15 @@ function MarketplacePage() {
     retailerFilter,
     availabilityFilter,
     complianceFilter,
+    retailerNameFilter,
   ]);
 
   const activeFilterCount =
     stateFilter.length +
     retailerFilter.length +
     availabilityFilter.length +
-    complianceFilter.length;
+    complianceFilter.length +
+    (retailerNameFilter !== "all" ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -365,12 +399,17 @@ function MarketplacePage() {
             setAvailabilityFilter={setAvailabilityFilter}
             complianceFilter={complianceFilter}
             setComplianceFilter={setComplianceFilter}
+            retailerNameFilter={retailerNameFilter}
+            setRetailerNameFilter={setRetailerNameFilter}
+            retailerOptions={retailerOptions}
+            activeRetailerListing={activeRetailerListing}
             activeFilterCount={activeFilterCount}
             onClear={() => {
               setStateFilter([]);
               setRetailerFilter([]);
               setAvailabilityFilter([]);
               setComplianceFilter([]);
+              setRetailerNameFilter("all");
             }}
           />
 
@@ -430,9 +469,19 @@ interface FiltersProps {
   setAvailabilityFilter: (v: Availability[]) => void;
   complianceFilter: ComplianceStatus[];
   setComplianceFilter: (v: ComplianceStatus[]) => void;
+  retailerNameFilter: string;
+  setRetailerNameFilter: (v: string) => void;
+  retailerOptions: { name: string; listing: Listing }[];
+  activeRetailerListing: Listing | null;
   activeFilterCount: number;
   onClear: () => void;
 }
+
+const COMPLIANCE_TONE: Record<ComplianceStatus, string> = {
+  eligible: "bg-emerald-500/20 text-emerald-300",
+  limited: "bg-amber-500/20 text-amber-300",
+  not_eligible: "bg-destructive/20 text-destructive",
+};
 
 function FiltersSidebar(props: FiltersProps) {
   const {
@@ -444,12 +493,41 @@ function FiltersSidebar(props: FiltersProps) {
     setAvailabilityFilter,
     complianceFilter,
     setComplianceFilter,
+    retailerNameFilter,
+    setRetailerNameFilter,
+    retailerOptions,
+    activeRetailerListing,
     activeFilterCount,
     onClear,
   } = props;
 
   const toggle = <T extends string>(arr: T[], v: T) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+
+  // Per-state compliance for the currently-selected retailer (if any).
+  const stateStatusForRetailer = useMemo(() => {
+    if (!activeRetailerListing) return null;
+    const map: Record<string, ComplianceStatus> = {};
+    for (const s of STATES) {
+      map[s.code] = getComplianceStatus(activeRetailerListing, s.code);
+    }
+    return map;
+  }, [activeRetailerListing]);
+
+  // Compliance counts (number of states matching each status) for the selected
+  // retailer. When no retailer is chosen, shows nothing.
+  const complianceCounts = useMemo(() => {
+    if (!stateStatusForRetailer) return null;
+    const counts: Record<ComplianceStatus, number> = {
+      eligible: 0,
+      limited: 0,
+      not_eligible: 0,
+    };
+    for (const code of Object.keys(stateStatusForRetailer)) {
+      counts[stateStatusForRetailer[code]]++;
+    }
+    return counts;
+  }, [stateStatusForRetailer]);
 
   return (
     <aside
@@ -471,10 +549,40 @@ function FiltersSidebar(props: FiltersProps) {
         )}
       </div>
 
+      <FilterGroup label="Retailer">
+        <Select
+          value={retailerNameFilter}
+          onValueChange={setRetailerNameFilter}
+        >
+          <SelectTrigger
+            className="h-9 text-sm"
+            data-testid="filter-retailer-name"
+          >
+            <SelectValue placeholder="All retailers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All retailers</SelectItem>
+            {retailerOptions.map((r) => (
+              <SelectItem key={r.name} value={r.name}>
+                {r.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {activeRetailerListing && (
+          <p className="text-[11px] text-muted-foreground">
+            Showing compliance for{" "}
+            <span className="text-foreground">{activeRetailerListing.retailer}</span>
+            .
+          </p>
+        )}
+      </FilterGroup>
+
       <FilterGroup label="Ships to state">
         <div className="grid grid-cols-2 gap-2">
           {STATES.map((s) => {
             const checked = stateFilter.includes(s.code);
+            const status = stateStatusForRetailer?.[s.code];
             return (
               <label
                 key={s.code}
@@ -487,7 +595,24 @@ function FiltersSidebar(props: FiltersProps) {
                   }
                   data-testid={`filter-state-${s.code}`}
                 />
-                <span>{s.code}</span>
+                <span className="flex items-center gap-1.5">
+                  {s.code}
+                  {status && (
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
+                        COMPLIANCE_TONE[status],
+                      )}
+                      title={COMPLIANCE_STATUS_LABEL[status]}
+                    >
+                      {status === "eligible"
+                        ? "OK"
+                        : status === "limited"
+                          ? "LMT"
+                          : "NO"}
+                    </span>
+                  )}
+                </span>
               </label>
             );
           })}
@@ -545,6 +670,7 @@ function FiltersSidebar(props: FiltersProps) {
           {(Object.keys(COMPLIANCE_STATUS_LABEL) as ComplianceStatus[]).map(
             (c) => {
               const checked = complianceFilter.includes(c);
+              const count = complianceCounts?.[c];
               return (
                 <label
                   key={c}
@@ -557,7 +683,19 @@ function FiltersSidebar(props: FiltersProps) {
                     }
                     data-testid={`filter-compliance-${c}`}
                   />
-                  <span>{COMPLIANCE_STATUS_LABEL[c]}</span>
+                  <span className="flex items-center gap-1.5">
+                    {COMPLIANCE_STATUS_LABEL[c]}
+                    {count != null && (
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
+                          COMPLIANCE_TONE[c],
+                        )}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </span>
                 </label>
               );
             },
