@@ -199,6 +199,14 @@ function getComplianceStatus(
   return "eligible";
 }
 
+function initialsFor(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? "";
+  const second = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
+  return (first + second).toUpperCase();
+}
+
+
 const LISTINGS: Listing[] = [
   {
     id: "l-1",
