@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -19,11 +20,17 @@ import { Route as ApiPublicFirebaseConfigRouteImport } from './routes/api/public
 import { Route as AuthenticatedVerifiedMessagesRouteImport } from './routes/_authenticated/_verified/messages'
 import { Route as AuthenticatedVerifiedMessagesIndexRouteImport } from './routes/_authenticated/_verified/messages.index'
 import { Route as AuthenticatedVerifiedSettingsNotificationsRouteImport } from './routes/_authenticated/_verified/settings.notifications'
+import { Route as AuthenticatedVerifiedReviewsNewRouteImport } from './routes/_authenticated/_verified/reviews.new'
 import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_authenticated/_verified/messages.new'
 import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './routes/_authenticated/_verified/messages.$threadId'
 import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
 import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from './routes/_authenticated/_verified/events.$eventId.checkout'
 
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
   id: '/marketplace',
   path: '/marketplace',
@@ -76,6 +83,12 @@ const AuthenticatedVerifiedSettingsNotificationsRoute =
     path: '/settings/notifications',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
+const AuthenticatedVerifiedReviewsNewRoute =
+  AuthenticatedVerifiedReviewsNewRouteImport.update({
+    id: '/reviews/new',
+    path: '/reviews/new',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
 const AuthenticatedVerifiedMessagesNewRoute =
   AuthenticatedVerifiedMessagesNewRouteImport.update({
     id: '/new',
@@ -106,11 +119,13 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
+  '/reviews': typeof ReviewsRoute
   '/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/reviews/new': typeof AuthenticatedVerifiedReviewsNewRoute
   '/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
@@ -120,10 +135,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
+  '/reviews': typeof ReviewsRoute
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/reviews/new': typeof AuthenticatedVerifiedReviewsNewRoute
   '/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/messages': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
@@ -135,12 +152,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
+  '/reviews': typeof ReviewsRoute
   '/_authenticated/_verified': typeof AuthenticatedVerifiedRouteRouteWithChildren
   '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
   '/_authenticated/_verified/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/_authenticated/_verified/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/_authenticated/_verified/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
+  '/_authenticated/_verified/reviews/new': typeof AuthenticatedVerifiedReviewsNewRoute
   '/_authenticated/_verified/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/_authenticated/_verified/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/_authenticated/_verified/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
@@ -152,11 +171,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/discover'
     | '/marketplace'
+    | '/reviews'
     | '/messages'
     | '/api/public/firebase-config'
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
+    | '/reviews/new'
     | '/settings/notifications'
     | '/messages/'
     | '/events/$eventId/checkout'
@@ -166,10 +187,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/discover'
     | '/marketplace'
+    | '/reviews'
     | '/api/public/firebase-config'
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
+    | '/reviews/new'
     | '/settings/notifications'
     | '/messages'
     | '/events/$eventId/checkout'
@@ -180,12 +203,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/discover'
     | '/marketplace'
+    | '/reviews'
     | '/_authenticated/_verified'
     | '/_authenticated/_verified/messages'
     | '/api/public/firebase-config'
     | '/_authenticated/_verified/forum/new'
     | '/_authenticated/_verified/messages/$threadId'
     | '/_authenticated/_verified/messages/new'
+    | '/_authenticated/_verified/reviews/new'
     | '/_authenticated/_verified/settings/notifications'
     | '/_authenticated/_verified/messages/'
     | '/_authenticated/_verified/events/$eventId/checkout'
@@ -197,11 +222,19 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DiscoverRoute: typeof DiscoverRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  ReviewsRoute: typeof ReviewsRoute
   ApiPublicFirebaseConfigRoute: typeof ApiPublicFirebaseConfigRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/marketplace': {
       id: '/marketplace'
       path: '/marketplace'
@@ -272,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedSettingsNotificationsRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
+    '/_authenticated/_verified/reviews/new': {
+      id: '/_authenticated/_verified/reviews/new'
+      path: '/reviews/new'
+      fullPath: '/reviews/new'
+      preLoaderRoute: typeof AuthenticatedVerifiedReviewsNewRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
     '/_authenticated/_verified/messages/new': {
       id: '/_authenticated/_verified/messages/new'
       path: '/new'
@@ -327,6 +367,7 @@ const AuthenticatedVerifiedMessagesRouteWithChildren =
 interface AuthenticatedVerifiedRouteRouteChildren {
   AuthenticatedVerifiedMessagesRoute: typeof AuthenticatedVerifiedMessagesRouteWithChildren
   AuthenticatedVerifiedForumNewRoute: typeof AuthenticatedVerifiedForumNewRoute
+  AuthenticatedVerifiedReviewsNewRoute: typeof AuthenticatedVerifiedReviewsNewRoute
   AuthenticatedVerifiedSettingsNotificationsRoute: typeof AuthenticatedVerifiedSettingsNotificationsRoute
   AuthenticatedVerifiedEventsEventIdCheckoutRoute: typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
 }
@@ -336,6 +377,7 @@ const AuthenticatedVerifiedRouteRouteChildren: AuthenticatedVerifiedRouteRouteCh
     AuthenticatedVerifiedMessagesRoute:
       AuthenticatedVerifiedMessagesRouteWithChildren,
     AuthenticatedVerifiedForumNewRoute: AuthenticatedVerifiedForumNewRoute,
+    AuthenticatedVerifiedReviewsNewRoute: AuthenticatedVerifiedReviewsNewRoute,
     AuthenticatedVerifiedSettingsNotificationsRoute:
       AuthenticatedVerifiedSettingsNotificationsRoute,
     AuthenticatedVerifiedEventsEventIdCheckoutRoute:
@@ -364,6 +406,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DiscoverRoute: DiscoverRoute,
   MarketplaceRoute: MarketplaceRoute,
+  ReviewsRoute: ReviewsRoute,
   ApiPublicFirebaseConfigRoute: ApiPublicFirebaseConfigRoute,
 }
 export const routeTree = rootRouteImport

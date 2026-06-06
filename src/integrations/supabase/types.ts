@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      bourbon_reviews: {
+        Row: {
+          body: string
+          bottle_name: string
+          created_at: string
+          distillery_id: string | null
+          id: string
+          image_url: string | null
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          bottle_name: string
+          created_at?: string
+          distillery_id?: string | null
+          id?: string
+          image_url?: string | null
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          bottle_name?: string
+          created_at?: string
+          distillery_id?: string | null
+          id?: string
+          image_url?: string | null
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bourbon_reviews_distillery_id_fkey"
+            columns: ["distillery_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dm_messages: {
         Row: {
           body: string
