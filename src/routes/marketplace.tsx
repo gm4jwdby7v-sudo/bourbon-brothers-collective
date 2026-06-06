@@ -658,6 +658,21 @@ function FiltersSidebar(props: FiltersProps) {
             {retailerSort === "asc" ? "A–Z" : "Z–A"}
           </Button>
         </div>
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor="retailer-eligible-only"
+            className="text-[11px] text-muted-foreground"
+          >
+            Only eligible retailers
+          </Label>
+          <Switch
+            id="retailer-eligible-only"
+            checked={retailerEligibleOnly}
+            onCheckedChange={setRetailerEligibleOnly}
+            className="scale-75"
+            data-testid="retailer-eligible-only-toggle"
+          />
+        </div>
         <div className="space-y-2">
           {visibleRetailers.map((r) => {
             const checked = retailerNamesFilter.includes(r.name);
