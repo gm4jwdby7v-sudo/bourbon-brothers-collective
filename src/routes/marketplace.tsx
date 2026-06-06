@@ -712,9 +712,9 @@ function LegalDetailsModal({
     return states[0] ?? "";
   }, [selectedStates, states, listing.shipsTo]);
 
-  useState(() => {
+  useEffect(() => {
     setActiveState(defaultActive);
-  });
+  }, [defaultActive]);
 
   // If the states list changes (e.g. filter applied), ensure activeState is valid
   const validActive = states.includes(activeState)
