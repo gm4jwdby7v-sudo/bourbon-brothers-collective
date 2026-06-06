@@ -35,6 +35,7 @@ vi.mock("@/components/SiteNav", () => ({
   SiteNav: () => <nav data-testid="site-nav" />,
 }));
 
+import { AnyRoute } from "@tanstack/react-router";
 import { Route as AuthedRoute } from "@/routes/_authenticated/route";
 import { Route as VerifiedRoute } from "@/routes/_authenticated/_verified/route";
 import { Route as MessagesRoute } from "@/routes/_authenticated/_verified/messages";
@@ -52,29 +53,29 @@ function buildRouter(initialPath: string) {
     getParentRoute: () => rootRoute,
     id: "_authenticated",
     ssr: false,
-    beforeLoad: AuthedRoute.options.beforeLoad as never,
+    beforeLoad: AuthedRoute.options.beforeLoad as AnyRoute["options"]["beforeLoad"],
     component: () => <Outlet />,
-  });
+  }) as AnyRoute;
   const verifiedLayout = createRoute({
     getParentRoute: () => authedLayout,
     id: "_verified",
-    component: VerifiedRoute.options.component as never,
-  });
+    component: VerifiedRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
   const messages = createRoute({
     getParentRoute: () => verifiedLayout,
     path: "/messages",
-    component: MessagesRoute.options.component as never,
-  });
+    component: MessagesRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
   const forumNew = createRoute({
     getParentRoute: () => verifiedLayout,
     path: "/forum/new",
-    component: ForumNewRoute.options.component as never,
-  });
+    component: ForumNewRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
   const checkout = createRoute({
     getParentRoute: () => verifiedLayout,
     path: "/events/$eventId/checkout",
-    component: CheckoutRoute.options.component as never,
-  });
+    component: CheckoutRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
 
   const routeTree = rootRoute.addChildren([
     authRoute,
