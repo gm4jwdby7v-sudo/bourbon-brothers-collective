@@ -43,23 +43,23 @@
 :root {
   --radius: 0.5rem;
 
-  /* Bourbon-inspired dark palette */
-  --background: oklch(0.16 0.018 50);
+  /* Bourbon-inspired dark palette — lifted for readability */
+  --background: oklch(0.24 0.022 50);
   --foreground: oklch(0.94 0.02 75);
 
-  --card: oklch(0.20 0.022 50);
+  --card: oklch(0.30 0.025 50);
   --card-foreground: oklch(0.94 0.02 75);
 
-  --popover: oklch(0.18 0.02 50);
+  --popover: oklch(0.28 0.025 50);
   --popover-foreground: oklch(0.94 0.02 75);
 
   --primary: oklch(0.68 0.14 55);   /* copper */
   --primary-foreground: oklch(0.15 0.02 50);
 
-  --secondary: oklch(0.26 0.03 50);
+  --secondary: oklch(0.34 0.03 50);
   --secondary-foreground: oklch(0.94 0.02 75);
 
-  --muted: oklch(0.24 0.022 50);
+  --muted: oklch(0.32 0.025 50);
   --muted-foreground: oklch(0.68 0.03 65);
 
   --accent: oklch(0.55 0.16 45);    /* whiskey amber */
@@ -68,8 +68,8 @@
   --destructive: oklch(0.55 0.20 25);
   --destructive-foreground: oklch(0.96 0.02 75);
 
-  --border: oklch(0.30 0.025 55 / 60%);
-  --input: oklch(0.28 0.025 55);
+  --border: oklch(0.38 0.028 55 / 60%);
+  --input: oklch(0.36 0.028 55);
   --ring: oklch(0.68 0.14 55);
 
   --copper: oklch(0.72 0.14 55);
@@ -79,7 +79,7 @@
   --ember: oklch(0.62 0.20 35);
 
   --gradient-amber: linear-gradient(135deg, var(--copper) 0%, var(--ember) 100%);
-  --gradient-radial: radial-gradient(ellipse at top, oklch(0.28 0.05 55 / 0.6), transparent 60%);
+  --gradient-radial: radial-gradient(ellipse at top, oklch(0.35 0.05 55 / 0.6), transparent 60%);
   --shadow-glow: 0 20px 60px -20px oklch(0.62 0.20 45 / 0.5);
   --shadow-soft: 0 10px 40px -10px oklch(0 0 0 / 0.6);
 }
