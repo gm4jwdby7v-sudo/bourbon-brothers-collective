@@ -812,12 +812,20 @@ function FiltersSidebar(props: FiltersProps) {
               variant="secondary"
               className="h-8 px-2 text-xs"
               onClick={saveCurrentAsPreset}
-              disabled={!presetNameDraft.trim()}
+              disabled={!presetNameDraft.trim() || presetsSyncing}
               data-testid="retailer-preset-save"
             >
-              Save
+              {presetsSyncing ? "…" : "Save"}
             </Button>
           </div>
+          <p
+            className="text-[10px] text-muted-foreground"
+            data-testid="retailer-preset-sync-status"
+          >
+            {isSignedIn
+              ? "Synced to your account — available on any device."
+              : "Saved on this device. Sign in to sync presets across devices."}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Label
