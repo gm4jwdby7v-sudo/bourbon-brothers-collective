@@ -24,6 +24,7 @@ import { Route as AuthenticatedVerifiedReviewsNewRouteImport } from './routes/_a
 import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_authenticated/_verified/messages.new'
 import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './routes/_authenticated/_verified/messages.$threadId'
 import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
+import { Route as AuthenticatedVerifiedAdminModerationRouteImport } from './routes/_authenticated/_verified/admin.moderation'
 import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from './routes/_authenticated/_verified/events.$eventId.checkout'
 
 const ReviewsRoute = ReviewsRouteImport.update({
@@ -107,6 +108,12 @@ const AuthenticatedVerifiedForumNewRoute =
     path: '/forum/new',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
+const AuthenticatedVerifiedAdminModerationRoute =
+  AuthenticatedVerifiedAdminModerationRouteImport.update({
+    id: '/admin/moderation',
+    path: '/admin/moderation',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
 const AuthenticatedVerifiedEventsEventIdCheckoutRoute =
   AuthenticatedVerifiedEventsEventIdCheckoutRouteImport.update({
     id: '/events/$eventId/checkout',
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/reviews': typeof ReviewsRoute
   '/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
+  '/admin/moderation': typeof AuthenticatedVerifiedAdminModerationRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
@@ -137,6 +145,7 @@ export interface FileRoutesByTo {
   '/marketplace': typeof MarketplaceRoute
   '/reviews': typeof ReviewsRoute
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
+  '/admin/moderation': typeof AuthenticatedVerifiedAdminModerationRoute
   '/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
@@ -156,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/_verified': typeof AuthenticatedVerifiedRouteRouteWithChildren
   '/_authenticated/_verified/messages': typeof AuthenticatedVerifiedMessagesRouteWithChildren
   '/api/public/firebase-config': typeof ApiPublicFirebaseConfigRoute
+  '/_authenticated/_verified/admin/moderation': typeof AuthenticatedVerifiedAdminModerationRoute
   '/_authenticated/_verified/forum/new': typeof AuthenticatedVerifiedForumNewRoute
   '/_authenticated/_verified/messages/$threadId': typeof AuthenticatedVerifiedMessagesThreadIdRoute
   '/_authenticated/_verified/messages/new': typeof AuthenticatedVerifiedMessagesNewRoute
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/messages'
     | '/api/public/firebase-config'
+    | '/admin/moderation'
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/reviews'
     | '/api/public/firebase-config'
+    | '/admin/moderation'
     | '/forum/new'
     | '/messages/$threadId'
     | '/messages/new'
@@ -207,6 +219,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_verified'
     | '/_authenticated/_verified/messages'
     | '/api/public/firebase-config'
+    | '/_authenticated/_verified/admin/moderation'
     | '/_authenticated/_verified/forum/new'
     | '/_authenticated/_verified/messages/$threadId'
     | '/_authenticated/_verified/messages/new'
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedForumNewRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
+    '/_authenticated/_verified/admin/moderation': {
+      id: '/_authenticated/_verified/admin/moderation'
+      path: '/admin/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AuthenticatedVerifiedAdminModerationRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
     '/_authenticated/_verified/events/$eventId/checkout': {
       id: '/_authenticated/_verified/events/$eventId/checkout'
       path: '/events/$eventId/checkout'
@@ -366,6 +386,7 @@ const AuthenticatedVerifiedMessagesRouteWithChildren =
 
 interface AuthenticatedVerifiedRouteRouteChildren {
   AuthenticatedVerifiedMessagesRoute: typeof AuthenticatedVerifiedMessagesRouteWithChildren
+  AuthenticatedVerifiedAdminModerationRoute: typeof AuthenticatedVerifiedAdminModerationRoute
   AuthenticatedVerifiedForumNewRoute: typeof AuthenticatedVerifiedForumNewRoute
   AuthenticatedVerifiedReviewsNewRoute: typeof AuthenticatedVerifiedReviewsNewRoute
   AuthenticatedVerifiedSettingsNotificationsRoute: typeof AuthenticatedVerifiedSettingsNotificationsRoute
@@ -376,6 +397,8 @@ const AuthenticatedVerifiedRouteRouteChildren: AuthenticatedVerifiedRouteRouteCh
   {
     AuthenticatedVerifiedMessagesRoute:
       AuthenticatedVerifiedMessagesRouteWithChildren,
+    AuthenticatedVerifiedAdminModerationRoute:
+      AuthenticatedVerifiedAdminModerationRoute,
     AuthenticatedVerifiedForumNewRoute: AuthenticatedVerifiedForumNewRoute,
     AuthenticatedVerifiedReviewsNewRoute: AuthenticatedVerifiedReviewsNewRoute,
     AuthenticatedVerifiedSettingsNotificationsRoute:
@@ -412,3 +435,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
