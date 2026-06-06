@@ -26,8 +26,7 @@ import {
   deleteRetailerPreset,
   type RetailerPresetRow,
 } from "@/lib/retailer-presets.functions";
-
-
+import { toast } from "sonner";
 
 import {
   Check,
@@ -207,6 +206,24 @@ function initialsFor(name: string): string {
   const first = parts[0]?.[0] ?? "";
   const second = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
   return (first + second).toUpperCase();
+}
+
+/** Retry an async operation with exponential backoff. */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  { maxAttempts = 3, delayMs = 400 }: { maxAttempts?: number; delayMs?: number } = {},
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt === maxAttempts) break;
+      await new Promise((res) => setTimeout(res, delayMs * attempt));
+    }
+  }
+  throw lastErr;
 }
 
 
@@ -547,6 +564,7 @@ function FiltersSidebar(props: FiltersProps) {
   const [activePresetId, setActivePresetId] = useState<string>("");
   const [presetNameDraft, setPresetNameDraft] = useState("");
   const [presetsSyncing, setPresetsSyncing] = useState(false);
+  const [presetSyncError, setPresetSyncError] = useState<string | null>(null);
 
   const fromRow = (r: RetailerPresetRow): RetailerPreset => ({
     id: r.id,
@@ -560,6 +578,7 @@ function FiltersSidebar(props: FiltersProps) {
 
   useEffect(() => {
     let cancelled = false;
+    setPresetSyncError(null);
     if (!isSignedIn) {
       try {
         const raw = localStorage.getItem(PRESETS_KEY);
@@ -570,13 +589,24 @@ function FiltersSidebar(props: FiltersProps) {
       return;
     }
     setPresetsSyncing(true);
-    listRetailerPresets()
+    withRetry(() => listRetailerPresets(), { maxAttempts: 3, delayMs: 400 })
       .then(({ presets: rows }) => {
         if (cancelled) return;
         setPresets(rows.map(fromRow));
+        setPresetSyncError(null);
       })
-      .catch(() => {
-        if (!cancelled) setPresets([]);
+      .catch((err) => {
+        if (!cancelled) {
+          setPresets([]);
+          const msg =
+            err instanceof Error
+              ? err.message
+              : "Could not load your presets. Please try again later.";
+          setPresetSyncError(msg);
+          toast.error("Preset sync failed", {
+            description: msg,
+          });
+        }
       })
       .finally(() => {
         if (!cancelled) setPresetsSyncing(false);
@@ -610,22 +640,35 @@ function FiltersSidebar(props: FiltersProps) {
     if (!name) return;
     if (isSignedIn) {
       setPresetsSyncing(true);
+      setPresetSyncError(null);
       try {
-        const { preset } = await createRetailerPreset({
-          data: {
-            name,
-            state_filter: stateFilter,
-            retailer_search: retailerSearch,
-            retailer_sort: retailerSort,
-            retailer_state_scope: retailerStateScope,
-            retailer_eligible_only: retailerEligibleOnly,
-          },
-        });
+        const { preset } = await withRetry(
+          () =>
+            createRetailerPreset({
+              data: {
+                name,
+                state_filter: stateFilter,
+                retailer_search: retailerSearch,
+                retailer_sort: retailerSort,
+                retailer_state_scope: retailerStateScope,
+                retailer_eligible_only: retailerEligibleOnly,
+              },
+            }),
+          { maxAttempts: 3, delayMs: 400 },
+        );
         setPresets((cur) => [...cur, fromRow(preset)]);
         setActivePresetId(preset.id);
         setPresetNameDraft("");
-      } catch (e) {
-        console.error("Failed to save preset", e);
+        toast.success("Preset saved", {
+          description: `"${preset.name}" has been synced to your account.`,
+        });
+      } catch (err) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Could not save preset. Please try again later.";
+        setPresetSyncError(msg);
+        toast.error("Preset save failed", { description: msg });
       } finally {
         setPresetsSyncing(false);
       }
@@ -645,19 +688,35 @@ function FiltersSidebar(props: FiltersProps) {
     persistLocal(next);
     setActivePresetId(preset.id);
     setPresetNameDraft("");
+    toast.success("Preset saved", {
+      description: `"${preset.name}" has been saved locally.`,
+    });
   };
 
   const deleteActivePreset = async () => {
     if (!activePresetId) return;
     const id = activePresetId;
+    const presetName = presets.find((p) => p.id === id)?.name ?? "Preset";
     if (isSignedIn) {
       setPresetsSyncing(true);
+      setPresetSyncError(null);
       try {
-        await deleteRetailerPreset({ data: { id } });
+        await withRetry(
+          () => deleteRetailerPreset({ data: { id } }),
+          { maxAttempts: 3, delayMs: 400 },
+        );
         setPresets((cur) => cur.filter((p) => p.id !== id));
         setActivePresetId("");
-      } catch (e) {
-        console.error("Failed to delete preset", e);
+        toast.success("Preset deleted", {
+          description: `"${presetName}" has been removed from your account.`,
+        });
+      } catch (err) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Could not delete preset. Please try again later.";
+        setPresetSyncError(msg);
+        toast.error("Preset delete failed", { description: msg });
       } finally {
         setPresetsSyncing(false);
       }
@@ -667,6 +726,9 @@ function FiltersSidebar(props: FiltersProps) {
     setPresets(next);
     persistLocal(next);
     setActivePresetId("");
+    toast.success("Preset deleted", {
+      description: `"${presetName}" has been removed.`,
+    });
   };
 
   const visibleRetailers = useMemo(() => {
@@ -826,6 +888,14 @@ function FiltersSidebar(props: FiltersProps) {
               ? "Synced to your account — available on any device."
               : "Saved on this device. Sign in to sync presets across devices."}
           </p>
+          {presetSyncError && (
+            <p
+              className="text-[10px] text-destructive"
+              data-testid="retailer-preset-sync-error"
+            >
+              {presetSyncError}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Label
