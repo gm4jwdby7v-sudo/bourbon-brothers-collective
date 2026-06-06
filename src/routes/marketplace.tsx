@@ -517,19 +517,25 @@ function FiltersSidebar(props: FiltersProps) {
 
   const [retailerSearch, setRetailerSearch] = useState("");
   const [retailerSort, setRetailerSort] = useState<"asc" | "desc">("asc");
+  const [retailerStateScope, setRetailerStateScope] = useState<string>("all");
 
   const visibleRetailers = useMemo(() => {
     const q = retailerSearch.trim().toLowerCase();
-    const filtered = q
+    let filtered = q
       ? retailerOptions.filter((r) => r.name.toLowerCase().includes(q))
       : [...retailerOptions];
+    if (retailerStateScope !== "all") {
+      filtered = filtered.filter((r) =>
+        r.listing.shipsTo.includes(retailerStateScope),
+      );
+    }
     filtered.sort((a, b) =>
       retailerSort === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name),
     );
     return filtered;
-  }, [retailerSearch, retailerOptions, retailerSort]);
+  }, [retailerSearch, retailerOptions, retailerSort, retailerStateScope]);
 
   // Per-state, per-retailer compliance for the currently-selected retailers.
   // Shape: { [stateCode]: Array<{ name, initials, status }> }
