@@ -524,58 +524,70 @@ function ListingCard({
   listing: Listing;
   selectedStates: string[];
 }) {
+  const [open, setOpen] = useState(false);
   // When the user has selected states, surface per-state eligibility for
   // exactly those states. Otherwise show every state the retailer ships to.
   const eligibilityStates =
     selectedStates.length > 0 ? selectedStates : listing.shipsTo;
 
   return (
-    <Card className="h-full border-border bg-card/60 transition-colors hover:border-primary/40">
-      <CardContent className="flex h-full flex-col gap-3 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-display text-lg leading-tight">
-              {listing.name}
-            </h3>
-            <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-              <Store className="h-3 w-3" /> {listing.retailer}
-              <span className="opacity-60">·</span>
-              {RETAILER_TYPE_LABEL[listing.retailerType]}
-            </p>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Card className="h-full border-border bg-card/60 transition-colors hover:border-primary/40">
+        <CardContent className="flex h-full flex-col gap-3 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-display text-lg leading-tight">
+                {listing.name}
+              </h3>
+              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                <Store className="h-3 w-3" /> {listing.retailer}
+                <span className="opacity-60">·</span>
+                {RETAILER_TYPE_LABEL[listing.retailerType]}
+              </p>
+            </div>
+            <Badge
+              variant="outline"
+              className={AVAILABILITY_TONE[listing.availability]}
+            >
+              {AVAILABILITY_LABEL[listing.availability]}
+            </Badge>
           </div>
-          <Badge
-            variant="outline"
-            className={AVAILABILITY_TONE[listing.availability]}
-          >
-            {AVAILABILITY_LABEL[listing.availability]}
-          </Badge>
-        </div>
 
-        <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <MapPin className="h-3 w-3" /> {listing.basedIn}
-        </p>
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {listing.basedIn}
+          </p>
 
-        <EligibilityPanel
-          listing={listing}
-          states={eligibilityStates}
-          filtered={selectedStates.length > 0}
-        />
+          <EligibilityPanel
+            listing={listing}
+            states={eligibilityStates}
+            filtered={selectedStates.length > 0}
+          />
 
-        <div className="mt-auto flex items-end justify-between pt-2">
-          <div>
-            <p className="font-display text-xl">
-              ${listing.priceUsd.toLocaleString()}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {listing.proof} proof
-            </p>
+          <div className="mt-auto flex items-end justify-between pt-2">
+            <div>
+              <p className="font-display text-xl">
+                ${listing.priceUsd.toLocaleString()}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {listing.proof} proof
+              </p>
+            </div>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">
+                <Scale className="mr-1.5 h-3 w-3" />
+                Legal
+              </Button>
+            </DialogTrigger>
           </div>
-          <Button size="sm" variant="outline">
-            View
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <LegalDetailsModal
+        listing={listing}
+        states={eligibilityStates}
+        filtered={selectedStates.length > 0}
+      />
+    </Dialog>
   );
 }
 
