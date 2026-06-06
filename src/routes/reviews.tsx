@@ -79,7 +79,11 @@ function ReviewsPage() {
       const rows = (data ?? []) as unknown as ReviewRow[];
       setReviews(rows);
 
-      const paths = rows.map((r) => r.image_url).filter((p): p is string => Boolean(p));
+      // Only show photos that passed moderation
+      const paths = rows
+        .filter((r) => r.image_moderation_status === "approved")
+        .map((r) => r.image_url)
+        .filter((p): p is string => Boolean(p));
       if (paths.length) {
         const urls = await getReviewImageUrls(paths);
         if (cancelled) return;
