@@ -153,19 +153,20 @@ test.describe("Flapping connection with out-of-order duplicate prefs updates →
       updated_at: "2025-05-01T10:34:00Z",
     };
 
-    // ── Cycle 1: offline, broadcast v2 then v1 (stale after v2), then duplicate v2.
+    // ── Cycle 1: go offline, cross old boundary under OLD prefs → toast.
     await setOffline(page, true);
-    await broadcastPrefsUpdate(page, v2);
-    await broadcastPrefsUpdate(page, v1);
-    await broadcastPrefsUpdate(page, v2);
-    await page.waitForTimeout(50);
 
-    // Cross old boundary while offline at 11:05 → old prefs say outside, toast.
     await page.clock.setFixedTime(new Date("2025-05-01T11:05:00Z"));
     await injectDm(page, "11:05 — cycle1 offline old prefs toast");
     await expect(
       page.getByText("11:05 — cycle1 offline old prefs toast"),
     ).toBeVisible({ timeout: 5_000 });
+
+    // Now deliver jumbled duplicates while still offline: v2, v1 (stale), v2 dup.
+    await broadcastPrefsUpdate(page, v2);
+    await broadcastPrefsUpdate(page, v1);
+    await broadcastPrefsUpdate(page, v2);
+    await page.waitForTimeout(50);
 
     // ── Reconnect briefly.
     await setOffline(page, false);
