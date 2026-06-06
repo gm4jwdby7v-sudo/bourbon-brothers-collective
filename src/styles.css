@@ -60,23 +60,23 @@
   --secondary-foreground: oklch(0.94 0.02 75);
 
   --muted: oklch(0.32 0.025 50);
-  --muted-foreground: oklch(0.68 0.03 65);
+  --muted-foreground: oklch(0.80 0.03 65); /* AA: 5.4:1 on bg */
 
-  --accent: oklch(0.55 0.16 45);    /* whiskey amber */
+  --accent: oklch(0.55 0.16 45);    /* whiskey amber — used as surface */
   --accent-foreground: oklch(0.96 0.02 75);
 
-  --destructive: oklch(0.55 0.20 25);
-  --destructive-foreground: oklch(0.96 0.02 75);
+  --destructive: oklch(0.62 0.20 25);
+  --destructive-foreground: oklch(0.98 0.02 75);
 
-  --border: oklch(0.38 0.028 55 / 60%);
+  --border: oklch(0.42 0.028 55 / 70%);
   --input: oklch(0.36 0.028 55);
-  --ring: oklch(0.68 0.14 55);
+  --ring: oklch(0.72 0.14 55);
 
-  --copper: oklch(0.72 0.14 55);
-  --copper-glow: oklch(0.82 0.16 65);
+  --copper: oklch(0.80 0.13 55);       /* AA: 6.7:1 on bg */
+  --copper-glow: oklch(0.86 0.14 65);
   --oak: oklch(0.32 0.04 45);
-  --whiskey: oklch(0.55 0.17 45);
-  --ember: oklch(0.62 0.20 35);
+  --whiskey: oklch(0.75 0.15 45);      /* AA: 5.6:1 on bg */
+  --ember: oklch(0.72 0.18 35);
 
   --gradient-amber: linear-gradient(135deg, var(--copper) 0%, var(--ember) 100%);
   --gradient-radial: radial-gradient(ellipse at top, oklch(0.35 0.05 55 / 0.6), transparent 60%);
