@@ -518,6 +518,7 @@ function FiltersSidebar(props: FiltersProps) {
   const [retailerSearch, setRetailerSearch] = useState("");
   const [retailerSort, setRetailerSort] = useState<"asc" | "desc">("asc");
   const [retailerStateScope, setRetailerStateScope] = useState<string>("all");
+  const [retailerEligibleOnly, setRetailerEligibleOnly] = useState(false);
 
   const visibleRetailers = useMemo(() => {
     const q = retailerSearch.trim().toLowerCase();
@@ -529,13 +530,25 @@ function FiltersSidebar(props: FiltersProps) {
         r.listing.shipsTo.includes(retailerStateScope),
       );
     }
+    if (retailerEligibleOnly && stateFilter.length > 0) {
+      filtered = filtered.filter((r) =>
+        stateFilter.some((s) => r.listing.shipsTo.includes(s)),
+      );
+    }
     filtered.sort((a, b) =>
       retailerSort === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name),
     );
     return filtered;
-  }, [retailerSearch, retailerOptions, retailerSort, retailerStateScope]);
+  }, [
+    retailerSearch,
+    retailerOptions,
+    retailerSort,
+    retailerStateScope,
+    retailerEligibleOnly,
+    stateFilter,
+  ]);
 
   // Per-state, per-retailer compliance for the currently-selected retailers.
   // Shape: { [stateCode]: Array<{ name, initials, status }> }
@@ -644,6 +657,21 @@ function FiltersSidebar(props: FiltersProps) {
           >
             {retailerSort === "asc" ? "A–Z" : "Z–A"}
           </Button>
+        </div>
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor="retailer-eligible-only"
+            className="text-[11px] text-muted-foreground"
+          >
+            Only eligible retailers
+          </Label>
+          <Switch
+            id="retailer-eligible-only"
+            checked={retailerEligibleOnly}
+            onCheckedChange={setRetailerEligibleOnly}
+            className="scale-75"
+            data-testid="retailer-eligible-only-toggle"
+          />
         </div>
         <div className="space-y-2">
           {visibleRetailers.map((r) => {
