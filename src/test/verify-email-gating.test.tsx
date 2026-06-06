@@ -53,14 +53,14 @@ function buildRouter(initialPath: string) {
     getParentRoute: () => rootRoute,
     id: "_authenticated",
     ssr: false,
-    beforeLoad: AuthedRoute.options.beforeLoad as never,
+    beforeLoad: AuthedRoute.options.beforeLoad as AnyRoute["options"]["beforeLoad"],
     component: () => <Outlet />,
-  });
+  }) as AnyRoute;
   const verifiedLayout = createRoute({
     getParentRoute: () => authedLayout,
     id: "_verified",
-    component: VerifiedRoute.options.component as never,
-  });
+    component: VerifiedRoute.options.component as AnyRoute["options"]["component"],
+  }) as AnyRoute;
   const messages = createRoute({
     getParentRoute: () => verifiedLayout,
     path: "/messages",
