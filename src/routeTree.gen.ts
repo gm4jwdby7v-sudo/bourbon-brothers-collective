@@ -25,6 +25,7 @@ import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_
 import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './routes/_authenticated/_verified/messages.$threadId'
 import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
 import { Route as AuthenticatedVerifiedAdminModerationRouteImport } from './routes/_authenticated/_verified/admin.moderation'
+import { Route as AuthenticatedVerifiedReviewsReviewIdAppealRouteImport } from './routes/_authenticated/_verified/reviews.$reviewId.appeal'
 import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from './routes/_authenticated/_verified/events.$eventId.checkout'
 
 const ReviewsRoute = ReviewsRouteImport.update({
@@ -114,6 +115,12 @@ const AuthenticatedVerifiedAdminModerationRoute =
     path: '/admin/moderation',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
+const AuthenticatedVerifiedReviewsReviewIdAppealRoute =
+  AuthenticatedVerifiedReviewsReviewIdAppealRouteImport.update({
+    id: '/reviews/$reviewId/appeal',
+    path: '/reviews/$reviewId/appeal',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
 const AuthenticatedVerifiedEventsEventIdCheckoutRoute =
   AuthenticatedVerifiedEventsEventIdCheckoutRouteImport.update({
     id: '/events/$eventId/checkout',
@@ -137,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
+  '/reviews/$reviewId/appeal': typeof AuthenticatedVerifiedReviewsReviewIdAppealRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -153,6 +161,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/messages': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
+  '/reviews/$reviewId/appeal': typeof AuthenticatedVerifiedReviewsReviewIdAppealRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -173,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated/_verified/settings/notifications': typeof AuthenticatedVerifiedSettingsNotificationsRoute
   '/_authenticated/_verified/messages/': typeof AuthenticatedVerifiedMessagesIndexRoute
   '/_authenticated/_verified/events/$eventId/checkout': typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
+  '/_authenticated/_verified/reviews/$reviewId/appeal': typeof AuthenticatedVerifiedReviewsReviewIdAppealRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/messages/'
     | '/events/$eventId/checkout'
+    | '/reviews/$reviewId/appeal'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/messages'
     | '/events/$eventId/checkout'
+    | '/reviews/$reviewId/appeal'
   id:
     | '__root__'
     | '/'
@@ -227,6 +239,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_verified/settings/notifications'
     | '/_authenticated/_verified/messages/'
     | '/_authenticated/_verified/events/$eventId/checkout'
+    | '/_authenticated/_verified/reviews/$reviewId/appeal'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -353,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedAdminModerationRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
+    '/_authenticated/_verified/reviews/$reviewId/appeal': {
+      id: '/_authenticated/_verified/reviews/$reviewId/appeal'
+      path: '/reviews/$reviewId/appeal'
+      fullPath: '/reviews/$reviewId/appeal'
+      preLoaderRoute: typeof AuthenticatedVerifiedReviewsReviewIdAppealRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
     '/_authenticated/_verified/events/$eventId/checkout': {
       id: '/_authenticated/_verified/events/$eventId/checkout'
       path: '/events/$eventId/checkout'
@@ -391,6 +411,7 @@ interface AuthenticatedVerifiedRouteRouteChildren {
   AuthenticatedVerifiedReviewsNewRoute: typeof AuthenticatedVerifiedReviewsNewRoute
   AuthenticatedVerifiedSettingsNotificationsRoute: typeof AuthenticatedVerifiedSettingsNotificationsRoute
   AuthenticatedVerifiedEventsEventIdCheckoutRoute: typeof AuthenticatedVerifiedEventsEventIdCheckoutRoute
+  AuthenticatedVerifiedReviewsReviewIdAppealRoute: typeof AuthenticatedVerifiedReviewsReviewIdAppealRoute
 }
 
 const AuthenticatedVerifiedRouteRouteChildren: AuthenticatedVerifiedRouteRouteChildren =
@@ -405,6 +426,8 @@ const AuthenticatedVerifiedRouteRouteChildren: AuthenticatedVerifiedRouteRouteCh
       AuthenticatedVerifiedSettingsNotificationsRoute,
     AuthenticatedVerifiedEventsEventIdCheckoutRoute:
       AuthenticatedVerifiedEventsEventIdCheckoutRoute,
+    AuthenticatedVerifiedReviewsReviewIdAppealRoute:
+      AuthenticatedVerifiedReviewsReviewIdAppealRoute,
   }
 
 const AuthenticatedVerifiedRouteRouteWithChildren =
