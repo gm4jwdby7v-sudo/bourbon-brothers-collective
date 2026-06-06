@@ -94,6 +94,14 @@ const AVAILABILITY_TONE: Record<Availability, string> = {
   sold_out: "bg-muted text-muted-foreground border-border",
 };
 
+type ComplianceStatus = "eligible" | "limited" | "not_eligible";
+
+const COMPLIANCE_STATUS_LABEL: Record<ComplianceStatus, string> = {
+  eligible: "Eligible",
+  limited: "Limited",
+  not_eligible: "Not eligible",
+};
+
 // Common US states for the compliance filter. Kept short on purpose;
 // real data would come from the listings/retailer license tables.
 const STATES: { code: string; name: string }[] = [
