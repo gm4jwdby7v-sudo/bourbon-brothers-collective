@@ -38,7 +38,7 @@ vi.mock("@/components/SiteNav", () => ({
 import { AnyRoute } from "@tanstack/react-router";
 import { Route as AuthedRoute } from "@/routes/_authenticated/route";
 import { Route as VerifiedRoute } from "@/routes/_authenticated/_verified/route";
-import { Route as MessagesRoute } from "@/routes/_authenticated/_verified/messages";
+import { Route as MessagesRoute } from "@/routes/_authenticated/_verified/messages.index";
 import { Route as ForumNewRoute } from "@/routes/_authenticated/_verified/forum.new";
 import { Route as CheckoutRoute } from "@/routes/_authenticated/_verified/events.$eventId.checkout";
 

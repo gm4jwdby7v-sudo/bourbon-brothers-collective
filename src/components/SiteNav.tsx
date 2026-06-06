@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const links = [
-  { to: "/", label: "Community" },
-  { to: "/marketplace", label: "Marketplace" },
-  { to: "/forum/new", label: "New post" },
-  { to: "/messages", label: "Messages" },
-  { to: "/events/featured/checkout", label: "Events" },
+  { to: "/", label: "Community", params: undefined },
+  { to: "/marketplace", label: "Marketplace", params: undefined },
+  { to: "/forum/new", label: "New post", params: undefined },
+  { to: "/messages", label: "Messages", params: undefined },
+  { to: "/events/$eventId/checkout", label: "Events", params: { eventId: "featured" } },
 ] as const;
 
 export function SiteNav() {
@@ -32,7 +32,7 @@ export function SiteNav() {
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           {links.map((l) => (
-            <Link key={l.label} to={l.to} className="hover:text-foreground transition-colors">
+            <Link key={l.label} to={l.to} params={l.params as never} className="hover:text-foreground transition-colors">
               {l.label}
             </Link>
           ))}
@@ -76,7 +76,7 @@ export function SiteNav() {
       {open && (
         <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3">
           {links.map((l) => (
-            <Link key={l.label} to={l.to} className="block text-sm py-1">{l.label}</Link>
+            <Link key={l.label} to={l.to} params={l.params as never} className="block text-sm py-1">{l.label}</Link>
           ))}
           <div className="pt-3 flex gap-2">
             {user ? (
