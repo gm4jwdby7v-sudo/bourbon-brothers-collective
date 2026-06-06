@@ -640,22 +640,35 @@ function FiltersSidebar(props: FiltersProps) {
     if (!name) return;
     if (isSignedIn) {
       setPresetsSyncing(true);
+      setPresetSyncError(null);
       try {
-        const { preset } = await createRetailerPreset({
-          data: {
-            name,
-            state_filter: stateFilter,
-            retailer_search: retailerSearch,
-            retailer_sort: retailerSort,
-            retailer_state_scope: retailerStateScope,
-            retailer_eligible_only: retailerEligibleOnly,
-          },
-        });
+        const { preset } = await withRetry(
+          () =>
+            createRetailerPreset({
+              data: {
+                name,
+                state_filter: stateFilter,
+                retailer_search: retailerSearch,
+                retailer_sort: retailerSort,
+                retailer_state_scope: retailerStateScope,
+                retailer_eligible_only: retailerEligibleOnly,
+              },
+            }),
+          { maxAttempts: 3, delayMs: 400 },
+        );
         setPresets((cur) => [...cur, fromRow(preset)]);
         setActivePresetId(preset.id);
         setPresetNameDraft("");
-      } catch (e) {
-        console.error("Failed to save preset", e);
+        toast.success("Preset saved", {
+          description: `"${preset.name}" has been synced to your account.`,
+        });
+      } catch (err) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Could not save preset. Please try again later.";
+        setPresetSyncError(msg);
+        toast.error("Preset save failed", { description: msg });
       } finally {
         setPresetsSyncing(false);
       }
@@ -675,24 +688,48 @@ function FiltersSidebar(props: FiltersProps) {
     persistLocal(next);
     setActivePresetId(preset.id);
     setPresetNameDraft("");
+    toast.success("Preset saved", {
+      description: `"${preset.name}" has been saved locally.`,
+    });
   };
 
   const deleteActivePreset = async () => {
     if (!activePresetId) return;
     const id = activePresetId;
+    const presetName = presets.find((p) => p.id === id)?.name ?? "Preset";
     if (isSignedIn) {
       setPresetsSyncing(true);
+      setPresetSyncError(null);
       try {
-        await deleteRetailerPreset({ data: { id } });
+        await withRetry(
+          () => deleteRetailerPreset({ data: { id } }),
+          { maxAttempts: 3, delayMs: 400 },
+        );
         setPresets((cur) => cur.filter((p) => p.id !== id));
         setActivePresetId("");
-      } catch (e) {
-        console.error("Failed to delete preset", e);
+        toast.success("Preset deleted", {
+          description: `"${presetName}" has been removed from your account.`,
+        });
+      } catch (err) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Could not delete preset. Please try again later.";
+        setPresetSyncError(msg);
+        toast.error("Preset delete failed", { description: msg });
       } finally {
         setPresetsSyncing(false);
       }
       return;
     }
+    const next = presets.filter((p) => p.id !== id);
+    setPresets(next);
+    persistLocal(next);
+    setActivePresetId("");
+    toast.success("Preset deleted", {
+      description: `"${presetName}" has been removed.`,
+    });
+  };
     const next = presets.filter((p) => p.id !== id);
     setPresets(next);
     persistLocal(next);
