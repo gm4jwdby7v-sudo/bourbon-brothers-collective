@@ -337,7 +337,7 @@ function MarketplacePage() {
               >
                 {filtered.map((l) => (
                   <li key={l.id}>
-                    <ListingCard listing={l} />
+                    <ListingCard listing={l} selectedStates={stateFilter} />
                   </li>
                 ))}
               </ul>
