@@ -912,6 +912,32 @@ function ListingCard({
             filtered={selectedStates.length > 0}
           />
 
+          {selectedStates.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {selectedStates.map((code) => {
+                const allowed = listing.shipsTo.includes(code);
+                return (
+                  <span
+                    key={code}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                      allowed
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                        : "border-destructive/30 bg-destructive/10 text-destructive",
+                    )}
+                  >
+                    {allowed ? (
+                      <Check className="h-2.5 w-2.5" />
+                    ) : (
+                      <X className="h-2.5 w-2.5" />
+                    )}
+                    {code}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
           <div className="mt-auto flex items-end justify-between pt-2">
             <div>
               <p className="font-display text-xl">
