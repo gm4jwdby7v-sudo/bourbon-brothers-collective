@@ -207,10 +207,6 @@ test.describe("Live notification settings → DmAlerts (no refresh)", () => {
     const h = new Date().getUTCHours();
     await page.getByTestId("quiet-start").fill(pad(h - 1));
     await page.getByTestId("quiet-end").fill(pad(h - 2));
-    await page.getByTestId("quiet-tz").click();
-    // The Select uses radix; fall back to direct write by saving — the saved
-    // payload uses whatever tz the page chose. To keep the simulated broadcast
-    // deterministic in UTC, override the broadcast row.
     await page.getByTestId("save-settings").click();
     await expect.poll(() => state.lastWrite?.quiet_hours_enabled).toBe(true);
 
