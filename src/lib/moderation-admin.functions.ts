@@ -61,13 +61,6 @@ export const setReviewModeration = createServerFn({ method: "POST" })
     await requireModerator(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const update: Record<string, unknown> = {
-      image_moderation_status: data.decision as ModerationDecision,
-      image_moderation_reason: data.reason ?? null,
-      image_moderated_at: new Date().toISOString(),
-      image_moderated_by: context.userId,
-    };
-
     // On rejection, remove the file from storage too
     if (data.decision === "rejected") {
       const { data: row } = await supabaseAdmin
@@ -78,12 +71,28 @@ export const setReviewModeration = createServerFn({ method: "POST" })
       if (row?.image_url) {
         await supabaseAdmin.storage.from("review-images").remove([row.image_url]);
       }
-      update.image_url = null;
+      const { error } = await supabaseAdmin
+        .from("bourbon_reviews")
+        .update({
+          image_url: null,
+          image_moderation_status: "rejected",
+          image_moderation_reason: data.reason ?? null,
+          image_moderated_at: new Date().toISOString(),
+          image_moderated_by: context.userId,
+        })
+        .eq("id", data.reviewId);
+      if (error) throw new Error(error.message);
+      return { ok: true };
     }
 
     const { error } = await supabaseAdmin
       .from("bourbon_reviews")
-      .update(update)
+      .update({
+        image_moderation_status: "approved",
+        image_moderation_reason: data.reason ?? null,
+        image_moderated_at: new Date().toISOString(),
+        image_moderated_by: context.userId,
+      })
       .eq("id", data.reviewId);
     if (error) throw new Error(error.message);
     return { ok: true };
