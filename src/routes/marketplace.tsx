@@ -672,6 +672,71 @@ function FiltersSidebar(props: FiltersProps) {
       </div>
 
       <FilterGroup label="Retailers (compare)">
+        <div className="space-y-2 rounded-md border border-dashed border-border/60 p-2">
+          <div className="flex items-center gap-2">
+            <Label
+              htmlFor="retailer-preset-select"
+              className="text-[11px] text-muted-foreground"
+            >
+              Preset:
+            </Label>
+            <select
+              id="retailer-preset-select"
+              value={activePresetId}
+              onChange={(e) => {
+                const id = e.target.value;
+                if (id) applyPreset(id);
+                else setActivePresetId("");
+              }}
+              className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+              data-testid="retailer-preset-select"
+            >
+              <option value="">— Select preset —</option>
+              {presets.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            {activePresetId && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-1.5 text-xs text-muted-foreground hover:text-destructive"
+                onClick={deleteActivePreset}
+                data-testid="retailer-preset-delete"
+                title="Delete preset"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Name this preset…"
+              className="h-8 flex-1 text-xs"
+              value={presetNameDraft}
+              onChange={(e) => setPresetNameDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  saveCurrentAsPreset();
+                }
+              }}
+              data-testid="retailer-preset-name-input"
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 px-2 text-xs"
+              onClick={saveCurrentAsPreset}
+              disabled={!presetNameDraft.trim()}
+              data-testid="retailer-preset-save"
+            >
+              Save
+            </Button>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <Label
             htmlFor="retailer-state-scope"
