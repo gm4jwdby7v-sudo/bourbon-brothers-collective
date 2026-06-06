@@ -126,10 +126,21 @@ export function DmAlerts() {
       const detail = (e as CustomEvent<DmMessagePayload>).detail;
       if (detail) void handleIncoming(detail);
     };
+    // Test-only bridge: simulate the realtime prefs-update callback so E2E
+    // tests can verify live suppression without a websocket connection.
+    const onTestUpdatePrefs = (e: Event) => {
+      const detail = (e as CustomEvent<Partial<NotificationPrefs>>).detail;
+      if (detail) prefsRef.current = { ...DEFAULT_PREFS, ...detail };
+    };
     window.addEventListener("dm-alerts:test-inject", onTestInject);
+    window.addEventListener("dm-alerts:test-update-prefs", onTestUpdatePrefs);
 
     return () => {
       window.removeEventListener("dm-alerts:test-inject", onTestInject);
+      window.removeEventListener(
+        "dm-alerts:test-update-prefs",
+        onTestUpdatePrefs,
+      );
       supabase.removeChannel(channel);
       supabase.removeChannel(prefsChannel);
     };
