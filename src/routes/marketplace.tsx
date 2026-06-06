@@ -516,12 +516,20 @@ function FiltersSidebar(props: FiltersProps) {
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
   const [retailerSearch, setRetailerSearch] = useState("");
+  const [retailerSort, setRetailerSort] = useState<"asc" | "desc">("asc");
 
   const visibleRetailers = useMemo(() => {
     const q = retailerSearch.trim().toLowerCase();
-    if (!q) return retailerOptions;
-    return retailerOptions.filter((r) => r.name.toLowerCase().includes(q));
-  }, [retailerSearch, retailerOptions]);
+    const filtered = q
+      ? retailerOptions.filter((r) => r.name.toLowerCase().includes(q))
+      : [...retailerOptions];
+    filtered.sort((a, b) =>
+      retailerSort === "asc"
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name),
+    );
+    return filtered;
+  }, [retailerSearch, retailerOptions, retailerSort]);
 
   // Per-state, per-retailer compliance for the currently-selected retailers.
   // Shape: { [stateCode]: Array<{ name, initials, status }> }
