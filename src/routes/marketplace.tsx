@@ -564,6 +564,7 @@ function FiltersSidebar(props: FiltersProps) {
   const [activePresetId, setActivePresetId] = useState<string>("");
   const [presetNameDraft, setPresetNameDraft] = useState("");
   const [presetsSyncing, setPresetsSyncing] = useState(false);
+  const [presetSyncError, setPresetSyncError] = useState<string | null>(null);
 
   const fromRow = (r: RetailerPresetRow): RetailerPreset => ({
     id: r.id,
@@ -577,6 +578,7 @@ function FiltersSidebar(props: FiltersProps) {
 
   useEffect(() => {
     let cancelled = false;
+    setPresetSyncError(null);
     if (!isSignedIn) {
       try {
         const raw = localStorage.getItem(PRESETS_KEY);
@@ -587,13 +589,24 @@ function FiltersSidebar(props: FiltersProps) {
       return;
     }
     setPresetsSyncing(true);
-    listRetailerPresets()
+    withRetry(() => listRetailerPresets(), { maxAttempts: 3, delayMs: 400 })
       .then(({ presets: rows }) => {
         if (cancelled) return;
         setPresets(rows.map(fromRow));
+        setPresetSyncError(null);
       })
-      .catch(() => {
-        if (!cancelled) setPresets([]);
+      .catch((err) => {
+        if (!cancelled) {
+          setPresets([]);
+          const msg =
+            err instanceof Error
+              ? err.message
+              : "Could not load your presets. Please try again later.";
+          setPresetSyncError(msg);
+          toast.error("Preset sync failed", {
+            description: msg,
+          });
+        }
       })
       .finally(() => {
         if (!cancelled) setPresetsSyncing(false);
