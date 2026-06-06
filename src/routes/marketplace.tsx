@@ -86,6 +86,65 @@ const STATES: { code: string; name: string }[] = [
   { code: "TN", name: "Tennessee" },
 ];
 
+/**
+ * Per-state shipping limitations applied at the destination. Real data would
+ * come from a compliance service; these notes are representative summaries
+ * for filter-aware UI and are NOT legal advice.
+ */
+interface StateLaw {
+  /** Cap on a single shipment, in 750ml-equivalent bottles. null = no cap. */
+  monthlyBottleLimit: number | null;
+  /** True when the destination requires an adult signature on delivery. */
+  adultSignatureRequired: boolean;
+  /** Short legal note shown on the eligibility row. */
+  note: string;
+}
+
+const STATE_LAW: Record<string, StateLaw> = {
+  CA: {
+    monthlyBottleLimit: null,
+    adultSignatureRequired: true,
+    note: "Direct-to-consumer allowed via licensed retailer. Adult signature required.",
+  },
+  FL: {
+    monthlyBottleLimit: 12,
+    adultSignatureRequired: true,
+    note: "Limit 12 bottles per shipment. Adult signature required.",
+  },
+  IL: {
+    monthlyBottleLimit: 9,
+    adultSignatureRequired: true,
+    note: "Limit 9L per month per address. Retailer must hold an IL shipper's license.",
+  },
+  KY: {
+    monthlyBottleLimit: null,
+    adultSignatureRequired: true,
+    note: "In-state shipments only from KY-licensed retailers. Adult signature required.",
+  },
+  NY: {
+    monthlyBottleLimit: 36,
+    adultSignatureRequired: true,
+    note: "Limit 36 bottles per year per address. Adult signature required.",
+  },
+  TX: {
+    monthlyBottleLimit: 3,
+    adultSignatureRequired: true,
+    note: "Limit 3 gallons per month per address. TX permit required.",
+  },
+  WA: {
+    monthlyBottleLimit: null,
+    adultSignatureRequired: true,
+    note: "Direct-to-consumer allowed for licensed out-of-state retailers.",
+  },
+  TN: {
+    monthlyBottleLimit: 12,
+    adultSignatureRequired: true,
+    note: "Limit 12 bottles per shipment. Retailer must hold a TN direct-shipper license.",
+  },
+};
+
+
+
 const LISTINGS: Listing[] = [
   {
     id: "l-1",
