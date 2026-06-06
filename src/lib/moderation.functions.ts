@@ -2,6 +2,52 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
+ * Owner-initiated resubmission: after rejection, owner uploaded a new image
+ * to review-images/{user_id}/... and now wants it re-moderated.
+ */
+export const resubmitReviewImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { reviewId: string; newImagePath: string }) => {
+    if (!input?.reviewId) throw new Error("reviewId is required");
+    if (!input?.newImagePath || typeof input.newImagePath !== "string") {
+      throw new Error("newImagePath is required");
+    }
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    // Enforce the upload lives in the user's folder
+    if (!data.newImagePath.startsWith(`${userId}/`)) {
+      throw new Error("Image path must be inside your own folder");
+    }
+    const { data: review, error: loadErr } = await supabase
+      .from("bourbon_reviews")
+      .select("id, user_id, image_moderation_status, image_url")
+      .eq("id", data.reviewId)
+      .single();
+    if (loadErr || !review) throw new Error("Review not found");
+    if (review.user_id !== userId) throw new Error("Forbidden");
+    if (review.image_moderation_status !== "rejected") {
+      throw new Error("Only rejected photos can be resubmitted");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: upErr } = await supabaseAdmin
+      .from("bourbon_reviews")
+      .update({
+        image_url: data.newImagePath,
+        image_moderation_status: "pending",
+        image_moderation_reason: null,
+        image_moderated_at: null,
+        image_moderated_by: null,
+      })
+      .eq("id", data.reviewId);
+    if (upErr) throw new Error(upErr.message);
+
+    return { ok: true };
+  });
+
+/**
  * Run AI moderation on a freshly uploaded review image, then update the review.
  * Uses Lovable AI Gateway (Gemini Flash) for low-cost vision moderation.
  */
