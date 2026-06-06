@@ -730,11 +730,6 @@ function FiltersSidebar(props: FiltersProps) {
       description: `"${presetName}" has been removed.`,
     });
   };
-    const next = presets.filter((p) => p.id !== id);
-    setPresets(next);
-    persistLocal(next);
-    setActivePresetId("");
-  };
 
   const visibleRetailers = useMemo(() => {
     const q = retailerSearch.trim().toLowerCase();
