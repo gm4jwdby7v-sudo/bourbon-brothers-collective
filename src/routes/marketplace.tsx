@@ -428,6 +428,8 @@ interface FiltersProps {
   setRetailerFilter: (v: RetailerType[]) => void;
   availabilityFilter: Availability[];
   setAvailabilityFilter: (v: Availability[]) => void;
+  complianceFilter: ComplianceStatus[];
+  setComplianceFilter: (v: ComplianceStatus[]) => void;
   activeFilterCount: number;
   onClear: () => void;
 }
@@ -440,6 +442,8 @@ function FiltersSidebar(props: FiltersProps) {
     setRetailerFilter,
     availabilityFilter,
     setAvailabilityFilter,
+    complianceFilter,
+    setComplianceFilter,
     activeFilterCount,
     onClear,
   } = props;
