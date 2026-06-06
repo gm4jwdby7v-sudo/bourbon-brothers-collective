@@ -36,6 +36,7 @@ interface ReviewRow {
   rating: number;
   body: string;
   image_url: string | null;
+  image_moderation_status: "pending" | "approved" | "rejected" | "auto_flagged" | null;
   created_at: string;
   distillery: { name: string } | null;
   author: { display_name: string | null; username: string | null; avatar_url: string | null } | null;
