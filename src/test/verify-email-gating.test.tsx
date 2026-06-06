@@ -35,6 +35,7 @@ vi.mock("@/components/SiteNav", () => ({
   SiteNav: () => <nav data-testid="site-nav" />,
 }));
 
+import { AnyRoute } from "@tanstack/react-router";
 import { Route as AuthedRoute } from "@/routes/_authenticated/route";
 import { Route as VerifiedRoute } from "@/routes/_authenticated/_verified/route";
 import { Route as MessagesRoute } from "@/routes/_authenticated/_verified/messages";
