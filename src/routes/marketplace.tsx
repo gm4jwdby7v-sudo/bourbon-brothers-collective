@@ -688,16 +688,38 @@ function EligibilityPanel({
 function LegalDetailsModal({
   listing,
   states,
+  selectedStates,
   filtered,
 }: {
   listing: Listing;
   states: string[];
+  selectedStates: string[];
   filtered: boolean;
 }) {
   const [activeState, setActiveState] = useState(states[0] ?? "");
 
+  // Sync activeState to the filter state(s) whenever the dialog content mounts
+  // or the underlying state list changes. Prefer the first selected filter state
+  // that the retailer ships to; fall back to the first selected state; finally
+  // fall back to the first eligible state.
+  const defaultActive = useMemo(() => {
+    if (selectedStates.length > 0) {
+      const firstShipped = selectedStates.find((s) =>
+        listing.shipsTo.includes(s),
+      );
+      return firstShipped ?? selectedStates[0] ?? states[0] ?? "";
+    }
+    return states[0] ?? "";
+  }, [selectedStates, states, listing.shipsTo]);
+
+  useState(() => {
+    setActiveState(defaultActive);
+  });
+
   // If the states list changes (e.g. filter applied), ensure activeState is valid
-  const validActive = states.includes(activeState) ? activeState : states[0] ?? "";
+  const validActive = states.includes(activeState)
+    ? activeState
+    : defaultActive;
 
   const activeLaw = STATE_LAW[validActive];
   const activeAllowed = listing.shipsTo.includes(validActive);
@@ -736,7 +758,7 @@ function LegalDetailsModal({
                   ? "border-primary bg-primary text-primary-foreground"
                   : allowed
                     ? "border-border bg-muted text-muted-foreground hover:text-foreground"
-                    : "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20"
+                    : "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
               )}
             >
               {code}
