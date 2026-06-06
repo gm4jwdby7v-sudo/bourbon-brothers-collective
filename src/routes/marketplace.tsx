@@ -19,6 +19,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  listRetailerPresets,
+  createRetailerPreset,
+  deleteRetailerPreset,
+  type RetailerPresetRow,
+} from "@/lib/retailer-presets.functions";
+
 
 
 import {
