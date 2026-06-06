@@ -115,6 +115,8 @@ interface StateLaw {
   monthlyBottleLimit: number | null;
   /** True when the destination requires an adult signature on delivery. */
   adultSignatureRequired: boolean;
+  /** True when the destination requires government-issued ID verification at delivery. */
+  idRequired: boolean;
   /** Short legal note shown on the eligibility row. */
   note: string;
 }
@@ -123,42 +125,50 @@ const STATE_LAW: Record<string, StateLaw> = {
   CA: {
     monthlyBottleLimit: null,
     adultSignatureRequired: true,
-    note: "Direct-to-consumer allowed via licensed retailer. Adult signature required.",
+    idRequired: true,
+    note: "Direct-to-consumer allowed via licensed retailer. Adult signature and valid government-issued ID required at delivery. Must be 21+.",
   },
   FL: {
     monthlyBottleLimit: 12,
     adultSignatureRequired: true,
-    note: "Limit 12 bottles per shipment. Adult signature required.",
+    idRequired: true,
+    note: "Limit 12 bottles per shipment. Adult signature and government-issued ID required. Must be 21+.",
   },
   IL: {
     monthlyBottleLimit: 9,
     adultSignatureRequired: true,
-    note: "Limit 9L per month per address. Retailer must hold an IL shipper's license.",
+    idRequired: true,
+    note: "Limit 9L per month per address. Retailer must hold an IL shipper's license. Adult signature and ID verification required. Must be 21+.",
   },
   KY: {
     monthlyBottleLimit: null,
     adultSignatureRequired: true,
-    note: "In-state shipments only from KY-licensed retailers. Adult signature required.",
+    idRequired: true,
+    note: "In-state shipments only from KY-licensed retailers. Adult signature and valid ID required at delivery. Must be 21+.",
   },
   NY: {
     monthlyBottleLimit: 36,
     adultSignatureRequired: true,
-    note: "Limit 36 bottles per year per address. Adult signature required.",
+    idRequired: true,
+    note: "Limit 36 bottles per year per address. Adult signature and government-issued ID required. Must be 21+.",
   },
   TX: {
     monthlyBottleLimit: 3,
     adultSignatureRequired: true,
-    note: "Limit 3 gallons per month per address. TX permit required.",
+    idRequired: true,
+    note: "Limit 3 gallons per month per address. TX permit required. Adult signature and valid ID required. Must be 21+.",
   },
   WA: {
     monthlyBottleLimit: null,
     adultSignatureRequired: true,
-    note: "Direct-to-consumer allowed for licensed out-of-state retailers.",
+    idRequired: true,
+    note: "Direct-to-consumer allowed for licensed out-of-state retailers. Adult signature and ID verification required. Must be 21+.",
   },
   TN: {
     monthlyBottleLimit: 12,
     adultSignatureRequired: true,
-    note: "Limit 12 bottles per shipment. Retailer must hold a TN direct-shipper license.",
+    idRequired: true,
+    note: "Limit 12 bottles per shipment. Retailer must hold a TN direct-shipper license. Adult signature and ID required. Must be 21+.",
   },
 };
 
