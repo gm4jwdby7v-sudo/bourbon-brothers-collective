@@ -681,3 +681,124 @@ function EligibilityPanel({
   );
 }
 
+// ─── Legal details modal ───────────────────────────────────────────────────
+
+function LegalDetailsModal({
+  listing,
+  states,
+  filtered,
+}: {
+  listing: Listing;
+  states: string[];
+  filtered: boolean;
+}) {
+  return (
+    <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Scale className="h-5 w-5 text-primary" />
+          Legal limitations
+        </DialogTitle>
+        <DialogDescription>
+          Shipping compliance, limits, and ID requirements for{" "}
+          {listing.retailer}
+          {filtered
+            ? " in your selected states"
+            : " in every state they ship to"}
+          .
+        </DialogDescription>
+      </DialogHeader>
+
+      <ScrollArea className="-mr-4 flex-1 pr-4">
+        <div className="space-y-5">
+          {states.map((code, idx) => {
+            const allowed = listing.shipsTo.includes(code);
+            const law = STATE_LAW[code];
+            const stateName =
+              STATES.find((s) => s.code === code)?.name ?? code;
+            return (
+              <div key={code} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {allowed ? (
+                    <Check className="h-4 w-4 shrink-0 text-primary" />
+                  ) : (
+                    <X className="h-4 w-4 shrink-0 text-destructive" />
+                  )}
+                  <span className="font-medium">
+                    {stateName} ({code})
+                  </span>
+                  {!allowed && (
+                    <Badge
+                      variant="outline"
+                      className="border-destructive/40 bg-destructive/10 text-xs text-destructive"
+                    >
+                      Not licensed
+                    </Badge>
+                  )}
+                </div>
+
+                {allowed && law && (
+                  <div className="ml-6 space-y-2 rounded-md border border-border/60 bg-background/40 p-3">
+                    <div className="flex flex-wrap gap-2">
+                      {law.monthlyBottleLimit != null ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-500/30 bg-amber-500/10 text-amber-300"
+                        >
+                          Limit {law.monthlyBottleLimit} btl
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-primary/30 bg-primary/10 text-primary"
+                        >
+                          No bottle limit
+                        </Badge>
+                      )}
+                      {law.adultSignatureRequired && (
+                        <Badge
+                          variant="outline"
+                          className="border-border bg-muted text-muted-foreground"
+                        >
+                          Adult signature
+                        </Badge>
+                      )}
+                      {law.idRequired && (
+                        <Badge
+                          variant="outline"
+                          className="border-border bg-muted text-muted-foreground"
+                        >
+                          ID required
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{law.note}</p>
+                  </div>
+                )}
+
+                {!allowed && (
+                  <p className="ml-6 text-sm text-muted-foreground">
+                    {listing.retailer} is not licensed to ship to {code}.
+                  </p>
+                )}
+
+                {idx < states.length - 1 && <Separator />}
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
+
+      <div className="mt-4 flex items-start gap-2 rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          These details are summaries for convenience and are NOT legal advice.
+          Alcohol shipping laws change frequently. Confirm all requirements
+          directly with the retailer and consult local regulations before
+          ordering.
+        </p>
+      </div>
+    </DialogContent>
+  );
+}
+
