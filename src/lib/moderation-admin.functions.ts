@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type ModerationDecision = "approved" | "rejected" | "auto_flagged" | "pending";
+
 
 async function requireModerator(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
