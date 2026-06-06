@@ -301,6 +301,28 @@ function MarketplacePage() {
   const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>(
     [],
   );
+  const [retailerNameFilter, setRetailerNameFilter] = useState<string>("all");
+  const [query, setQuery] = useState("");
+
+  // Unique retailer names (preserve first-seen order) + a representative listing
+  // per retailer so the sidebar can show that retailer's per-state compliance.
+  const retailerOptions = useMemo(() => {
+    const seen = new Map<string, Listing>();
+    for (const l of LISTINGS) if (!seen.has(l.retailer)) seen.set(l.retailer, l);
+    return Array.from(seen.entries()).map(([name, listing]) => ({
+      name,
+      listing,
+    }));
+  }, []);
+
+  const activeRetailerListing = useMemo(
+    () =>
+      retailerNameFilter === "all"
+        ? null
+        : (retailerOptions.find((r) => r.name === retailerNameFilter)?.listing ??
+          null),
+    [retailerNameFilter, retailerOptions],
+  );
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
