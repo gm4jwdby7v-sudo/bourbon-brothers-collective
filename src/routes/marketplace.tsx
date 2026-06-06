@@ -331,7 +331,10 @@ function MarketplacePage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return LISTINGS.filter((l) => {
-      if (retailerNameFilter !== "all" && l.retailer !== retailerNameFilter)
+      if (
+        retailerNamesFilter.length > 0 &&
+        !retailerNamesFilter.includes(l.retailer)
+      )
         return false;
       if (q && !`${l.name} ${l.retailer}`.toLowerCase().includes(q))
         return false;
@@ -366,7 +369,7 @@ function MarketplacePage() {
     retailerFilter,
     availabilityFilter,
     complianceFilter,
-    retailerNameFilter,
+    retailerNamesFilter,
   ]);
 
   const activeFilterCount =
@@ -374,7 +377,8 @@ function MarketplacePage() {
     retailerFilter.length +
     availabilityFilter.length +
     complianceFilter.length +
-    (retailerNameFilter !== "all" ? 1 : 0);
+    retailerNamesFilter.length;
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
