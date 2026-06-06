@@ -3,6 +3,7 @@ import { Menu, X, LogOut, User as UserIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +47,7 @@ export function SiteNav() {
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-3">
+          {user && <NotificationsBell />}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
