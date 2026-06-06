@@ -67,7 +67,7 @@ function ReviewsPage() {
       const { data, error } = await supabase
         .from("bourbon_reviews")
         .select(
-          "id, user_id, bottle_name, rating, body, image_url, created_at, distillery:places(name), author:profiles(display_name, username, avatar_url)",
+          "id, user_id, bottle_name, rating, body, image_url, image_moderation_status, created_at, distillery:places(name), author:profiles(display_name, username, avatar_url)",
         )
         .order("created_at", { ascending: false })
         .limit(60);
