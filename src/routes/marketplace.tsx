@@ -566,31 +566,42 @@ function FiltersSidebar(props: FiltersProps) {
         )}
       </div>
 
-      <FilterGroup label="Retailer">
-        <Select
-          value={retailerNameFilter}
-          onValueChange={setRetailerNameFilter}
-        >
-          <SelectTrigger
-            className="h-9 text-sm"
-            data-testid="filter-retailer-name"
-          >
-            <SelectValue placeholder="All retailers" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All retailers</SelectItem>
-            {retailerOptions.map((r) => (
-              <SelectItem key={r.name} value={r.name}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {activeRetailerListing && (
+      <FilterGroup label="Retailers (compare)">
+        <div className="space-y-2">
+          {retailerOptions.map((r) => {
+            const checked = retailerNamesFilter.includes(r.name);
+            return (
+              <label
+                key={r.name}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={() =>
+                    setRetailerNamesFilter(toggle(retailerNamesFilter, r.name))
+                  }
+                  data-testid={`filter-retailer-name-${r.name}`}
+                />
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="inline-flex h-4 w-5 items-center justify-center rounded-sm bg-muted text-[9px] font-bold text-foreground/80"
+                    aria-hidden
+                  >
+                    {initialsFor(r.name)}
+                  </span>
+                  {r.name}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        {activeRetailerListings.length > 0 && (
           <p className="text-[11px] text-muted-foreground">
-            Showing compliance for{" "}
-            <span className="text-foreground">{activeRetailerListing.retailer}</span>
-            .
+            Comparing{" "}
+            <span className="text-foreground">
+              {activeRetailerListings.length}
+            </span>{" "}
+            retailer{activeRetailerListings.length === 1 ? "" : "s"}.
           </p>
         )}
       </FilterGroup>
@@ -599,7 +610,7 @@ function FiltersSidebar(props: FiltersProps) {
         <div className="grid grid-cols-2 gap-2">
           {STATES.map((s) => {
             const checked = stateFilter.includes(s.code);
-            const status = stateStatusForRetailer?.[s.code];
+            const entries = stateStatusByRetailer?.[s.code];
             return (
               <label
                 key={s.code}
@@ -614,25 +625,27 @@ function FiltersSidebar(props: FiltersProps) {
                 />
                 <span className="flex items-center gap-1.5">
                   {s.code}
-                  {status && (
-                    <span
-                      className={cn(
-                        "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
-                        COMPLIANCE_TONE[status],
-                      )}
-                      title={COMPLIANCE_STATUS_LABEL[status]}
-                    >
-                      {status === "eligible"
-                        ? "OK"
-                        : status === "limited"
-                          ? "LMT"
-                          : "NO"}
+                  {entries && entries.length > 0 && (
+                    <span className="flex items-center gap-0.5">
+                      {entries.map((e) => (
+                        <span
+                          key={e.name}
+                          className={cn(
+                            "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
+                            COMPLIANCE_TONE[e.status],
+                          )}
+                          title={`${e.name}: ${COMPLIANCE_STATUS_LABEL[e.status]}`}
+                        >
+                          {e.initials}
+                        </span>
+                      ))}
                     </span>
                   )}
                 </span>
               </label>
             );
           })}
+
         </div>
       </FilterGroup>
 
