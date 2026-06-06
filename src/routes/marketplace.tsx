@@ -515,6 +515,14 @@ function FiltersSidebar(props: FiltersProps) {
   const toggle = <T extends string>(arr: T[], v: T) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
+  const [retailerSearch, setRetailerSearch] = useState("");
+
+  const visibleRetailers = useMemo(() => {
+    const q = retailerSearch.trim().toLowerCase();
+    if (!q) return retailerOptions;
+    return retailerOptions.filter((r) => r.name.toLowerCase().includes(q));
+  }, [retailerSearch, retailerOptions]);
+
   // Per-state, per-retailer compliance for the currently-selected retailers.
   // Shape: { [stateCode]: Array<{ name, initials, status }> }
   const stateStatusByRetailer = useMemo(() => {
