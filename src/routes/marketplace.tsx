@@ -698,6 +698,7 @@ function LegalDetailsModal({
   filtered: boolean;
 }) {
   const [activeState, setActiveState] = useState(states[0] ?? "");
+  const [showNotes, setShowNotes] = useState(true);
 
   // Sync activeState to the filter state(s) whenever the dialog content mounts
   // or the underlying state list changes. Prefer the first selected filter state
@@ -743,6 +744,15 @@ function LegalDetailsModal({
           .
         </DialogDescription>
       </DialogHeader>
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">Show disclaimers &amp; notes</span>
+        <Switch
+          checked={showNotes}
+          onCheckedChange={setShowNotes}
+          aria-label="Toggle disclaimers and notes"
+        />
+      </div>
 
       {/* State selector */}
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -824,9 +834,11 @@ function LegalDetailsModal({
                 </Badge>
               )}
             </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {activeLaw.note}
-            </p>
+            {showNotes && (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {activeLaw.note}
+              </p>
+            )}
           </div>
         )}
 
@@ -868,7 +880,7 @@ function LegalDetailsModal({
                     </Badge>
                   )}
                 </div>
-                {allowed && law && (
+                {showNotes && allowed && law && (
                   <p className="ml-5 text-xs text-muted-foreground">
                     {law.note}
                   </p>
@@ -885,15 +897,17 @@ function LegalDetailsModal({
         </div>
       </ScrollArea>
 
-      <div className="mt-2 flex items-start gap-2 rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
-        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          These details are summaries for convenience and are NOT legal advice.
-          Alcohol shipping laws change frequently. Confirm all requirements
-          directly with the retailer and consult local regulations before
-          ordering.
-        </p>
-      </div>
+      {showNotes && (
+        <div className="mt-2 flex items-start gap-2 rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            These details are summaries for convenience and are NOT legal advice.
+            Alcohol shipping laws change frequently. Confirm all requirements
+            directly with the retailer and consult local regulations before
+            ordering.
+          </p>
+        </div>
+      )}
     </DialogContent>
   );
 }
