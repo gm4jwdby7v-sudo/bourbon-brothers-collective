@@ -28,16 +28,7 @@ import {
 } from "@/lib/retailer-presets.functions";
 import { toast } from "sonner";
 
-import {
-  Check,
-  FileText,
-  MapPin,
-  Scale,
-  ShieldAlert,
-  ShieldCheck,
-  Store,
-  X,
-} from "lucide-react";
+import { Check, FileText, MapPin, Scale, ShieldAlert, ShieldCheck, Store, X } from "lucide-react";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
@@ -61,11 +52,7 @@ export const Route = createFileRoute("/marketplace")({
 
 // ─── Domain ────────────────────────────────────────────────────────────────
 
-type RetailerType =
-  | "liquor_store"
-  | "online_retailer"
-  | "auction_house"
-  | "distillery_direct";
+type RetailerType = "liquor_store" | "online_retailer" | "auction_house" | "distillery_direct";
 
 type Availability = "in_stock" | "allocated" | "waitlist" | "sold_out";
 
@@ -191,10 +178,7 @@ const STATE_LAW: Record<string, StateLaw> = {
   },
 };
 
-function getComplianceStatus(
-  listing: Listing,
-  stateCode: string,
-): ComplianceStatus {
+function getComplianceStatus(listing: Listing, stateCode: string): ComplianceStatus {
   if (!listing.shipsTo.includes(stateCode)) return "not_eligible";
   const law = STATE_LAW[stateCode];
   if (law?.monthlyBottleLimit != null) return "limited";
@@ -225,7 +209,6 @@ async function withRetry<T>(
   }
   throw lastErr;
 }
-
 
 const LISTINGS: Listing[] = [
   {
@@ -323,12 +306,8 @@ const LISTINGS: Listing[] = [
 function MarketplacePage() {
   const [stateFilter, setStateFilter] = useState<string[]>([]);
   const [retailerFilter, setRetailerFilter] = useState<RetailerType[]>([]);
-  const [availabilityFilter, setAvailabilityFilter] = useState<Availability[]>(
-    [],
-  );
-  const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>(
-    [],
-  );
+  const [availabilityFilter, setAvailabilityFilter] = useState<Availability[]>([]);
+  const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>([]);
   const [retailerNamesFilter, setRetailerNamesFilter] = useState<string[]>([]);
   const [query, setQuery] = useState("");
 
@@ -347,43 +326,21 @@ function MarketplacePage() {
     () =>
       retailerNamesFilter.length === 0
         ? []
-        : retailerOptions
-            .filter((r) => retailerNamesFilter.includes(r.name))
-            .map((r) => r.listing),
+        : retailerOptions.filter((r) => retailerNamesFilter.includes(r.name)).map((r) => r.listing),
     [retailerNamesFilter, retailerOptions],
   );
-
-
-
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return LISTINGS.filter((l) => {
-      if (
-        retailerNamesFilter.length > 0 &&
-        !retailerNamesFilter.includes(l.retailer)
-      )
-        return false;
-      if (q && !`${l.name} ${l.retailer}`.toLowerCase().includes(q))
-        return false;
-      if (
-        stateFilter.length > 0 &&
-        !stateFilter.some((s) => l.shipsTo.includes(s))
-      )
-        return false;
-      if (
-        retailerFilter.length > 0 &&
-        !retailerFilter.includes(l.retailerType)
-      )
-        return false;
-      if (
-        availabilityFilter.length > 0 &&
-        !availabilityFilter.includes(l.availability)
-      )
+      if (retailerNamesFilter.length > 0 && !retailerNamesFilter.includes(l.retailer)) return false;
+      if (q && !`${l.name} ${l.retailer}`.toLowerCase().includes(q)) return false;
+      if (stateFilter.length > 0 && !stateFilter.some((s) => l.shipsTo.includes(s))) return false;
+      if (retailerFilter.length > 0 && !retailerFilter.includes(l.retailerType)) return false;
+      if (availabilityFilter.length > 0 && !availabilityFilter.includes(l.availability))
         return false;
       if (complianceFilter.length > 0) {
-        const statesToCheck =
-          stateFilter.length > 0 ? stateFilter : STATES.map((s) => s.code);
+        const statesToCheck = stateFilter.length > 0 ? stateFilter : STATES.map((s) => s.code);
         const matches = statesToCheck.some((code) =>
           complianceFilter.includes(getComplianceStatus(l, code)),
         );
@@ -407,19 +364,15 @@ function MarketplacePage() {
     complianceFilter.length +
     retailerNamesFilter.length;
 
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
       <main className="mx-auto max-w-7xl px-6 py-10">
         <header className="mb-8">
-          <h1 className="font-display text-4xl md:text-5xl tracking-tight">
-            Marketplace
-          </h1>
+          <h1 className="font-display text-4xl md:text-5xl tracking-tight">Marketplace</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Licensed retailers, store picks, and rare drops. Filter by where a
-            retailer ships, what kind of operation they run, and what's
-            actually on the shelf right now.
+            Licensed retailers, store picks, and rare drops. Filter by where a retailer ships, what
+            kind of operation they run, and what's actually on the shelf right now.
           </p>
         </header>
 
@@ -444,7 +397,6 @@ function MarketplacePage() {
               setAvailabilityFilter([]);
               setComplianceFilter([]);
               setRetailerNamesFilter([]);
-
             }}
           />
 
@@ -457,10 +409,7 @@ function MarketplacePage() {
                 className="sm:max-w-xs"
                 data-testid="marketplace-search"
               />
-              <p
-                className="text-sm text-muted-foreground"
-                data-testid="marketplace-result-count"
-              >
+              <p className="text-sm text-muted-foreground" data-testid="marketplace-result-count">
                 {filtered.length} {filtered.length === 1 ? "result" : "results"}
               </p>
             </div>
@@ -469,16 +418,13 @@ function MarketplacePage() {
               <Card className="border-dashed">
                 <CardContent className="py-12 text-center">
                   <p className="text-sm text-muted-foreground">
-                    No listings match these filters. Try widening your state
-                    compliance or availability selection.
+                    No listings match these filters. Try widening your state compliance or
+                    availability selection.
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <ul
-                className="grid gap-4 sm:grid-cols-2"
-                data-testid="marketplace-results"
-              >
+              <ul className="grid gap-4 sm:grid-cols-2" data-testid="marketplace-results">
                 {filtered.map((l) => (
                   <li key={l.id}>
                     <ListingCard listing={l} selectedStates={stateFilter} />
@@ -664,9 +610,7 @@ function FiltersSidebar(props: FiltersProps) {
         });
       } catch (err) {
         const msg =
-          err instanceof Error
-            ? err.message
-            : "Could not save preset. Please try again later.";
+          err instanceof Error ? err.message : "Could not save preset. Please try again later.";
         setPresetSyncError(msg);
         toast.error("Preset save failed", { description: msg });
       } finally {
@@ -701,10 +645,10 @@ function FiltersSidebar(props: FiltersProps) {
       setPresetsSyncing(true);
       setPresetSyncError(null);
       try {
-        await withRetry(
-          () => deleteRetailerPreset({ data: { id } }),
-          { maxAttempts: 3, delayMs: 400 },
-        );
+        await withRetry(() => deleteRetailerPreset({ data: { id } }), {
+          maxAttempts: 3,
+          delayMs: 400,
+        });
         setPresets((cur) => cur.filter((p) => p.id !== id));
         setActivePresetId("");
         toast.success("Preset deleted", {
@@ -712,9 +656,7 @@ function FiltersSidebar(props: FiltersProps) {
         });
       } catch (err) {
         const msg =
-          err instanceof Error
-            ? err.message
-            : "Could not delete preset. Please try again later.";
+          err instanceof Error ? err.message : "Could not delete preset. Please try again later.";
         setPresetSyncError(msg);
         toast.error("Preset delete failed", { description: msg });
       } finally {
@@ -737,19 +679,13 @@ function FiltersSidebar(props: FiltersProps) {
       ? retailerOptions.filter((r) => r.name.toLowerCase().includes(q))
       : [...retailerOptions];
     if (retailerStateScope !== "all") {
-      filtered = filtered.filter((r) =>
-        r.listing.shipsTo.includes(retailerStateScope),
-      );
+      filtered = filtered.filter((r) => r.listing.shipsTo.includes(retailerStateScope));
     }
     if (retailerEligibleOnly && stateFilter.length > 0) {
-      filtered = filtered.filter((r) =>
-        stateFilter.some((s) => r.listing.shipsTo.includes(s)),
-      );
+      filtered = filtered.filter((r) => stateFilter.some((s) => r.listing.shipsTo.includes(s)));
     }
     filtered.sort((a, b) =>
-      retailerSort === "asc"
-        ? a.name.localeCompare(b.name)
-        : b.name.localeCompare(a.name),
+      retailerSort === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
     );
     return filtered;
   }, [
@@ -765,10 +701,7 @@ function FiltersSidebar(props: FiltersProps) {
   // Shape: { [stateCode]: Array<{ name, initials, status }> }
   const stateStatusByRetailer = useMemo(() => {
     if (activeRetailerListings.length === 0) return null;
-    const map: Record<
-      string,
-      { name: string; initials: string; status: ComplianceStatus }[]
-    > = {};
+    const map: Record<string, { name: string; initials: string; status: ComplianceStatus }[]> = {};
     for (const s of STATES) {
       map[s.code] = activeRetailerListings.map((listing) => ({
         name: listing.retailer,
@@ -794,7 +727,6 @@ function FiltersSidebar(props: FiltersProps) {
     return counts;
   }, [stateStatusByRetailer]);
 
-
   return (
     <aside
       className="space-y-6 rounded-lg border border-border bg-card/40 p-5"
@@ -818,10 +750,7 @@ function FiltersSidebar(props: FiltersProps) {
       <FilterGroup label="Retailers (compare)">
         <div className="space-y-2 rounded-md border border-dashed border-border/60 p-2">
           <div className="flex items-center gap-2">
-            <Label
-              htmlFor="retailer-preset-select"
-              className="text-[11px] text-muted-foreground"
-            >
+            <Label htmlFor="retailer-preset-select" className="text-[11px] text-muted-foreground">
               Preset:
             </Label>
             <select
@@ -889,19 +818,13 @@ function FiltersSidebar(props: FiltersProps) {
               : "Saved on this device. Sign in to sync presets across devices."}
           </p>
           {presetSyncError && (
-            <p
-              className="text-[10px] text-destructive"
-              data-testid="retailer-preset-sync-error"
-            >
+            <p className="text-[10px] text-destructive" data-testid="retailer-preset-sync-error">
               {presetSyncError}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Label
-            htmlFor="retailer-state-scope"
-            className="text-[11px] text-muted-foreground"
-          >
+          <Label htmlFor="retailer-state-scope" className="text-[11px] text-muted-foreground">
             State:
           </Label>
           <select
@@ -942,19 +865,14 @@ function FiltersSidebar(props: FiltersProps) {
             size="sm"
             variant="ghost"
             className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() =>
-              setRetailerSort((s) => (s === "asc" ? "desc" : "asc"))
-            }
+            onClick={() => setRetailerSort((s) => (s === "asc" ? "desc" : "asc"))}
             data-testid="retailer-sort-toggle"
           >
             {retailerSort === "asc" ? "A–Z" : "Z–A"}
           </Button>
         </div>
         <div className="flex items-center justify-between">
-          <Label
-            htmlFor="retailer-eligible-only"
-            className="text-[11px] text-muted-foreground"
-          >
+          <Label htmlFor="retailer-eligible-only" className="text-[11px] text-muted-foreground">
             Only eligible retailers
           </Label>
           <Switch
@@ -1004,10 +922,7 @@ function FiltersSidebar(props: FiltersProps) {
             onClick={() =>
               setRetailerNamesFilter(
                 Array.from(
-                  new Set([
-                    ...retailerNamesFilter,
-                    ...visibleRetailers.map((r) => r.name),
-                  ]),
+                  new Set([...retailerNamesFilter, ...visibleRetailers.map((r) => r.name)]),
                 ),
               )
             }
@@ -1028,10 +943,7 @@ function FiltersSidebar(props: FiltersProps) {
         </div>
         {activeRetailerListings.length > 0 && (
           <p className="text-[11px] text-muted-foreground">
-            Comparing{" "}
-            <span className="text-foreground">
-              {activeRetailerListings.length}
-            </span>{" "}
+            Comparing <span className="text-foreground">{activeRetailerListings.length}</span>{" "}
             retailer{activeRetailerListings.length === 1 ? "" : "s"}.
           </p>
         )}
@@ -1049,9 +961,7 @@ function FiltersSidebar(props: FiltersProps) {
               >
                 <Checkbox
                   checked={checked}
-                  onCheckedChange={() =>
-                    setStateFilter(toggle(stateFilter, s.code))
-                  }
+                  onCheckedChange={() => setStateFilter(toggle(stateFilter, s.code))}
                   data-testid={`filter-state-${s.code}`}
                 />
                 <span className="flex items-center gap-1.5">
@@ -1111,9 +1021,7 @@ function FiltersSidebar(props: FiltersProps) {
               >
                 <Checkbox
                   checked={checked}
-                  onCheckedChange={() =>
-                    setRetailerFilter(toggle(retailerFilter, t))
-                  }
+                  onCheckedChange={() => setRetailerFilter(toggle(retailerFilter, t))}
                   data-testid={`filter-retailer-${t}`}
                 />
                 <span>{RETAILER_TYPE_LABEL[t]}</span>
@@ -1134,9 +1042,7 @@ function FiltersSidebar(props: FiltersProps) {
               >
                 <Checkbox
                   checked={checked}
-                  onCheckedChange={() =>
-                    setAvailabilityFilter(toggle(availabilityFilter, a))
-                  }
+                  onCheckedChange={() => setAvailabilityFilter(toggle(availabilityFilter, a))}
                   data-testid={`filter-availability-${a}`}
                 />
                 <span>{AVAILABILITY_LABEL[a]}</span>
@@ -1148,57 +1054,45 @@ function FiltersSidebar(props: FiltersProps) {
 
       <FilterGroup label="Compliance status">
         <div className="space-y-2">
-          {(Object.keys(COMPLIANCE_STATUS_LABEL) as ComplianceStatus[]).map(
-            (c) => {
-              const checked = complianceFilter.includes(c);
-              const count = complianceCounts?.[c];
-              return (
-                <label
-                  key={c}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <Checkbox
-                    checked={checked}
-                    onCheckedChange={() =>
-                      setComplianceFilter(toggle(complianceFilter, c))
-                    }
-                    data-testid={`filter-compliance-${c}`}
-                  />
-                  <span className="flex items-center gap-1.5">
-                    {COMPLIANCE_STATUS_LABEL[c]}
-                    {count != null && (
-                      <span
-                        className={cn(
-                          "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
-                          COMPLIANCE_TONE[c],
-                        )}
-                      >
-                        {count}
-                      </span>
-                    )}
-                  </span>
-                </label>
-              );
-            },
-          )}
+          {(Object.keys(COMPLIANCE_STATUS_LABEL) as ComplianceStatus[]).map((c) => {
+            const checked = complianceFilter.includes(c);
+            const count = complianceCounts?.[c];
+            return (
+              <label
+                key={c}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={() => setComplianceFilter(toggle(complianceFilter, c))}
+                  data-testid={`filter-compliance-${c}`}
+                />
+                <span className="flex items-center gap-1.5">
+                  {COMPLIANCE_STATUS_LABEL[c]}
+                  {count != null && (
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none",
+                        COMPLIANCE_TONE[c],
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </span>
+              </label>
+            );
+          })}
         </div>
       </FilterGroup>
     </aside>
   );
 }
 
-function FilterGroup({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-        {label}
-      </Label>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
       {children}
     </div>
   );
@@ -1206,18 +1100,11 @@ function FilterGroup({
 
 // ─── Listing card ─────────────────────────────────────────────────────────
 
-function ListingCard({
-  listing,
-  selectedStates,
-}: {
-  listing: Listing;
-  selectedStates: string[];
-}) {
+function ListingCard({ listing, selectedStates }: { listing: Listing; selectedStates: string[] }) {
   const [open, setOpen] = useState(false);
   // When the user has selected states, surface per-state eligibility for
   // exactly those states. Otherwise show every state the retailer ships to.
-  const eligibilityStates =
-    selectedStates.length > 0 ? selectedStates : listing.shipsTo;
+  const eligibilityStates = selectedStates.length > 0 ? selectedStates : listing.shipsTo;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -1225,19 +1112,14 @@ function ListingCard({
         <CardContent className="flex h-full flex-col gap-3 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-display text-lg leading-tight">
-                {listing.name}
-              </h3>
+              <h3 className="font-display text-lg leading-tight">{listing.name}</h3>
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                 <Store className="h-3 w-3" /> {listing.retailer}
                 <span className="opacity-60">·</span>
                 {RETAILER_TYPE_LABEL[listing.retailerType]}
               </p>
             </div>
-            <Badge
-              variant="outline"
-              className={AVAILABILITY_TONE[listing.availability]}
-            >
+            <Badge variant="outline" className={AVAILABILITY_TONE[listing.availability]}>
               {AVAILABILITY_LABEL[listing.availability]}
             </Badge>
           </div>
@@ -1266,11 +1148,7 @@ function ListingCard({
                         : "border-destructive/30 bg-destructive/10 text-destructive",
                     )}
                   >
-                    {allowed ? (
-                      <Check className="h-2.5 w-2.5" />
-                    ) : (
-                      <X className="h-2.5 w-2.5" />
-                    )}
+                    {allowed ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
                     {code}
                   </span>
                 );
@@ -1280,12 +1158,8 @@ function ListingCard({
 
           <div className="mt-auto flex items-end justify-between pt-2">
             <div>
-              <p className="font-display text-xl">
-                ${listing.priceUsd.toLocaleString()}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {listing.proof} proof
-              </p>
+              <p className="font-display text-xl">${listing.priceUsd.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{listing.proof} proof</p>
             </div>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline">
@@ -1336,10 +1210,7 @@ function EligibilityPanel({
               data-testid={`eligibility-${listing.id}-${code}`}
             >
               {allowed ? (
-                <Check
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary"
-                  aria-label="Eligible"
-                />
+                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-label="Eligible" />
               ) : (
                 <X
                   className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive"
@@ -1377,8 +1248,7 @@ function EligibilityPanel({
                 </div>
                 <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
                   {allowed
-                    ? (law?.note ??
-                      "Direct-to-consumer shipping allowed by retailer.")
+                    ? (law?.note ?? "Direct-to-consumer shipping allowed by retailer.")
                     : `${listing.retailer} is not licensed to ship to ${code}.`}
                 </p>
               </div>
@@ -1389,8 +1259,7 @@ function EligibilityPanel({
       {filtered && (
         <p className="mt-2 flex items-start gap-1 text-[10px] leading-snug text-muted-foreground">
           <ShieldAlert className="mt-0.5 h-3 w-3 shrink-0" />
-          Compliance details are summaries, not legal advice. Confirm at
-          checkout.
+          Compliance details are summaries, not legal advice. Confirm at checkout.
         </p>
       )}
     </div>
@@ -1419,9 +1288,7 @@ function LegalDetailsModal({
   // fall back to the first eligible state.
   const defaultActive = useMemo(() => {
     if (selectedStates.length > 0) {
-      const firstShipped = selectedStates.find((s) =>
-        listing.shipsTo.includes(s),
-      );
+      const firstShipped = selectedStates.find((s) => listing.shipsTo.includes(s));
       return firstShipped ?? selectedStates[0] ?? states[0] ?? "";
     }
     return states[0] ?? "";
@@ -1432,14 +1299,11 @@ function LegalDetailsModal({
   }, [defaultActive]);
 
   // If the states list changes (e.g. filter applied), ensure activeState is valid
-  const validActive = states.includes(activeState)
-    ? activeState
-    : defaultActive;
+  const validActive = states.includes(activeState) ? activeState : defaultActive;
 
   const activeLaw = STATE_LAW[validActive];
   const activeAllowed = listing.shipsTo.includes(validActive);
-  const activeStateName =
-    STATES.find((s) => s.code === validActive)?.name ?? validActive;
+  const activeStateName = STATES.find((s) => s.code === validActive)?.name ?? validActive;
 
   return (
     <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col">
@@ -1449,12 +1313,8 @@ function LegalDetailsModal({
           Legal limitations
         </DialogTitle>
         <DialogDescription>
-          Shipping compliance, limits, and ID requirements for{" "}
-          {listing.retailer}
-          {filtered
-            ? " in your selected states"
-            : " in every state they ship to"}
-          .
+          Shipping compliance, limits, and ID requirements for {listing.retailer}
+          {filtered ? " in your selected states" : " in every state they ship to"}.
         </DialogDescription>
       </DialogHeader>
 
@@ -1542,34 +1402,23 @@ function LegalDetailsModal({
                   Limit {activeLaw.monthlyBottleLimit} btl
                 </Badge>
               ) : (
-                <Badge
-                  variant="outline"
-                  className="border-primary/30 bg-primary/10 text-primary"
-                >
+                <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
                   No bottle limit
                 </Badge>
               )}
               {activeLaw.adultSignatureRequired && (
-                <Badge
-                  variant="outline"
-                  className="border-border bg-muted text-muted-foreground"
-                >
+                <Badge variant="outline" className="border-border bg-muted text-muted-foreground">
                   Adult signature required
                 </Badge>
               )}
               {activeLaw.idRequired && (
-                <Badge
-                  variant="outline"
-                  className="border-border bg-muted text-muted-foreground"
-                >
+                <Badge variant="outline" className="border-border bg-muted text-muted-foreground">
                   Government-issued ID required
                 </Badge>
               )}
             </div>
             {showNotes && (
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {activeLaw.note}
-              </p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{activeLaw.note}</p>
             )}
           </div>
         )}
@@ -1590,8 +1439,7 @@ function LegalDetailsModal({
           {states.map((code, idx) => {
             const allowed = listing.shipsTo.includes(code);
             const law = STATE_LAW[code];
-            const stateName =
-              STATES.find((s) => s.code === code)?.name ?? code;
+            const stateName = STATES.find((s) => s.code === code)?.name ?? code;
             return (
               <div key={code} className="space-y-1.5">
                 <div className="flex items-center gap-2">
@@ -1613,9 +1461,7 @@ function LegalDetailsModal({
                   )}
                 </div>
                 {showNotes && allowed && law && (
-                  <p className="ml-5 text-xs text-muted-foreground">
-                    {law.note}
-                  </p>
+                  <p className="ml-5 text-xs text-muted-foreground">{law.note}</p>
                 )}
                 {!allowed && (
                   <p className="ml-5 text-xs text-muted-foreground">
@@ -1633,14 +1479,12 @@ function LegalDetailsModal({
         <div className="mt-2 flex items-start gap-2 rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            These details are summaries for convenience and are NOT legal advice.
-            Alcohol shipping laws change frequently. Confirm all requirements
-            directly with the retailer and consult local regulations before
-            ordering.
+            These details are summaries for convenience and are NOT legal advice. Alcohol shipping
+            laws change frequently. Confirm all requirements directly with the retailer and consult
+            local regulations before ordering.
           </p>
         </div>
       )}
     </DialogContent>
   );
 }
-

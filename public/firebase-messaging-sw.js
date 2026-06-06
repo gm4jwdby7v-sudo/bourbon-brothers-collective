@@ -3,17 +3,11 @@
 // Loads the Firebase compat SDKs and fetches the public web config so we
 // don't have to hard-code values in this file.
 
-importScripts(
-  "https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js",
-);
-importScripts(
-  "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js",
-);
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js");
 
 self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (event) =>
-  event.waitUntil(self.clients.claim()),
-);
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
 const ready = fetch("/api/public/firebase-config")
   .then((r) => r.json())

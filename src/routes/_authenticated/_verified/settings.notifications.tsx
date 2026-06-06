@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  DEFAULT_PREFS,
-  isInQuietHours,
-  type NotificationPrefs,
-} from "@/lib/notification-prefs";
+import { DEFAULT_PREFS, isInQuietHours, type NotificationPrefs } from "@/lib/notification-prefs";
 
 export const Route = createFileRoute("/_authenticated/_verified/settings/notifications")({
   head: () => ({ meta: [{ title: "Notification settings — BourbonConnect" }] }),
@@ -90,25 +92,21 @@ function NotificationSettingsPage() {
 
   const inQuiet = useMemo(() => isInQuietHours(prefs), [prefs]);
 
-  const update = <K extends keyof NotificationPrefs>(
-    key: K,
-    value: NotificationPrefs[K],
-  ) => setPrefs((p) => ({ ...p, [key]: value }));
+  const update = <K extends keyof NotificationPrefs>(key: K, value: NotificationPrefs[K]) =>
+    setPrefs((p) => ({ ...p, [key]: value }));
 
   const save = async () => {
     if (!viewerId) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("notification_preferences")
-        .upsert(
-          {
-            user_id: viewerId,
-            ...prefs,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" },
-        );
+      const { error } = await supabase.from("notification_preferences").upsert(
+        {
+          user_id: viewerId,
+          ...prefs,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
       if (error) throw new Error(error.message);
       toast.success("Notification settings saved");
     } catch (e) {
@@ -129,10 +127,7 @@ function NotificationSettingsPage() {
   }
 
   return (
-    <main
-      className="max-w-2xl mx-auto px-6 py-12 space-y-8"
-      data-testid="notif-settings-root"
-    >
+    <main className="max-w-2xl mx-auto px-6 py-12 space-y-8" data-testid="notif-settings-root">
       <header className="space-y-2">
         <h1 className="font-display text-3xl">Notifications</h1>
         <p className="text-sm text-muted-foreground">
@@ -215,10 +210,7 @@ function NotificationSettingsPage() {
             </div>
             <div className="space-y-1">
               <Label>Time zone</Label>
-              <Select
-                value={prefs.timezone}
-                onValueChange={(v) => update("timezone", v)}
-              >
+              <Select value={prefs.timezone} onValueChange={(v) => update("timezone", v)}>
                 <SelectTrigger data-testid="quiet-tz">
                   <SelectValue />
                 </SelectTrigger>
@@ -233,10 +225,7 @@ function NotificationSettingsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <p
-              className="sm:col-span-3 text-xs text-muted-foreground"
-              data-testid="quiet-status"
-            >
+            <p className="sm:col-span-3 text-xs text-muted-foreground" data-testid="quiet-status">
               {inQuiet
                 ? "You're currently in quiet hours — alerts are paused."
                 : "Outside quiet hours — alerts will arrive normally."}

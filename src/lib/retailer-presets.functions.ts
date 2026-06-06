@@ -57,10 +57,7 @@ export const deleteRetailerPreset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("retailer_presets")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await context.supabase.from("retailer_presets").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

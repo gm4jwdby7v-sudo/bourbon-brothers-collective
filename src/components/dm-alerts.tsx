@@ -3,11 +3,7 @@ import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  DEFAULT_PREFS,
-  isInQuietHours,
-  type NotificationPrefs,
-} from "@/lib/notification-prefs";
+import { DEFAULT_PREFS, isInQuietHours, type NotificationPrefs } from "@/lib/notification-prefs";
 
 interface DmMessagePayload {
   id: string;
@@ -67,7 +63,6 @@ export function DmAlerts() {
       )
       .subscribe();
 
-
     const handleIncoming = async (msg: DmMessagePayload) => {
       if (!msg || msg.sender_id === viewerId) return;
 
@@ -88,13 +83,11 @@ export function DmAlerts() {
           .select("display_name, username")
           .eq("id", msg.sender_id)
           .maybeSingle();
-        senderName =
-          profile?.display_name ?? profile?.username ?? "Someone";
+        senderName = profile?.display_name ?? profile?.username ?? "Someone";
         senderNameCache.current.set(msg.sender_id, senderName);
       }
 
-      const preview =
-        msg.body.length > 80 ? `${msg.body.slice(0, 80)}…` : msg.body;
+      const preview = msg.body.length > 80 ? `${msg.body.slice(0, 80)}…` : msg.body;
 
       toast(senderName, {
         description: preview,
@@ -137,10 +130,7 @@ export function DmAlerts() {
 
     return () => {
       window.removeEventListener("dm-alerts:test-inject", onTestInject);
-      window.removeEventListener(
-        "dm-alerts:test-update-prefs",
-        onTestUpdatePrefs,
-      );
+      window.removeEventListener("dm-alerts:test-update-prefs", onTestUpdatePrefs);
       supabase.removeChannel(channel);
       supabase.removeChannel(prefsChannel);
     };

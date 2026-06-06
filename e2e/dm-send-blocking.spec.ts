@@ -1,5 +1,12 @@
 import { test, expect, Request } from "@playwright/test";
-import { mockAuth, mockDmThreadApi, STATIC_THREAD_ID, UNVERIFIED, VERIFIED, type DmState } from "./dm-helpers";
+import {
+  mockAuth,
+  mockDmThreadApi,
+  STATIC_THREAD_ID,
+  UNVERIFIED,
+  VERIFIED,
+  type DmState,
+} from "./dm-helpers";
 
 function trackSendAttempts(page: import("@playwright/test").Page): Request[] {
   const attempts: Request[] = [];
@@ -28,7 +35,9 @@ function emptyState(): DmState {
 test.describe("DM thread send blocking", () => {
   const THREAD_PATH = `/messages/${STATIC_THREAD_ID}`;
 
-  test("unauthenticated: send button is unreachable and no send request fires", async ({ page }) => {
+  test("unauthenticated: send button is unreachable and no send request fires", async ({
+    page,
+  }) => {
     await mockAuth(page, null);
     const attempts = trackSendAttempts(page);
     await page.goto(THREAD_PATH);
@@ -66,7 +75,9 @@ test.describe("DM thread send blocking", () => {
 test.describe("DM composer send blocking", () => {
   const NEW_PATH = "/messages/new";
 
-  test("unauthenticated: send button is unreachable and no send request fires", async ({ page }) => {
+  test("unauthenticated: send button is unreachable and no send request fires", async ({
+    page,
+  }) => {
     await mockAuth(page, null);
     const attempts = trackSendAttempts(page);
     await page.goto(NEW_PATH);

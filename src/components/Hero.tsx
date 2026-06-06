@@ -7,7 +7,13 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0">
-        <img src={hero} alt="" className="h-full w-full object-cover opacity-40" width={1600} height={1200} />
+        <img
+          src={hero}
+          alt=""
+          className="h-full w-full object-cover opacity-40"
+          width={1600}
+          height={1200}
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
       </div>
@@ -19,7 +25,8 @@ export function Hero() {
             Now pouring · 12,400 enthusiasts online
           </div>
           <h1 className="font-display text-5xl md:text-7xl leading-[1.05] tracking-tight">
-            The nation's <span className="text-gradient-copper italic">bourbon</span><br />
+            The nation's <span className="text-gradient-copper italic">bourbon</span>
+            <br />
             community, distilled.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
@@ -28,7 +35,10 @@ export function Hero() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/auth">
-              <Button size="lg" className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow">
+              <Button
+                size="lg"
+                className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
+              >
                 Join the community <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
@@ -52,7 +62,10 @@ export function Hero() {
             <div className="text-sm text-muted-foreground mb-5">Wheated · 90 proof · MSRP $45</div>
             <div className="flex items-center gap-2 mb-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className={`h-1.5 flex-1 rounded-full ${i < 4 ? "bg-gradient-amber" : "bg-muted"}`} />
+                <div
+                  key={i}
+                  className={`h-1.5 flex-1 rounded-full ${i < 4 ? "bg-gradient-amber" : "bg-muted"}`}
+                />
               ))}
               <span className="text-sm font-medium ml-2">4.7</span>
             </div>

@@ -6,8 +6,8 @@ export interface NotificationPrefs {
   dm_inapp_enabled: boolean;
   quiet_hours_enabled: boolean;
   quiet_start: string; // "HH:MM"
-  quiet_end: string;   // "HH:MM"
-  timezone: string;    // IANA, e.g. "America/New_York"
+  quiet_end: string; // "HH:MM"
+  timezone: string; // IANA, e.g. "America/New_York"
 }
 
 export const DEFAULT_PREFS: NotificationPrefs = {
@@ -49,10 +49,7 @@ function minutesInZone(now: Date, timezone: string): number {
 }
 
 /** True when `now` falls inside the user's configured quiet hours window. */
-export function isInQuietHours(
-  prefs: NotificationPrefs,
-  now: Date = new Date(),
-): boolean {
+export function isInQuietHours(prefs: NotificationPrefs, now: Date = new Date()): boolean {
   if (!prefs.quiet_hours_enabled) return false;
   const start = parseHHMM(prefs.quiet_start);
   const end = parseHHMM(prefs.quiet_end);

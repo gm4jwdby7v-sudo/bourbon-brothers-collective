@@ -37,13 +37,19 @@ async function mockAuth(page: Page, user: MockUser | null) {
       },
     };
 
-    await page.addInitScript(({ session, key }: { session: unknown; key: string }) => {
-      localStorage.setItem(key, JSON.stringify(session));
-    }, { session: fakeSession, key: STORAGE_KEY });
+    await page.addInitScript(
+      ({ session, key }: { session: unknown; key: string }) => {
+        localStorage.setItem(key, JSON.stringify(session));
+      },
+      { session: fakeSession, key: STORAGE_KEY },
+    );
   } else {
-    await page.addInitScript(({ key }: { key: string }) => {
-      localStorage.removeItem(key);
-    }, { key: STORAGE_KEY });
+    await page.addInitScript(
+      ({ key }: { key: string }) => {
+        localStorage.removeItem(key);
+      },
+      { key: STORAGE_KEY },
+    );
   }
 
   // Intercept getUser() API call
@@ -121,7 +127,7 @@ test.describe("unauthenticated users", () => {
 
       // Auth page content is visible
       await expect(
-        page.getByRole("heading", { name: /Welcome back|Join the community/ })
+        page.getByRole("heading", { name: /Welcome back|Join the community/ }),
       ).toBeVisible();
     });
   }
@@ -142,13 +148,11 @@ test.describe("authenticated but unverified users", () => {
 
       // Verify email notice is shown
       await expect(
-        page.getByText(/Confirm your email to access messaging, forums, and event checkout/)
+        page.getByText(/Confirm your email to access messaging, forums, and event checkout/),
       ).toBeVisible();
 
       // Page-specific heading should NOT be visible
-      await expect(
-        page.getByRole("heading", { name: heading })
-      ).not.toBeVisible();
+      await expect(page.getByRole("heading", { name: heading })).not.toBeVisible();
     });
   }
 });
@@ -168,14 +172,10 @@ test.describe("verified users", () => {
       await expect(page).toHaveURL(path);
 
       // Page-specific heading IS visible
-      await expect(
-        page.getByRole("heading", { name: heading })
-      ).toBeVisible();
+      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
 
       // Verify email notice should NOT be present
-      await expect(
-        page.getByText(/Confirm your email to access messaging/)
-      ).not.toBeVisible();
+      await expect(page.getByText(/Confirm your email to access messaging/)).not.toBeVisible();
     });
   }
 });

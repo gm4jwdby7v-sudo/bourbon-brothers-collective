@@ -27,7 +27,10 @@ function CheckoutPage() {
       <h1 className="font-display text-3xl">Reserve your seat</h1>
       <p className="text-muted-foreground text-sm">Event ID: {eventId}</p>
 
-      <ol className="flex items-center gap-2 text-xs text-muted-foreground" aria-label="Checkout progress">
+      <ol
+        className="flex items-center gap-2 text-xs text-muted-foreground"
+        aria-label="Checkout progress"
+      >
         {ORDER.map((s, i) => (
           <li
             key={s}
@@ -40,7 +43,10 @@ function CheckoutPage() {
         ))}
       </ol>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4" data-testid={`step-panel-${step}`}>
+      <div
+        className="rounded-xl border border-border bg-card p-6 space-y-4"
+        data-testid={`step-panel-${step}`}
+      >
         {step === "review" && (
           <>
             <h2 className="font-display text-xl">Review your order</h2>
@@ -48,7 +54,11 @@ function CheckoutPage() {
               <span>Ticket</span>
               <span>$85.00</span>
             </div>
-            <Button onClick={next} data-testid="next-button" className="w-full bg-gradient-amber text-primary-foreground">
+            <Button
+              onClick={next}
+              data-testid="next-button"
+              className="w-full bg-gradient-amber text-primary-foreground"
+            >
               Continue to attendee
             </Button>
           </>
@@ -59,10 +69,17 @@ function CheckoutPage() {
             <h2 className="font-display text-xl">Attendee details</h2>
             <div className="space-y-2">
               <Label htmlFor="name">Full name</Label>
-              <Input id="name" data-testid="attendee-name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                id="name"
+                data-testid="attendee-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={back} data-testid="back-button">Back</Button>
+              <Button variant="outline" onClick={back} data-testid="back-button">
+                Back
+              </Button>
               <Button
                 onClick={next}
                 disabled={!name.trim()}
@@ -80,10 +97,17 @@ function CheckoutPage() {
             <h2 className="font-display text-xl">Payment</h2>
             <div className="space-y-2">
               <Label htmlFor="card">Card number</Label>
-              <Input id="card" data-testid="card-number" value={card} onChange={(e) => setCard(e.target.value)} />
+              <Input
+                id="card"
+                data-testid="card-number"
+                value={card}
+                onChange={(e) => setCard(e.target.value)}
+              />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={back} data-testid="back-button">Back</Button>
+              <Button variant="outline" onClick={back} data-testid="back-button">
+                Back
+              </Button>
               <Button
                 onClick={next}
                 disabled={card.replace(/\s/g, "").length < 12}
@@ -98,7 +122,9 @@ function CheckoutPage() {
 
         {step === "confirmation" && (
           <>
-            <h2 className="font-display text-xl" data-testid="confirmation-heading">You're going!</h2>
+            <h2 className="font-display text-xl" data-testid="confirmation-heading">
+              You're going!
+            </h2>
             <p className="text-sm text-muted-foreground">
               Your seat for event {eventId} is confirmed{name ? `, ${name}` : ""}.
             </p>

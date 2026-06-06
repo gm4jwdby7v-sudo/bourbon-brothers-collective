@@ -65,9 +65,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -89,17 +87,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -159,9 +153,7 @@ test.describe("Duplicate prefs updates with boundary quiet_end values → latest
     // 10:00:00 exact end boundary under v1 → toast (end is exclusive).
     await page.clock.setFixedTime(new Date("2025-05-01T10:00:00Z"));
     await injectDm(page, "10:00 — v1 end boundary toast");
-    await expect(
-      page.getByText("10:00 — v1 end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("10:00 — v1 end boundary toast")).toBeVisible({ timeout: 5_000 });
 
     // ── Phase B: v2 duplicates arrive (latest = v2, end 12:00), interleaved with stale v1 dups.
     await broadcastPrefsUpdate(page, v2);
@@ -194,16 +186,14 @@ test.describe("Duplicate prefs updates with boundary quiet_end values → latest
     await page.clock.setFixedTime(new Date("2025-05-01T11:59:59.999Z"));
     await injectDm(page, "11:59:59.999 — v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:59:59.999 — v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:59:59.999 — v3 suppress")).toHaveCount(0);
 
     // 12:00:00.000 exact end boundary under v3 → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:00.000Z"));
     await injectDm(page, "12:00:00.000 — v3 end boundary toast");
-    await expect(
-      page.getByText("12:00:00.000 — v3 end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("12:00:00.000 — v3 end boundary toast")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Final jumbled flurry of duplicates — v3 must still be the latest.
     await broadcastPrefsUpdate(page, v1);
@@ -216,8 +206,6 @@ test.describe("Duplicate prefs updates with boundary quiet_end values → latest
     // 12:00:01 outside v3 → toast.
     await page.clock.setFixedTime(new Date("2025-05-01T12:00:01Z"));
     await injectDm(page, "12:00:01 — past v3 end toast");
-    await expect(
-      page.getByText("12:00:01 — past v3 end toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("12:00:01 — past v3 end toast")).toBeVisible({ timeout: 5_000 });
   });
 });

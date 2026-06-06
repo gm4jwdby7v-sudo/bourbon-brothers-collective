@@ -9,10 +9,10 @@ export const Route = createFileRoute("/api/public/firebase-config")({
       GET: async () => {
         const raw = process.env.FIREBASE_WEB_CONFIG;
         if (!raw) {
-          return new Response(
-            JSON.stringify({ error: "FIREBASE_WEB_CONFIG not set" }),
-            { status: 500, headers: { "content-type": "application/json" } },
-          );
+          return new Response(JSON.stringify({ error: "FIREBASE_WEB_CONFIG not set" }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          });
         }
         try {
           const parsed = JSON.parse(raw);
@@ -25,10 +25,10 @@ export const Route = createFileRoute("/api/public/firebase-config")({
             },
           });
         } catch {
-          return new Response(
-            JSON.stringify({ error: "FIREBASE_WEB_CONFIG is not valid JSON" }),
-            { status: 500, headers: { "content-type": "application/json" } },
-          );
+          return new Response(JSON.stringify({ error: "FIREBASE_WEB_CONFIG is not valid JSON" }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          });
         }
       },
     },

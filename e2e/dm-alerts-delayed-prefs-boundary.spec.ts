@@ -64,9 +64,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -88,17 +86,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -137,9 +131,7 @@ test.describe("Delayed prefs broadcast still honors exact quiet-hour boundaries"
     await page.clock.setFixedTime(new Date("2025-02-10T10:45:00Z"));
     await injectDm(page, "10:45 — pre-broadcast still suppressed");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("10:45 — pre-broadcast still suppressed"),
-    ).toHaveCount(0);
+    await expect(page.getByText("10:45 — pre-broadcast still suppressed")).toHaveCount(0);
 
     // Delayed broadcast finally arrives with the new window.
     await page.waitForTimeout(800);
@@ -154,9 +146,7 @@ test.describe("Delayed prefs broadcast still honors exact quiet-hour boundaries"
     // Boundary check on the NEW window: exactly 10:30 must already be outside.
     await page.clock.setFixedTime(new Date("2025-02-10T10:30:00Z"));
     await injectDm(page, "10:30 — new end boundary toast");
-    await expect(
-      page.getByText("10:30 — new end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("10:30 — new end boundary toast")).toBeVisible({ timeout: 5_000 });
 
     // And 10:29 must still be inside the new window → suppressed.
     await page.clock.setFixedTime(new Date("2025-02-10T10:29:00Z"));
@@ -205,16 +195,12 @@ test.describe("Delayed prefs broadcast still honors exact quiet-hour boundaries"
     // Same 11:15 UTC, now under NEW window (10:00–11:30) → suppressed.
     await injectDm(page, "11:15 — post-broadcast suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("11:15 — post-broadcast suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("11:15 — post-broadcast suppress")).toHaveCount(0);
 
     // Boundary check on the NEW window: exactly 11:30 is outside → toast.
     await page.clock.setFixedTime(new Date("2025-02-10T11:30:00Z"));
     await injectDm(page, "11:30 — new end boundary toast");
-    await expect(
-      page.getByText("11:30 — new end boundary toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("11:30 — new end boundary toast")).toBeVisible({ timeout: 5_000 });
 
     // 11:29 still inside the new window → suppressed.
     await page.clock.setFixedTime(new Date("2025-02-10T11:29:00Z"));

@@ -31,7 +31,9 @@ test.describe("DM read receipts", () => {
     await expect(msg.getByTestId("receipt-seen")).toHaveCount(0);
   });
 
-  test("a message already older than the recipient's last_read renders 'seen' (double check)", async ({ page }) => {
+  test("a message already older than the recipient's last_read renders 'seen' (double check)", async ({
+    page,
+  }) => {
     await mockAuth(page, VERIFIED);
     // Recipient last read in the future, so anything we send now is already 'seen' on load.
     const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
@@ -48,7 +50,9 @@ test.describe("DM read receipts", () => {
     await expect(msg.getByTestId("receipt-sent")).toHaveCount(0);
   });
 
-  test("'sent' flips to 'seen' when the recipient's last_read_at advances (simulated realtime)", async ({ page }) => {
+  test("'sent' flips to 'seen' when the recipient's last_read_at advances (simulated realtime)", async ({
+    page,
+  }) => {
     await mockAuth(page, VERIFIED);
     const state = buildState(new Date(0).toISOString());
     await mockDmThreadApi(page, state, STATIC_THREAD_ID);
@@ -102,7 +106,9 @@ test.describe("DM read receipts", () => {
     await expect(incoming.getByTestId("receipt-icon")).toHaveCount(0);
   });
 
-  test("opening the thread marks it read for the viewer (PATCH on dm_thread_participants)", async ({ page }) => {
+  test("opening the thread marks it read for the viewer (PATCH on dm_thread_participants)", async ({
+    page,
+  }) => {
     await mockAuth(page, VERIFIED);
     const marks: Array<{ user: string; at: string }> = [];
     const state: DmState = {
@@ -124,6 +130,8 @@ test.describe("DM read receipts", () => {
     await page.goto(THREAD_PATH);
 
     await expect(page.getByTestId("thread-messages")).toBeVisible();
-    await expect.poll(() => marks.some((m) => m.user === VERIFIED.id), { timeout: 5000 }).toBe(true);
+    await expect
+      .poll(() => marks.some((m) => m.user === VERIFIED.id), { timeout: 5000 })
+      .toBe(true);
   });
 });

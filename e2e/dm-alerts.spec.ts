@@ -67,11 +67,7 @@ async function mockAlertsApi(page: Page, row: PrefsRow | null) {
 }
 
 /** Dispatch the test bridge event to simulate a realtime DM insert. */
-async function injectIncomingDm(
-  page: Page,
-  body: string,
-  threadId = "thread-abc",
-) {
+async function injectIncomingDm(page: Page, body: string, threadId = "thread-abc") {
   await page.evaluate(
     ({ body, threadId }) => {
       window.dispatchEvent(
@@ -93,9 +89,7 @@ async function injectIncomingDm(
 /** Wait until DmAlerts has loaded prefs so prefsRef no longer holds defaults. */
 async function waitForPrefsLoaded(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   // Allow React to commit the ref update.
@@ -109,9 +103,7 @@ function pad(n: number) {
 test.describe("DM in-app alert toasts", () => {
   test.describe.configure({ mode: "serial" });
 
-  test("shows a toast with sender + preview when in-app alerts are enabled", async ({
-    page,
-  }) => {
+  test("shows a toast with sender + preview when in-app alerts are enabled", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     await mockAlertsApi(page, prefs({ dm_inapp_enabled: true }));
     await page.goto("/");
@@ -120,14 +112,10 @@ test.describe("DM in-app alert toasts", () => {
     await injectIncomingDm(page, "Hey, are you joining the tasting tonight?");
 
     await expect(page.getByText("Alex Carter")).toBeVisible({ timeout: 5_000 });
-    await expect(
-      page.getByText("Hey, are you joining the tasting tonight?"),
-    ).toBeVisible();
+    await expect(page.getByText("Hey, are you joining the tasting tonight?")).toBeVisible();
   });
 
-  test("suppresses the toast when in-app alerts are disabled", async ({
-    page,
-  }) => {
+  test("suppresses the toast when in-app alerts are disabled", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     await mockAlertsApi(page, prefs({ dm_inapp_enabled: false }));
     await page.goto("/");
@@ -137,15 +125,11 @@ test.describe("DM in-app alert toasts", () => {
 
     // Give the UI a chance to render any toast, then assert none did.
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("This should not appear as a toast"),
-    ).toHaveCount(0);
+    await expect(page.getByText("This should not appear as a toast")).toHaveCount(0);
     await expect(page.getByText("Alex Carter")).toHaveCount(0);
   });
 
-  test("suppresses the toast during quiet hours even if in-app alerts are on", async ({
-    page,
-  }) => {
+  test("suppresses the toast during quiet hours even if in-app alerts are on", async ({ page }) => {
     await mockAuth(page, VERIFIED);
     const h = new Date().getUTCHours();
     // Cross-midnight window that always covers "now" in UTC.

@@ -65,9 +65,7 @@ async function mockApis(page: Page, state: PrefsState) {
     if (route.request().method() === "OPTIONS") {
       return route.fulfill({ status: 204, headers: cors });
     }
-    return json(route, 200, [
-      { display_name: "Alex Carter", username: "alex" },
-    ]);
+    return json(route, 200, [{ display_name: "Alex Carter", username: "alex" }]);
   });
 }
 
@@ -89,17 +87,13 @@ async function injectDm(page: Page, body: string) {
 
 async function broadcastPrefsUpdate(page: Page, row: PrefsRow) {
   await page.evaluate((row) => {
-    window.dispatchEvent(
-      new CustomEvent("dm-alerts:test-update-prefs", { detail: row }),
-    );
+    window.dispatchEvent(new CustomEvent("dm-alerts:test-update-prefs", { detail: row }));
   }, row);
 }
 
 async function waitForPrefsGet(page: Page) {
   await page.waitForResponse(
-    (r) =>
-      r.url().includes("/rest/v1/notification_preferences") &&
-      r.request().method() === "GET",
+    (r) => r.url().includes("/rest/v1/notification_preferences") && r.request().method() === "GET",
     { timeout: 10_000 },
   );
   await page.waitForTimeout(150);
@@ -128,9 +122,7 @@ test.describe("Duplicate prefs updates under clock skew → refresh → latest q
     // Real 08:30 (device 09:30) — inside baseline → suppress.
     await injectDm(page, "real 08:30 (device 09:30) — baseline suppress");
     await page.waitForTimeout(400);
-    await expect(
-      page.getByText("real 08:30 (device 09:30) — baseline suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 08:30 (device 09:30) — baseline suppress")).toHaveCount(0);
 
     // Three monotonically-newer versions; v3 is the latest.
     const v1: PrefsRow = {
@@ -165,9 +157,9 @@ test.describe("Duplicate prefs updates under clock skew → refresh → latest q
     await page.clock.setFixedTime(skew("2025-05-01T09:30:00Z"));
     await injectDm(page, "real 09:30 (device 10:30) — pre-reload v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 09:30 (device 10:30) — pre-reload v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 09:30 (device 10:30) — pre-reload v3 suppress")).toHaveCount(
+      0,
+    );
 
     // Persist the latest v3 server-side so that after refresh, the
     // initial GET returns the same latest version that the burst settled on.
@@ -181,30 +173,28 @@ test.describe("Duplicate prefs updates under clock skew → refresh → latest q
     await page.clock.setFixedTime(skew("2025-05-01T10:30:00Z"));
     await injectDm(page, "real 10:30 (device 11:30) — post-reload v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 10:30 (device 11:30) — post-reload v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 10:30 (device 11:30) — post-reload v3 suppress")).toHaveCount(
+      0,
+    );
 
     // Real 11:59:59 (device 12:59:59) — still inside v3 → suppress.
     await page.clock.setFixedTime(skew("2025-05-01T11:59:59Z"));
     await injectDm(page, "real 11:59:59 (device 12:59:59) — v3 suppress");
     await page.waitForTimeout(500);
-    await expect(
-      page.getByText("real 11:59:59 (device 12:59:59) — v3 suppress"),
-    ).toHaveCount(0);
+    await expect(page.getByText("real 11:59:59 (device 12:59:59) — v3 suppress")).toHaveCount(0);
 
     // Real 12:00:00 (device 13:00:00) — exact v3 end on skewed device → toast.
     await page.clock.setFixedTime(skew("2025-05-01T12:00:00Z"));
     await injectDm(page, "real 12:00 (device 13:00) — v3 end transition toast");
-    await expect(
-      page.getByText("real 12:00 (device 13:00) — v3 end transition toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 12:00 (device 13:00) — v3 end transition toast")).toBeVisible(
+      { timeout: 5_000 },
+    );
 
     // Just past the boundary — still toasts.
     await page.clock.setFixedTime(skew("2025-05-01T12:00:01Z"));
     await injectDm(page, "real 12:00:01 (device 13:00:01) — past v3 toast");
-    await expect(
-      page.getByText("real 12:00:01 (device 13:00:01) — past v3 toast"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("real 12:00:01 (device 13:00:01) — past v3 toast")).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });

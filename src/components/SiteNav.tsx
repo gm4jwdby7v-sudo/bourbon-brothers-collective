@@ -27,12 +27,19 @@ export function SiteNav() {
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-gradient-amber shadow-glow flex items-center justify-center font-display text-primary-foreground font-bold">B</div>
+          <div className="h-8 w-8 rounded-md bg-gradient-amber shadow-glow flex items-center justify-center font-display text-primary-foreground font-bold">
+            B
+          </div>
           <span className="font-display text-lg tracking-tight">BourbonConnect</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           {links.map((l) => (
-            <Link key={l.label} to={l.to} params={l.params as never} className="hover:text-foreground transition-colors">
+            <Link
+              key={l.label}
+              to={l.to}
+              params={l.params as never}
+              className="hover:text-foreground transition-colors"
+            >
               {l.label}
             </Link>
           ))}
@@ -60,9 +67,16 @@ export function SiteNav() {
             </DropdownMenu>
           ) : (
             <>
-              <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
               <Link to="/auth">
-                <Button size="sm" className="bg-gradient-amber text-primary-foreground hover:opacity-90">
+                <Button variant="ghost" size="sm">
+                  Sign in
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button
+                  size="sm"
+                  className="bg-gradient-amber text-primary-foreground hover:opacity-90"
+                >
                   Join the pour
                 </Button>
               </Link>
@@ -76,7 +90,9 @@ export function SiteNav() {
       {open && (
         <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3">
           {links.map((l) => (
-            <Link key={l.label} to={l.to} params={l.params as never} className="block text-sm py-1">{l.label}</Link>
+            <Link key={l.label} to={l.to} params={l.params as never} className="block text-sm py-1">
+              {l.label}
+            </Link>
           ))}
           <div className="pt-3 flex gap-2">
             {user ? (
@@ -85,8 +101,16 @@ export function SiteNav() {
               </Button>
             ) : (
               <>
-                <Link to="/auth" className="flex-1"><Button variant="outline" size="sm" className="w-full">Sign in</Button></Link>
-                <Link to="/auth" className="flex-1"><Button size="sm" className="w-full bg-gradient-amber text-primary-foreground">Join</Button></Link>
+                <Link to="/auth" className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Sign in
+                  </Button>
+                </Link>
+                <Link to="/auth" className="flex-1">
+                  <Button size="sm" className="w-full bg-gradient-amber text-primary-foreground">
+                    Join
+                  </Button>
+                </Link>
               </>
             )}
           </div>

@@ -4,13 +4,7 @@
 // can deliver push notifications to this device.
 
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import {
-  getMessaging,
-  getToken,
-  onMessage,
-  isSupported,
-  type Messaging,
-} from "firebase/messaging";
+import { getMessaging, getToken, onMessage, isSupported, type Messaging } from "firebase/messaging";
 
 interface FirebaseWebConfig {
   apiKey: string;
@@ -89,10 +83,9 @@ export async function enablePushNotifications(): Promise<string | null> {
   const cfg = await loadConfig();
 
   // Register the dedicated messaging SW (kept separate from any app SW).
-  const registration = await navigator.serviceWorker.register(
-    "/firebase-messaging-sw.js",
-    { scope: "/firebase-cloud-messaging-push-scope" },
-  );
+  const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+    scope: "/firebase-cloud-messaging-push-scope",
+  });
 
   const token = await getToken(messaging, {
     vapidKey: cfg.vapidKey,
@@ -103,11 +96,7 @@ export async function enablePushNotifications(): Promise<string | null> {
 
 /** Subscribe to foreground FCM messages. Returns an unsubscribe fn. */
 export async function onForegroundPush(
-  handler: (payload: {
-    title?: string;
-    body?: string;
-    data?: Record<string, string>;
-  }) => void,
+  handler: (payload: { title?: string; body?: string; data?: Record<string, string> }) => void,
 ): Promise<() => void> {
   const messaging = await getMessagingInstance();
   if (!messaging) return () => {};
