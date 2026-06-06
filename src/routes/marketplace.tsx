@@ -593,6 +593,39 @@ function FiltersSidebar(props: FiltersProps) {
 
       <FilterGroup label="Retailers (compare)">
         <div className="flex items-center gap-2">
+          <Label
+            htmlFor="retailer-state-scope"
+            className="text-[11px] text-muted-foreground"
+          >
+            State:
+          </Label>
+          <select
+            id="retailer-state-scope"
+            value={retailerStateScope}
+            onChange={(e) => setRetailerStateScope(e.target.value)}
+            className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-xs"
+            data-testid="retailer-state-scope"
+          >
+            <option value="all">All states</option>
+            {STATES.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.code} — {s.name}
+              </option>
+            ))}
+          </select>
+          {retailerStateScope !== "all" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-1.5 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setRetailerStateScope("all")}
+              data-testid="retailer-state-scope-clear"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
           <Input
             placeholder="Search retailers…"
             className="h-8 flex-1 text-xs"
