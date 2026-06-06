@@ -586,13 +586,26 @@ function FiltersSidebar(props: FiltersProps) {
       </div>
 
       <FilterGroup label="Retailers (compare)">
-        <Input
-          placeholder="Search retailers…"
-          className="h-8 text-xs"
-          value={retailerSearch}
-          onChange={(e) => setRetailerSearch(e.target.value)}
-          data-testid="retailer-search-input"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search retailers…"
+            className="h-8 flex-1 text-xs"
+            value={retailerSearch}
+            onChange={(e) => setRetailerSearch(e.target.value)}
+            data-testid="retailer-search-input"
+          />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() =>
+              setRetailerSort((s) => (s === "asc" ? "desc" : "asc"))
+            }
+            data-testid="retailer-sort-toggle"
+          >
+            {retailerSort === "asc" ? "A–Z" : "Z–A"}
+          </Button>
+        </div>
         <div className="space-y-2">
           {visibleRetailers.map((r) => {
             const checked = retailerNamesFilter.includes(r.name);
