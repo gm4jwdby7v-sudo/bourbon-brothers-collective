@@ -323,7 +323,8 @@ function MarketplacePage() {
           null),
     [retailerNameFilter, retailerOptions],
   );
-  const [query, setQuery] = useState("");
+
+
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
