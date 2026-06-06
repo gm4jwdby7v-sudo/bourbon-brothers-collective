@@ -182,7 +182,15 @@ const STATE_LAW: Record<string, StateLaw> = {
   },
 };
 
-
+function getComplianceStatus(
+  listing: Listing,
+  stateCode: string,
+): ComplianceStatus {
+  if (!listing.shipsTo.includes(stateCode)) return "not_eligible";
+  const law = STATE_LAW[stateCode];
+  if (law?.monthlyBottleLimit != null) return "limited";
+  return "eligible";
+}
 
 const LISTINGS: Listing[] = [
   {
