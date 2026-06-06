@@ -94,6 +94,14 @@ const AVAILABILITY_TONE: Record<Availability, string> = {
   sold_out: "bg-muted text-muted-foreground border-border",
 };
 
+type ComplianceStatus = "eligible" | "limited" | "not_eligible";
+
+const COMPLIANCE_STATUS_LABEL: Record<ComplianceStatus, string> = {
+  eligible: "Eligible",
+  limited: "Limited",
+  not_eligible: "Not eligible",
+};
+
 // Common US states for the compliance filter. Kept short on purpose;
 // real data would come from the listings/retailer license tables.
 const STATES: { code: string; name: string }[] = [
@@ -174,7 +182,15 @@ const STATE_LAW: Record<string, StateLaw> = {
   },
 };
 
-
+function getComplianceStatus(
+  listing: Listing,
+  stateCode: string,
+): ComplianceStatus {
+  if (!listing.shipsTo.includes(stateCode)) return "not_eligible";
+  const law = STATE_LAW[stateCode];
+  if (law?.monthlyBottleLimit != null) return "limited";
+  return "eligible";
+}
 
 const LISTINGS: Listing[] = [
   {
@@ -275,6 +291,9 @@ function MarketplacePage() {
   const [availabilityFilter, setAvailabilityFilter] = useState<Availability[]>(
     [],
   );
+  const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus[]>(
+    [],
+  );
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -297,12 +316,29 @@ function MarketplacePage() {
         !availabilityFilter.includes(l.availability)
       )
         return false;
+      if (complianceFilter.length > 0) {
+        const statesToCheck =
+          stateFilter.length > 0 ? stateFilter : STATES.map((s) => s.code);
+        const matches = statesToCheck.some((code) =>
+          complianceFilter.includes(getComplianceStatus(l, code)),
+        );
+        if (!matches) return false;
+      }
       return true;
     });
-  }, [query, stateFilter, retailerFilter, availabilityFilter]);
+  }, [
+    query,
+    stateFilter,
+    retailerFilter,
+    availabilityFilter,
+    complianceFilter,
+  ]);
 
   const activeFilterCount =
-    stateFilter.length + retailerFilter.length + availabilityFilter.length;
+    stateFilter.length +
+    retailerFilter.length +
+    availabilityFilter.length +
+    complianceFilter.length;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -327,11 +363,14 @@ function MarketplacePage() {
             setRetailerFilter={setRetailerFilter}
             availabilityFilter={availabilityFilter}
             setAvailabilityFilter={setAvailabilityFilter}
+            complianceFilter={complianceFilter}
+            setComplianceFilter={setComplianceFilter}
             activeFilterCount={activeFilterCount}
             onClear={() => {
               setStateFilter([]);
               setRetailerFilter([]);
               setAvailabilityFilter([]);
+              setComplianceFilter([]);
             }}
           />
 
@@ -389,6 +428,8 @@ interface FiltersProps {
   setRetailerFilter: (v: RetailerType[]) => void;
   availabilityFilter: Availability[];
   setAvailabilityFilter: (v: Availability[]) => void;
+  complianceFilter: ComplianceStatus[];
+  setComplianceFilter: (v: ComplianceStatus[]) => void;
   activeFilterCount: number;
   onClear: () => void;
 }
@@ -401,6 +442,8 @@ function FiltersSidebar(props: FiltersProps) {
     setRetailerFilter,
     availabilityFilter,
     setAvailabilityFilter,
+    complianceFilter,
+    setComplianceFilter,
     activeFilterCount,
     onClear,
   } = props;
@@ -494,6 +537,31 @@ function FiltersSidebar(props: FiltersProps) {
               </label>
             );
           })}
+        </div>
+      </FilterGroup>
+
+      <FilterGroup label="Compliance status">
+        <div className="space-y-2">
+          {(Object.keys(COMPLIANCE_STATUS_LABEL) as ComplianceStatus[]).map(
+            (c) => {
+              const checked = complianceFilter.includes(c);
+              return (
+                <label
+                  key={c}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() =>
+                      setComplianceFilter(toggle(complianceFilter, c))
+                    }
+                    data-testid={`filter-compliance-${c}`}
+                  />
+                  <span>{COMPLIANCE_STATUS_LABEL[c]}</span>
+                </label>
+              );
+            },
+          )}
         </div>
       </FilterGroup>
     </aside>
