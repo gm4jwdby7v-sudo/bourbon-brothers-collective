@@ -150,6 +150,74 @@ export type Database = {
         }
         Relationships: []
       }
+      place_follows: {
+        Row: {
+          created_at: string
+          place_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          place_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          place_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_follows_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      places: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_verified: boolean
+          kind: Database["public"]["Enums"]["place_kind"]
+          name: string
+          region: string | null
+          slug: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_verified?: boolean
+          kind: Database["public"]["Enums"]["place_kind"]
+          name: string
+          region?: string | null
+          slug: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_verified?: boolean
+          kind?: Database["public"]["Enums"]["place_kind"]
+          name?: string
+          region?: string | null
+          slug?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -233,7 +301,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      place_kind: "distillery" | "store"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -360,6 +428,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      place_kind: ["distillery", "store"],
+    },
   },
 } as const
