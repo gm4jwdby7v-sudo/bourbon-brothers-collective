@@ -44,6 +44,9 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
+  const [appleError, setAppleError] = useState<string | null>(null);
+  const [appleRetrying, setAppleRetrying] = useState(false);
+
 
   // Redirect away if already signed in AND email confirmed
   useEffect(() => {
@@ -147,6 +150,33 @@ function AuthPage() {
     if (!result.redirected) navigate({ to: "/" });
   }
 
+  async function handleApple() {
+    const ok = window.confirm("Confirm you are 21 or older to continue.");
+    if (!ok) return;
+    setAppleError(null);
+    setAppleRetrying(true);
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        const msg = result.error.message ?? "Sign in with Apple failed";
+        setAppleError(msg);
+        toast.error(msg);
+        return;
+      }
+      if (!result.redirected) navigate({ to: "/" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Sign in with Apple failed";
+      setAppleError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+      setAppleRetrying(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-16 relative">
       <div className="absolute top-6 left-6">
@@ -206,6 +236,30 @@ function AuthPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            {appleError && (
+              <div
+                role="alert"
+                className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">Sign in with Apple failed</p>
+                    <p className="mt-0.5 text-xs opacity-90">{appleError}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleApple}
+                    disabled={loading}
+                    className="shrink-0"
+                  >
+                    {appleRetrying && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -215,6 +269,16 @@ function AuthPage() {
             >
               <GoogleIcon /> Continue with Google
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mt-2"
+              onClick={handleApple}
+              disabled={loading}
+            >
+              <AppleIcon /> Continue with Apple
+            </Button>
+
 
             <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
@@ -322,6 +386,14 @@ function GoogleIcon() {
         fill="#EA4335"
         d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.31 0-6-2.74-6-6.2s2.69-6.2 6-6.2c1.88 0 3.14.8 3.86 1.49l2.63-2.54C16.83 3.27 14.66 2.3 12 2.3 6.86 2.3 2.7 6.46 2.7 11.6s4.16 9.3 9.3 9.3c5.37 0 8.93-3.77 8.93-9.08 0-.61-.07-1.08-.15-1.62H12z"
       />
+    </svg>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden fill="currentColor">
+      <path d="M16.365 1.43c0 1.14-.417 2.22-1.11 3.03-.79.93-2.06 1.65-3.14 1.55-.13-1.12.42-2.27 1.1-3.05.77-.9 2.11-1.6 3.15-1.53zM20.5 17.1c-.55 1.27-.82 1.84-1.53 2.97-.99 1.57-2.39 3.53-4.12 3.54-1.54.02-1.93-1-4.02-.99-2.09.01-2.52 1.01-4.06.99-1.73-.02-3.06-1.79-4.05-3.36C.03 16.35-.26 11.19 2.09 8.48c1.31-1.52 3.38-2.48 5.34-2.48 1.99 0 3.24 1.09 4.9 1.09 1.6 0 2.58-1.09 4.88-1.09 1.74 0 3.58.95 4.9 2.59-4.3 2.36-3.6 8.5-1.61 8.51z" />
     </svg>
   );
 }
