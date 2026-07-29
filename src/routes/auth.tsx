@@ -150,6 +150,33 @@ function AuthPage() {
     if (!result.redirected) navigate({ to: "/" });
   }
 
+  async function handleApple() {
+    const ok = window.confirm("Confirm you are 21 or older to continue.");
+    if (!ok) return;
+    setAppleError(null);
+    setAppleRetrying(true);
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        const msg = result.error.message ?? "Sign in with Apple failed";
+        setAppleError(msg);
+        toast.error(msg);
+        return;
+      }
+      if (!result.redirected) navigate({ to: "/" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Sign in with Apple failed";
+      setAppleError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+      setAppleRetrying(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-16 relative">
       <div className="absolute top-6 left-6">
