@@ -25,16 +25,21 @@ export function Exchange() {
           />
         </div>
         <div className="order-1 lg:order-2">
-          <div className="text-xs uppercase tracking-[0.3em] text-primary mb-3">
-            The Bourbon Exchange
+          <div className="flex items-center gap-3 mb-3">
+            <div className="text-xs uppercase tracking-[0.3em] text-primary">
+              The Bourbon Exchange
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border border-primary/40 text-primary/90">
+              Coming soon
+            </span>
           </div>
           <h2 className="font-display text-4xl md:text-5xl mb-6">
             Sell your finds. <span className="italic text-gradient-copper">Legally.</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-            Built with compliance at its core. The Exchange connects collectors with a verified
-            network of licensed retailers who handle every transaction within the bounds of state
-            and federal law.
+            The Exchange is still being built. When it launches, it will connect collectors with a
+            verified network of licensed retailers who handle every transaction within the bounds
+            of state and federal law. For now, take a look at what's coming.
           </p>
           <ul className="space-y-3 mb-8">
             {points.map((p) => (
@@ -44,10 +49,16 @@ export function Exchange() {
               </li>
             ))}
           </ul>
-          <Button size="lg" className="bg-gradient-amber text-primary-foreground hover:opacity-90">
-            Explore the Exchange
+          <Button
+            size="lg"
+            disabled
+            aria-disabled="true"
+            className="bg-gradient-amber text-primary-foreground opacity-70 cursor-not-allowed"
+          >
+            Exchange coming soon
           </Button>
         </div>
+
       </div>
     </section>
   );

@@ -43,7 +43,7 @@ export function Footer() {
         </div>
         {[
           { h: "Community", l: ["Forums", "Members", "Groups", "Events"] },
-          { h: "Discover", l: ["Database", "Reviews", "Releases", "Exchange"] },
+          { h: "Discover", l: ["Database", "Reviews", "Releases", "Exchange (soon)"] },
           { h: "Business", l: ["For Retailers", "For Distilleries", "Advertise", "Compliance"] },
         ].map((c) => (
           <div key={c.h}>
