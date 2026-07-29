@@ -44,6 +44,9 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
+  const [appleError, setAppleError] = useState<string | null>(null);
+  const [appleRetrying, setAppleRetrying] = useState(false);
+
 
   // Redirect away if already signed in AND email confirmed
   useEffect(() => {
