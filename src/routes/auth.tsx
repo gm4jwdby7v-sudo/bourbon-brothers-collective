@@ -236,6 +236,30 @@ function AuthPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            {appleError && (
+              <div
+                role="alert"
+                className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">Sign in with Apple failed</p>
+                    <p className="mt-0.5 text-xs opacity-90">{appleError}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleApple}
+                    disabled={loading}
+                    className="shrink-0"
+                  >
+                    {appleRetrying && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -245,6 +269,16 @@ function AuthPage() {
             >
               <GoogleIcon /> Continue with Google
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mt-2"
+              onClick={handleApple}
+              disabled={loading}
+            >
+              <AppleIcon /> Continue with Apple
+            </Button>
+
 
             <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
