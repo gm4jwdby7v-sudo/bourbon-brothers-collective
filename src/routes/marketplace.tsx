@@ -33,13 +33,13 @@ import { Check, FileText, MapPin, Scale, ShieldAlert, ShieldCheck, Store, X } fr
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
     meta: [
-      { title: "Marketplace — BourbonConnect" },
+      { title: "Marketplace — Bourbon Brothers" },
       {
         name: "description",
         content:
           "Browse bourbon retailers, store picks, and rare releases. Filter by state compliance, retailer type, and bottle availability.",
       },
-      { property: "og:title", content: "Marketplace — BourbonConnect" },
+      { property: "og:title", content: "Marketplace — Bourbon Brothers" },
       {
         property: "og:description",
         content:

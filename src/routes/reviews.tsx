@@ -13,16 +13,16 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/reviews")({
   head: () => ({
     meta: [
-      { title: "Bourbon Reviews — BourbonConnect" },
+      { title: "Bourbon Reviews — Bourbon Brothers" },
       {
         name: "description",
         content:
-          "Member-written bourbon reviews with photos, ratings, and tasting notes from the BourbonConnect community.",
+          "Member-written bourbon reviews with photos, ratings, and tasting notes from the Bourbon Brothers community.",
       },
-      { property: "og:title", content: "Bourbon Reviews — BourbonConnect" },
+      { property: "og:title", content: "Bourbon Reviews — Bourbon Brothers" },
       {
         property: "og:description",
-        content: "Photos, ratings, and tasting notes from the BourbonConnect community.",
+        content: "Photos, ratings, and tasting notes from the Bourbon Brothers community.",
       },
     ],
   }),
