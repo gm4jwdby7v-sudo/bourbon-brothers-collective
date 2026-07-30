@@ -32,7 +32,7 @@ export function SiteNav() {
           <div className="h-8 w-8 rounded-md bg-gradient-amber shadow-glow flex items-center justify-center font-display text-primary-foreground font-bold">
             B
           </div>
-          <span className="font-display text-lg tracking-tight">BourbonConnect</span>
+          <span className="font-display text-lg tracking-tight">Bourbon Brothers</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           {links.map((l) => (

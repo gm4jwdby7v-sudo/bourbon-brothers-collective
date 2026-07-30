@@ -9,7 +9,7 @@ import { enablePushNotifications, getPushStatus, type PushStatus } from "@/lib/p
 import { registerPushToken } from "@/lib/push.functions";
 
 export const Route = createFileRoute("/_authenticated/_verified/messages/")({
-  head: () => ({ meta: [{ title: "Messages — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "Messages — Bourbon Brothers" }] }),
   component: MessagesPage,
 });
 

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/_verified/events/$eventId/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "Checkout — Bourbon Brothers" }] }),
   component: CheckoutPage,
 });
 

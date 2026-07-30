@@ -14,13 +14,13 @@ import { Building2, Store as StoreIcon, Globe, MapPin, Check, Plus, Users } from
 export const Route = createFileRoute("/discover")({
   head: () => ({
     meta: [
-      { title: "Discover Distilleries & Stores — BourbonConnect" },
+      { title: "Discover Distilleries & Stores — Bourbon Brothers" },
       {
         name: "description",
         content:
           "Follow your favorite distilleries and bourbon retailers. Get updates from the brands and stores you love.",
       },
-      { property: "og:title", content: "Discover Distilleries & Stores — BourbonConnect" },
+      { property: "og:title", content: "Discover Distilleries & Stores — Bourbon Brothers" },
       {
         property: "og:description",
         content:

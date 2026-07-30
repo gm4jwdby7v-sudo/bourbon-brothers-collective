@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/_verified/messages/new")({
-  head: () => ({ meta: [{ title: "New Message — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "New Message — Bourbon Brothers" }] }),
   component: NewMessagePage,
 });
 

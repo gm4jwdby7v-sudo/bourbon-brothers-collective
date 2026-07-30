@@ -13,7 +13,7 @@ export function AgeGate() {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-xl px-6">
       <div className="relative max-w-md w-full rounded-2xl border border-border bg-card p-8 text-center shadow-soft grain overflow-hidden">
-        <div className="text-xs tracking-[0.3em] text-primary uppercase mb-3">BourbonConnect</div>
+        <div className="text-xs tracking-[0.3em] text-primary uppercase mb-3">Bourbon Brothers</div>
         <h2 className="font-display text-3xl mb-3">Are you 21 or older?</h2>
         <p className="text-sm text-muted-foreground mb-6">
           You must be of legal drinking age in your country to enter this site.

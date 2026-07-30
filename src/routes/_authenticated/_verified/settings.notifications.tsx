@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { DEFAULT_PREFS, isInQuietHours, type NotificationPrefs } from "@/lib/notification-prefs";
 
 export const Route = createFileRoute("/_authenticated/_verified/settings/notifications")({
-  head: () => ({ meta: [{ title: "Notification settings — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "Notification settings — Bourbon Brothers" }] }),
   component: NotificationSettingsPage,
 });
 

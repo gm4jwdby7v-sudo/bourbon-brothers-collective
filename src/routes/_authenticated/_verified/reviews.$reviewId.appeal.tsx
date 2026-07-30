@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { ImagePlus, Loader2, X, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_verified/reviews/$reviewId/appeal")({
-  head: () => ({ meta: [{ title: "Appeal photo — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "Appeal photo — Bourbon Brothers" }] }),
   component: AppealPage,
 });
 
