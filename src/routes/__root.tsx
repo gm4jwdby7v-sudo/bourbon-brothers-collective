@@ -82,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
-      { title: "BourbonConnect" },
+      { title: "Bourbon Brothers" },
       {
         name: "description",
         content:
@@ -93,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Bourbon" },
       { name: "mobile-web-app-capable", content: "yes" },
-      { property: "og:title", content: "BourbonConnect" },
+      { property: "og:title", content: "Bourbon Brothers" },
       {
         property: "og:description",
         content: "The premium community for bourbon enthusiasts, retailers, and distilleries.",

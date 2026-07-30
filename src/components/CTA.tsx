@@ -34,7 +34,7 @@ export function Footer() {
             <div className="h-7 w-7 rounded bg-gradient-amber flex items-center justify-center font-display text-primary-foreground text-sm font-bold">
               B
             </div>
-            <span className="font-display text-base">BourbonConnect</span>
+            <span className="font-display text-base">Bourbon Brothers</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
             The nationwide community for bourbon enthusiasts, collectors, retailers, and
@@ -62,7 +62,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-6 flex flex-col md:flex-row gap-3 justify-between text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} BourbonConnect. Drink responsibly. 21+ only.</span>
+          <span>© {new Date().getFullYear()} Bourbon Brothers. Drink responsibly. 21+ only.</span>
           <span>
             All sales facilitated through licensed retailers in accordance with state and federal
             law.

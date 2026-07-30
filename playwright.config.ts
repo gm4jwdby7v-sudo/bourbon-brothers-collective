@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright configuration for BourbonConnect E2E tests.
+ * Playwright configuration for Bourbon Brothers E2E tests.
  * Tests run against the local dev server to verify auth gating behavior.
  */
 export default defineConfig({

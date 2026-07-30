@@ -14,7 +14,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // from the app package (App Store review requires this — no remote HTML).
 const config: CapacitorConfig = {
   appId: "app.bourbonconnect.mobile",
-  appName: "BourbonConnect",
+  appName: "Bourbon Brothers",
   // Capacitor bundles the contents of `webDir` into the native app.
   // For a static SPA export, point this at the built assets folder.
   webDir: "dist",
