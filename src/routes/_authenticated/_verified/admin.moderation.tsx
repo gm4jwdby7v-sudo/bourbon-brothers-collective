@@ -15,7 +15,7 @@ import { Check, X, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_verified/admin/moderation")({
-  head: () => ({ meta: [{ title: "Moderation queue — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "Moderation queue — Bourbon Brothers" }] }),
   beforeLoad: async () => {
     try {
       const { isModerator } = await getModeratorStatus();

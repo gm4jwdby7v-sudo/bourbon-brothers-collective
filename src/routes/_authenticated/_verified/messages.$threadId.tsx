@@ -10,7 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { sendDmPush } from "@/lib/push.functions";
 
 export const Route = createFileRoute("/_authenticated/_verified/messages/$threadId")({
-  head: () => ({ meta: [{ title: "Conversation — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "Conversation — Bourbon Brothers" }] }),
   component: ThreadPage,
 });
 

@@ -13,7 +13,7 @@ import { ImagePlus, Star, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_verified/reviews/new")({
-  head: () => ({ meta: [{ title: "New review — BourbonConnect" }] }),
+  head: () => ({ meta: [{ title: "New review — Bourbon Brothers" }] }),
   component: NewReviewPage,
 });
 

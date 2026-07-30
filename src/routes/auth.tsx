@@ -12,8 +12,8 @@ import { Loader2 } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in · BourbonConnect" },
-      { name: "description", content: "Sign in or create your BourbonConnect account. 21+ only." },
+      { title: "Sign in · Bourbon Brothers" },
+      { name: "description", content: "Sign in or create your Bourbon Brothers account. 21+ only." },
     ],
   }),
   component: AuthPage,
@@ -190,7 +190,7 @@ function AuthPage() {
             <div className="h-9 w-9 rounded-md bg-gradient-amber shadow-glow flex items-center justify-center font-display text-primary-foreground font-bold">
               B
             </div>
-            <span className="font-display text-xl">BourbonConnect</span>
+            <span className="font-display text-xl">Bourbon Brothers</span>
           </div>
           <h1 className="font-display text-3xl mb-2">
             {pendingEmail
