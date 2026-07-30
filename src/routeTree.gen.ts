@@ -9,38 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ReviewsRouteImport } from './routes/reviews'
-import { Route as MarketplaceRouteImport } from './routes/marketplace'
-import { Route as DiscoverRouteImport } from './routes/discover'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as AuthenticatedVerifiedRouteRouteImport } from './routes/_authenticated/_verified/route'
-import { Route as ApiPublicFirebaseConfigRouteImport } from './routes/api/public/firebase-config'
 import { Route as AuthenticatedVerifiedMessagesRouteImport } from './routes/_authenticated/_verified/messages'
-import { Route as AuthenticatedVerifiedMessagesIndexRouteImport } from './routes/_authenticated/_verified/messages.index'
-import { Route as AuthenticatedVerifiedSettingsNotificationsRouteImport } from './routes/_authenticated/_verified/settings.notifications'
-import { Route as AuthenticatedVerifiedReviewsNewRouteImport } from './routes/_authenticated/_verified/reviews.new'
-import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_authenticated/_verified/messages.new'
-import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './routes/_authenticated/_verified/messages.$threadId'
-import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
+import { Route as ApiPublicFirebaseConfigRouteImport } from './routes/api/public/firebase-config'
 import { Route as AuthenticatedVerifiedAdminModerationRouteImport } from './routes/_authenticated/_verified/admin.moderation'
-import { Route as AuthenticatedVerifiedReviewsReviewIdAppealRouteImport } from './routes/_authenticated/_verified/reviews.$reviewId.appeal'
+import { Route as AuthenticatedVerifiedForumNewRouteImport } from './routes/_authenticated/_verified/forum.new'
+import { Route as AuthenticatedVerifiedMessagesIndexRouteImport } from './routes/_authenticated/_verified/messages.index'
+import { Route as AuthenticatedVerifiedMessagesThreadIdRouteImport } from './routes/_authenticated/_verified/messages.$threadId'
+import { Route as AuthenticatedVerifiedMessagesNewRouteImport } from './routes/_authenticated/_verified/messages.new'
+import { Route as AuthenticatedVerifiedReviewsNewRouteImport } from './routes/_authenticated/_verified/reviews.new'
+import { Route as AuthenticatedVerifiedSettingsNotificationsRouteImport } from './routes/_authenticated/_verified/settings.notifications'
 import { Route as AuthenticatedVerifiedEventsEventIdCheckoutRouteImport } from './routes/_authenticated/_verified/events.$eventId.checkout'
+import { Route as AuthenticatedVerifiedReviewsReviewIdAppealRouteImport } from './routes/_authenticated/_verified/reviews.$reviewId.appeal'
 
-const ReviewsRoute = ReviewsRouteImport.update({
-  id: '/reviews',
-  path: '/reviews',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketplaceRoute = MarketplaceRouteImport.update({
-  id: '/marketplace',
-  path: '/marketplace',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DiscoverRoute = DiscoverRouteImport.update({
-  id: '/discover',
-  path: '/discover',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -48,13 +42,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const DiscoverRoute = DiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedVerifiedRouteRoute =
@@ -62,15 +62,27 @@ const AuthenticatedVerifiedRouteRoute =
     id: '/_verified',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedVerifiedMessagesRoute =
+  AuthenticatedVerifiedMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
 const ApiPublicFirebaseConfigRoute = ApiPublicFirebaseConfigRouteImport.update({
   id: '/api/public/firebase-config',
   path: '/api/public/firebase-config',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedVerifiedMessagesRoute =
-  AuthenticatedVerifiedMessagesRouteImport.update({
-    id: '/messages',
-    path: '/messages',
+const AuthenticatedVerifiedAdminModerationRoute =
+  AuthenticatedVerifiedAdminModerationRouteImport.update({
+    id: '/admin/moderation',
+    path: '/admin/moderation',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
+const AuthenticatedVerifiedForumNewRoute =
+  AuthenticatedVerifiedForumNewRouteImport.update({
+    id: '/forum/new',
+    path: '/forum/new',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
 const AuthenticatedVerifiedMessagesIndexRoute =
@@ -79,17 +91,11 @@ const AuthenticatedVerifiedMessagesIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
   } as any)
-const AuthenticatedVerifiedSettingsNotificationsRoute =
-  AuthenticatedVerifiedSettingsNotificationsRouteImport.update({
-    id: '/settings/notifications',
-    path: '/settings/notifications',
-    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
-  } as any)
-const AuthenticatedVerifiedReviewsNewRoute =
-  AuthenticatedVerifiedReviewsNewRouteImport.update({
-    id: '/reviews/new',
-    path: '/reviews/new',
-    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+const AuthenticatedVerifiedMessagesThreadIdRoute =
+  AuthenticatedVerifiedMessagesThreadIdRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
   } as any)
 const AuthenticatedVerifiedMessagesNewRoute =
   AuthenticatedVerifiedMessagesNewRouteImport.update({
@@ -97,34 +103,28 @@ const AuthenticatedVerifiedMessagesNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
   } as any)
-const AuthenticatedVerifiedMessagesThreadIdRoute =
-  AuthenticatedVerifiedMessagesThreadIdRouteImport.update({
-    id: '/$threadId',
-    path: '/$threadId',
-    getParentRoute: () => AuthenticatedVerifiedMessagesRoute,
-  } as any)
-const AuthenticatedVerifiedForumNewRoute =
-  AuthenticatedVerifiedForumNewRouteImport.update({
-    id: '/forum/new',
-    path: '/forum/new',
+const AuthenticatedVerifiedReviewsNewRoute =
+  AuthenticatedVerifiedReviewsNewRouteImport.update({
+    id: '/reviews/new',
+    path: '/reviews/new',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
-const AuthenticatedVerifiedAdminModerationRoute =
-  AuthenticatedVerifiedAdminModerationRouteImport.update({
-    id: '/admin/moderation',
-    path: '/admin/moderation',
-    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
-  } as any)
-const AuthenticatedVerifiedReviewsReviewIdAppealRoute =
-  AuthenticatedVerifiedReviewsReviewIdAppealRouteImport.update({
-    id: '/reviews/$reviewId/appeal',
-    path: '/reviews/$reviewId/appeal',
+const AuthenticatedVerifiedSettingsNotificationsRoute =
+  AuthenticatedVerifiedSettingsNotificationsRouteImport.update({
+    id: '/settings/notifications',
+    path: '/settings/notifications',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
 const AuthenticatedVerifiedEventsEventIdCheckoutRoute =
   AuthenticatedVerifiedEventsEventIdCheckoutRouteImport.update({
     id: '/events/$eventId/checkout',
     path: '/events/$eventId/checkout',
+    getParentRoute: () => AuthenticatedVerifiedRouteRoute,
+  } as any)
+const AuthenticatedVerifiedReviewsReviewIdAppealRoute =
+  AuthenticatedVerifiedReviewsReviewIdAppealRouteImport.update({
+    id: '/reviews/$reviewId/appeal',
+    path: '/reviews/$reviewId/appeal',
     getParentRoute: () => AuthenticatedVerifiedRouteRoute,
   } as any)
 
@@ -254,32 +254,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reviews': {
-      id: '/reviews'
-      path: '/reviews'
-      fullPath: '/reviews'
-      preLoaderRoute: typeof ReviewsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/marketplace': {
-      id: '/marketplace'
-      path: '/marketplace'
-      fullPath: '/marketplace'
-      preLoaderRoute: typeof MarketplaceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/discover': {
-      id: '/discover'
-      path: '/discover'
-      fullPath: '/discover'
-      preLoaderRoute: typeof DiscoverRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -289,11 +268,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discover': {
+      id: '/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof DiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_verified': {
@@ -303,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/_verified/messages': {
+      id: '/_authenticated/_verified/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedVerifiedMessagesRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
     '/api/public/firebase-config': {
       id: '/api/public/firebase-config'
       path: '/api/public/firebase-config'
@@ -310,11 +317,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFirebaseConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/_verified/messages': {
-      id: '/_authenticated/_verified/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof AuthenticatedVerifiedMessagesRouteImport
+    '/_authenticated/_verified/admin/moderation': {
+      id: '/_authenticated/_verified/admin/moderation'
+      path: '/admin/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AuthenticatedVerifiedAdminModerationRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
+    '/_authenticated/_verified/forum/new': {
+      id: '/_authenticated/_verified/forum/new'
+      path: '/forum/new'
+      fullPath: '/forum/new'
+      preLoaderRoute: typeof AuthenticatedVerifiedForumNewRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
     '/_authenticated/_verified/messages/': {
@@ -324,19 +338,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedMessagesIndexRouteImport
       parentRoute: typeof AuthenticatedVerifiedMessagesRoute
     }
-    '/_authenticated/_verified/settings/notifications': {
-      id: '/_authenticated/_verified/settings/notifications'
-      path: '/settings/notifications'
-      fullPath: '/settings/notifications'
-      preLoaderRoute: typeof AuthenticatedVerifiedSettingsNotificationsRouteImport
-      parentRoute: typeof AuthenticatedVerifiedRouteRoute
-    }
-    '/_authenticated/_verified/reviews/new': {
-      id: '/_authenticated/_verified/reviews/new'
-      path: '/reviews/new'
-      fullPath: '/reviews/new'
-      preLoaderRoute: typeof AuthenticatedVerifiedReviewsNewRouteImport
-      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    '/_authenticated/_verified/messages/$threadId': {
+      id: '/_authenticated/_verified/messages/$threadId'
+      path: '/$threadId'
+      fullPath: '/messages/$threadId'
+      preLoaderRoute: typeof AuthenticatedVerifiedMessagesThreadIdRouteImport
+      parentRoute: typeof AuthenticatedVerifiedMessagesRoute
     }
     '/_authenticated/_verified/messages/new': {
       id: '/_authenticated/_verified/messages/new'
@@ -345,32 +352,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVerifiedMessagesNewRouteImport
       parentRoute: typeof AuthenticatedVerifiedMessagesRoute
     }
-    '/_authenticated/_verified/messages/$threadId': {
-      id: '/_authenticated/_verified/messages/$threadId'
-      path: '/$threadId'
-      fullPath: '/messages/$threadId'
-      preLoaderRoute: typeof AuthenticatedVerifiedMessagesThreadIdRouteImport
-      parentRoute: typeof AuthenticatedVerifiedMessagesRoute
-    }
-    '/_authenticated/_verified/forum/new': {
-      id: '/_authenticated/_verified/forum/new'
-      path: '/forum/new'
-      fullPath: '/forum/new'
-      preLoaderRoute: typeof AuthenticatedVerifiedForumNewRouteImport
+    '/_authenticated/_verified/reviews/new': {
+      id: '/_authenticated/_verified/reviews/new'
+      path: '/reviews/new'
+      fullPath: '/reviews/new'
+      preLoaderRoute: typeof AuthenticatedVerifiedReviewsNewRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
-    '/_authenticated/_verified/admin/moderation': {
-      id: '/_authenticated/_verified/admin/moderation'
-      path: '/admin/moderation'
-      fullPath: '/admin/moderation'
-      preLoaderRoute: typeof AuthenticatedVerifiedAdminModerationRouteImport
-      parentRoute: typeof AuthenticatedVerifiedRouteRoute
-    }
-    '/_authenticated/_verified/reviews/$reviewId/appeal': {
-      id: '/_authenticated/_verified/reviews/$reviewId/appeal'
-      path: '/reviews/$reviewId/appeal'
-      fullPath: '/reviews/$reviewId/appeal'
-      preLoaderRoute: typeof AuthenticatedVerifiedReviewsReviewIdAppealRouteImport
+    '/_authenticated/_verified/settings/notifications': {
+      id: '/_authenticated/_verified/settings/notifications'
+      path: '/settings/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedVerifiedSettingsNotificationsRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
     '/_authenticated/_verified/events/$eventId/checkout': {
@@ -378,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/events/$eventId/checkout'
       fullPath: '/events/$eventId/checkout'
       preLoaderRoute: typeof AuthenticatedVerifiedEventsEventIdCheckoutRouteImport
+      parentRoute: typeof AuthenticatedVerifiedRouteRoute
+    }
+    '/_authenticated/_verified/reviews/$reviewId/appeal': {
+      id: '/_authenticated/_verified/reviews/$reviewId/appeal'
+      path: '/reviews/$reviewId/appeal'
+      fullPath: '/reviews/$reviewId/appeal'
+      preLoaderRoute: typeof AuthenticatedVerifiedReviewsReviewIdAppealRouteImport
       parentRoute: typeof AuthenticatedVerifiedRouteRoute
     }
   }
