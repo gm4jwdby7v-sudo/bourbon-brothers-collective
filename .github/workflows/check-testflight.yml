@@ -5,7 +5,7 @@ jobs:
   check:
     runs-on: macos-latest
     steps:
-      - name: Check beta review status
+      - name: Submit for beta review
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
@@ -37,20 +37,23 @@ jobs:
               except urllib.error.HTTPError as e:
                   return e.code, e.read().decode(errors="replace")
           bundle = os.environ["BUNDLE_ID"]
-          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
+          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}&include=betaAppReviewDetail")
           aid = apps["data"][0]["id"]
-          # get builds for this app to map ids -> version numbers
-          _, builds = api(f"/v1/builds?filter[app]={aid}&limit=10&fields[builds]=version")
-          bmap = {b["id"]: b["attributes"].get("version") for b in builds["data"]}
-          for b in builds["data"]:
-              bid = b["id"]; ver = b["attributes"].get("version")
-              s, subs = api(f"/v1/betaAppReviewSubmissions?filter[build]={bid}")
-              if s != 200 or not isinstance(subs, dict):
-                  print(f"RESULT build={ver} QUERY_FAILED status={s}")
-              elif not subs["data"]:
-                  print(f"RESULT build={ver} NO_SUBMISSION")
-              else:
-                  for x in subs["data"]:
-                      print(f"RESULT build={ver} state={x['attributes'].get('betaReviewState')}")
+          detail_id = apps["included"][0]["id"]
+          # set every beta review field explicitly
+          s, _ = api(f"/v1/betaAppReviewDetails/{detail_id}", method="PATCH", body={
+              "data": {"type": "betaAppReviewDetails", "id": detail_id,
+                       "attributes": {"contactFirstName": "Brian", "contactLastName": "Pitts",
+                                      "contactPhone": "7039463903", "contactEmail": "brian.pitts81@gmail.com",
+                                      "demoAccountRequired": False,
+                                      "notes": "Bourbon enthusiast community app with marketplace, reviews, and events. All features work without a demo account; testers can create their own free account."}}})
+          print(f"Review details update: status={s}")
+          _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=3&fields[builds]=version,processingState")
+          latest = next(b for b in builds["data"] if b["attributes"].get("processingState") == "VALID")
+          s, resp = api("/v1/betaAppReviewSubmissions", method="POST",
+              body={"data": {"type": "betaAppReviewSubmissions",
+                             "relationships": {"build": {"data": {"type": "builds", "id": latest["id"]}}}}})
+          print(f"SUBMIT build={latest['attributes']['version']} status={s}")
+          print(f"BODY={str(resp)[:400]}")
           print("Done.")
           PYEOF
