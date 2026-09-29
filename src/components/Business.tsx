@@ -1,5 +1,7 @@
 import rickhouse from "@/assets/rickhouse.jpg";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 const tiers = [
   {
@@ -24,6 +26,18 @@ const tiers = [
 ];
 
 export function Business() {
+  const navigate = useNavigate();
+
+  function handleGetStarted(tier: string) {
+    toast(`${tier} plan — coming soon`, {
+      description: "Business onboarding is on the way. Create your account and we'll notify you.",
+      action: {
+        label: "Create account",
+        onClick: () => void navigate({ to: "/auth" }),
+      },
+    });
+  }
+
   return (
     <section id="business" className="relative py-24 overflow-hidden">
       <div className="absolute inset-0">
@@ -76,6 +90,7 @@ export function Business() {
                   t.featured ? "w-full bg-gradient-amber text-primary-foreground" : "w-full"
                 }
                 variant={t.featured ? "default" : "outline"}
+                onClick={() => handleGetStarted(t.name)}
               >
                 Get started
               </Button>

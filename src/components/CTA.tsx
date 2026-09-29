@@ -44,18 +44,40 @@ export function Footer() {
           </p>
         </div>
         {[
-          { h: "Community", l: ["Forums", "Members", "Groups", "Events"] },
-          { h: "Discover", l: ["Database", "Reviews", "Releases", "Exchange (soon)"] },
-          { h: "Business", l: ["For Retailers", "For Distilleries", "Advertise", "Compliance"] },
+          {
+            h: "Community",
+            l: [
+              { label: "Join the community", to: "/auth", hash: undefined as string | undefined },
+              { label: "Sign in", to: "/auth", hash: undefined as string | undefined },
+              { label: "Messages", to: "/messages", hash: undefined as string | undefined },
+              { label: "Start a discussion", to: "/forum/new", hash: undefined as string | undefined },
+            ],
+          },
+          {
+            h: "Discover",
+            l: [
+              { label: "Bottle database", to: "/discover", hash: undefined as string | undefined },
+              { label: "Reviews", to: "/reviews", hash: undefined as string | undefined },
+              { label: "Write a review", to: "/reviews/new", hash: undefined as string | undefined },
+              { label: "Marketplace", to: "/marketplace", hash: undefined as string | undefined },
+            ],
+          },
+          {
+            h: "Business",
+            l: [
+              { label: "For Retailers", to: "/", hash: "business" as string | undefined },
+              { label: "For Distilleries", to: "/", hash: "business" as string | undefined },
+            ],
+          },
         ].map((c) => (
           <div key={c.h}>
             <div className="text-xs uppercase tracking-widest text-primary mb-3">{c.h}</div>
             <ul className="space-y-2 text-muted-foreground">
               {c.l.map((i) => (
-                <li key={i}>
-                  <a href="#" className="hover:text-foreground">
-                    {i}
-                  </a>
+                <li key={i.label}>
+                  <Link to={i.to} hash={i.hash} className="hover:text-foreground">
+                    {i.label}
+                  </Link>
                 </li>
               ))}
             </ul>

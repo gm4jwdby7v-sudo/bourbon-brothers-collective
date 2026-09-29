@@ -29,9 +29,11 @@ export function SiteNav() {
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border pt-[env(safe-area-inset-top,0px)]">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-gradient-amber shadow-glow flex items-center justify-center font-display text-primary-foreground font-bold">
-            B
-          </div>
+          <img
+            src="/app-icon-512.png"
+            alt="Bourbon Brothers"
+            className="h-8 w-8 rounded-md shadow-glow"
+          />
           <span className="font-display text-lg tracking-tight">Bourbon Brothers</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -59,8 +61,10 @@ export function SiteNav() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>
-                  <UserIcon className="mr-2 h-4 w-4" /> Profile
+                <DropdownMenuItem asChild>
+                  <Link to="/settings/notifications">
+                    <UserIcon className="mr-2 h-4 w-4" /> Notification settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>

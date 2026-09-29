@@ -125,6 +125,10 @@
   .bg-gradient-amber { background: var(--gradient-amber); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
+  /* Keep top-center toasts clear of the iPhone status bar / notch. */
+  [data-sonner-toaster][data-y-position="top"] {
+    top: max(env(safe-area-inset-top, 0px) + 8px, 16px);
+  }
   .grain::before {
     content: "";
     position: absolute; inset: 0;

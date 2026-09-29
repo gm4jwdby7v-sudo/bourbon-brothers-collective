@@ -82,7 +82,9 @@ export function Hero() {
             </p>
             <div className="mt-5 pt-5 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
               <span>1,284 tasting notes</span>
-              <span className="text-primary">Hunt this bottle →</span>
+              <Link to="/discover" className="text-primary hover:underline">
+                Hunt this bottle →
+              </Link>
             </div>
           </div>
           <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-2xl bg-gradient-amber blur-2xl opacity-40" />

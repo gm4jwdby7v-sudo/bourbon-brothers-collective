@@ -34,7 +34,7 @@ export function Exchange() {
             </span>
           </div>
           <h2 className="font-display text-4xl md:text-5xl mb-6">
-            Sell your finds. <span className="italic text-gradient-copper">Legally.</span>
+            Sell <span className="italic text-gradient-copper">to your friends.</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed mb-8">
             The Exchange is still being built. When it launches, it will connect collectors with a

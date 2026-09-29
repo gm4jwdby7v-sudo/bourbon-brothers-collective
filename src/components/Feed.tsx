@@ -1,4 +1,5 @@
 import { Heart, MessageCircle, Repeat2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 const posts = [
   {
@@ -59,18 +60,30 @@ export function Feed() {
             </div>
             <p className="text-sm leading-relaxed text-foreground/90 mb-5">{p.text}</p>
             <div className="flex items-center gap-5 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
+              <Link
+                to="/auth"
+                className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+                aria-label="Sign in to like"
+              >
                 <Heart className="h-3.5 w-3.5" />
                 {p.likes}
-              </span>
-              <span className="flex items-center gap-1.5">
+              </Link>
+              <Link
+                to="/auth"
+                className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+                aria-label="Sign in to comment"
+              >
                 <MessageCircle className="h-3.5 w-3.5" />
                 {p.comments}
-              </span>
-              <span className="flex items-center gap-1.5">
+              </Link>
+              <Link
+                to="/auth"
+                className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+                aria-label="Sign in to share"
+              >
                 <Repeat2 className="h-3.5 w-3.5" />
                 Share
-              </span>
+              </Link>
             </div>
           </article>
         ))}
