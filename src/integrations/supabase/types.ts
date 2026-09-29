@@ -422,6 +422,13 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      place_follower_counts: {
+        Args: never
+        Returns: {
+          follower_count: number
+          place_id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "member"

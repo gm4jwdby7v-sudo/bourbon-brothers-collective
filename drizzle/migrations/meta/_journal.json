@@ -8,6 +8,13 @@
       "when": 1790645990573,
       "tag": "0000_restrict_profiles_and_place_follows_select",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790646454060,
+      "tag": "0001_scope_place_follows_select",
+      "breakpoints": true
     }
   ]
 }
