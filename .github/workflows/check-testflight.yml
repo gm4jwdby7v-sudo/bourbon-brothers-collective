@@ -5,7 +5,7 @@ jobs:
   check:
     runs-on: macos-latest
     steps:
-      - name: Remove build from external group
+      - name: Check beta review status
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
@@ -39,17 +39,14 @@ jobs:
           bundle = os.environ["BUNDLE_ID"]
           _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
           aid = apps["data"][0]["id"]
-          _, groups = api(f"/v1/apps/{aid}/relationships/betaGroups")
-          ext_gid = None
-          for g in groups["data"]:
-              _, gd = api(f"/v1/betaGroups/{g['id']}")
-              if gd["data"]["attributes"].get("isInternalGroup") is False:
-                  ext_gid = g["id"]
-          _, gb = api(f"/v1/betaGroups/{ext_gid}/relationships/builds")
-          # remove all builds from external group so Brian can re-add via UI
-          for b in gb["data"]:
-              s, _ = api(f"/v1/betaGroups/{ext_gid}/relationships/builds", method="DELETE",
-                  body={"data": [{"type": "builds", "id": b["id"]}]})
-              print(f"Removed build {b['id']}: status={s}")
+          _, builds = api(f"/v1/builds?filter[app]={aid}&limit=5&fields[builds]=version")
+          for b in builds["data"]:
+              bid = b["id"]; ver = b["attributes"].get("version")
+              s, subs = api(f"/v1/betaAppReviewSubmissions?filter[build]={bid}")
+              if s == 200 and isinstance(subs, dict) and subs["data"]:
+                  for x in subs["data"]:
+                      print(f"RESULT build={ver} state={x['attributes'].get('betaReviewState')}")
+              else:
+                  print(f"RESULT build={ver} NO_SUBMISSION")
           print("Done.")
           PYEOF
