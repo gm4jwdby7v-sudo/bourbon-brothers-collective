@@ -5,7 +5,7 @@ jobs:
   check:
     runs-on: macos-latest
     steps:
-      - name: Manage TestFlight builds
+      - name: Check beta review status
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
@@ -39,22 +39,10 @@ jobs:
           bundle = os.environ["BUNDLE_ID"]
           _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
           aid = apps["data"][0]["id"]
-          _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&fields[builds]=version,processingState,usesNonExemptEncryption,uploadedDate")
-          for b in builds["data"]:
-              a = b["attributes"]
-              print(f"Build {a.get('version')}: state={a.get('processingState')} encryption={a.get('usesNonExemptEncryption')}")
-          latest = next(b for b in builds["data"] if b["attributes"].get("processingState") == "VALID")
-          print(f"LATEST_VALID={latest['attributes']['version']}")
-          # add latest valid build to external Family Testers group
-          _, groups = api(f"/v1/apps/{aid}/relationships/betaGroups")
-          ext_gid = None
-          for g in groups["data"]:
-              _, gd = api(f"/v1/betaGroups/{g['id']}")
-              if gd["data"]["attributes"].get("isInternalGroup") is False:
-                  ext_gid = g["id"]; print(f"External group: {gd['data']['attributes']['name']}")
-          if ext_gid:
-              s, _ = api(f"/v1/betaGroups/{ext_gid}/relationships/builds", method="POST",
-                  body={"data": [{"type": "builds", "id": latest["id"]}]})
-              print(f"Added build {latest['attributes']['version']} to external group: status={s}")
+          _, subs = api(f"/v1/betaAppReviewSubmissions?filter[app]={aid}&include=build&limit=10")
+          print(f"SUBMISSION_COUNT={len(subs['data'])}")
+          for s in subs["data"]:
+              st = s["attributes"].get("betaReviewState")
+              print(f"Submission {s['id']}: state={st}")
           print("Done.")
           PYEOF
