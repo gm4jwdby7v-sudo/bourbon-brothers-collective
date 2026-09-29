@@ -38,10 +38,11 @@ jobs:
                   return e.code, e.read().decode(errors="replace")
           _, apps = api(f"/v1/apps?filter[bundleId]={os.environ['BUNDLE_ID']}")
           aid = apps["data"][0]["id"]
-          _, subs = api(f"/v1/apps/{aid}/betaAppReviewSubmissions?limit=10")
-          print("EXISTING SUBMISSIONS:")
-          for s in subs.get("data", []):
-              print(f"  state={s['attributes'].get('betaReviewState')} build={s.get('relationships',{}).get('build',{}).get('data',{}).get('id')}")
+          _, subs = api(f"/v1/betaAppReviewSubmissions?filter[build]=70a98223-b44b-4f01-a18d-14a77a824a2a&limit=10")
+          print(f"EXISTING SUBMISSIONS query: {type(subs)}")
+          data = subs.get("data", []) if isinstance(subs, dict) else []
+          for s in data:
+              print(f"  state={s['attributes'].get('betaReviewState')}")
           # retry submission for build 17 with full error
           bid = "70a98223-b44b-4f01-a18d-14a77a824a2a"
           s, resp = api("/v1/betaAppReviewSubmissions", method="POST",
