@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { isNativeApp } from "@/lib/native";
+import { isNativeApp, emailRedirectBase } from "@/lib/native";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +63,7 @@ function AuthPage() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: pendingEmail,
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: { emailRedirectTo: `${emailRedirectBase()}/` },
     });
     setResending(false);
     if (error) toast.error(error.message);
@@ -90,7 +90,7 @@ function AuthPage() {
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${emailRedirectBase()}/`,
             data: {
               display_name: parsed.data.displayName,
               date_of_birth: parsed.data.dob,
@@ -214,6 +214,8 @@ function AuthPage() {
             <p className="text-sm text-muted-foreground">
               Click the link in the email to confirm your account. You must verify your email before
               you can post in the forums or message other members.
+              {isNativeApp() &&
+                " The link opens in your browser — after confirming, come back here and sign in."}
             </p>
             <Button
               type="button"

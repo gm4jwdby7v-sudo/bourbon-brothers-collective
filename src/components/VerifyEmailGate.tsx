@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { emailRedirectBase } from "@/lib/native";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { MailWarning, Loader2 } from "lucide-react";
@@ -72,7 +73,7 @@ function VerifyEmailNotice({
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: { emailRedirectTo: `${emailRedirectBase()}/` },
     });
     setSending(false);
     if (error) toast.error(error.message);

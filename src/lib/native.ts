@@ -38,3 +38,18 @@ export function backendUrl(path: string): string {
   }
   return path;
 }
+
+/**
+ * Base URL for Supabase email-confirmation links (sign-up / resend).
+ *
+ * Inside the native iOS shell, window.location.origin is capacitor://localhost,
+ * which can't receive the confirmation link — tapping it opens Safari with
+ * nowhere valid to go, so verification appears broken. Point the link at the
+ * deployed web backend instead: the link confirms the email in the browser,
+ * then the user returns to the app and signs in with email + password.
+ */
+export function emailRedirectBase(): string {
+  if (isNativeApp() && BACKEND_URL) return BACKEND_URL;
+  if (typeof window !== "undefined") return window.location.origin;
+  return BACKEND_URL ?? "";
+}
