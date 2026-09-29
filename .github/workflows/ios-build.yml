@@ -48,6 +48,14 @@ jobs:
           printf '%s' "${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}" \
             > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
 
+      - name: Select Xcode 26+
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then echo "No Xcode 26+ found on runner:"; ls /Applications | grep -i xcode; exit 1; fi
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
       - name: Install distribution signing
         run: |
           set -euo pipefail
