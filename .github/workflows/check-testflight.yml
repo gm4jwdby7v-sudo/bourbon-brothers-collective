@@ -6,6 +6,10 @@ on:
         description: 'Set up external tester group and submit for beta review'
         required: false
         default: 'false'
+      contact_phone:
+        description: 'Contact phone for beta review'
+        required: false
+        default: ''
 jobs:
   check:
     runs-on: macos-latest
