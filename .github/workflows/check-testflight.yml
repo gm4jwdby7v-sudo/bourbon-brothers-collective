@@ -1,16 +1,23 @@
 name: Check TestFlight Groups
 on:
   workflow_dispatch:
+    inputs:
+      setup_external:
+        description: 'Set up external tester group and submit for beta review'
+        required: false
+        default: 'false'
 jobs:
   check:
     runs-on: macos-latest
     steps:
-      - name: Check review detail
+      - name: Manage TestFlight builds
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
           BUNDLE_ID: app.bourbonconnect.mobile
+          SETUP_EXTERNAL: ${{ inputs.setup_external }}
+          CONTACT_PHONE: ${{ inputs.contact_phone }}
         run: |
           set -euo pipefail
           if printf '%s' "$ASC_PRIVATE_KEY" | grep -q "BEGIN PRIVATE KEY"; then
@@ -36,10 +43,27 @@ jobs:
                       return r.status, json.load(r) if r.status != 204 else {}
               except urllib.error.HTTPError as e:
                   return e.code, e.read().decode(errors="replace")
-          _, apps = api(f"/v1/apps?filter[bundleId]={os.environ['BUNDLE_ID']}&include=betaAppReviewDetail")
+          bundle = os.environ["BUNDLE_ID"]
+          setup_external = os.environ.get("SETUP_EXTERNAL") == "true"
+          phone = os.environ.get("CONTACT_PHONE", "")
+          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}&include=betaAppReviewDetail")
           app = apps["data"][0]; aid = app["id"]
-          print(f"included: {list(apps.get('included', []))[:1]}")
-          inc = {i["id"]: i for i in apps.get("included", [])}
-          for i in apps.get("included", []):
-              print(f"INCLUDE {i['type']}: {json.dumps(i.get('attributes', {}))[:500]}")
+          detail_id = apps["included"][0]["id"] if apps.get("included") else None
+          print(f"App id={aid} reviewDetail id={detail_id}")
+          if setup_external and phone and detail_id:
+              s, resp = api(f"/v1/betaAppReviewDetails/{detail_id}", method="PATCH", body={
+                  "data": {"type": "betaAppReviewDetails", "id": detail_id,
+                           "attributes": {"contactFirstName": "Brian", "contactLastName": "Pitts",
+                                          "contactPhone": phone, "contactEmail": "brian.pitts81@gmail.com",
+                                          "notes": "Bourbon enthusiast community app with marketplace, reviews, and events."}}})
+              print(f"Updated review contact info: status={s}")
+              # now submit latest valid build for beta review
+              _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&fields[builds]=version,processingState")
+              latest = next(b for b in builds["data"] if b["attributes"].get("processingState") == "VALID")
+              s, resp = api("/v1/betaAppReviewSubmissions", method="POST",
+                  body={"data": {"type": "betaAppReviewSubmissions",
+                                 "relationships": {"build": {"data": {"type": "builds", "id": latest["id"]}}}}})
+              print(f"Beta review submission for build {latest['attributes']['version']}: status={s}")
+              print(f"Response: {str(resp)[:500]}")
+          print("Done.")
           PYEOF
