@@ -59,13 +59,17 @@ function DiscoverPage() {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      const [{ data: placesData, error: pErr }, { data: followsData }] = await Promise.all([
-        supabase
-          .from("places")
-          .select("id, kind, slug, name, region, description, website, image_url")
-          .order("name"),
-        supabase.from("place_follows").select("place_id, user_id"),
-      ]);
+      const [{ data: placesData, error: pErr }, { data: countData }, { data: myFollows }] =
+        await Promise.all([
+          supabase
+            .from("places")
+            .select("id, kind, slug, name, region, description, website, image_url")
+            .order("name"),
+          supabase.rpc("place_follower_counts"),
+          user
+            ? supabase.from("place_follows").select("place_id").eq("user_id", user.id)
+            : Promise.resolve({ data: [] as { place_id: string }[] }),
+        ]);
       if (cancelled) return;
       if (pErr) {
         toast.error("Couldn't load discover. Please refresh.");
@@ -74,11 +78,8 @@ function DiscoverPage() {
       }
       setPlaces((placesData ?? []) as Place[]);
       const counts: Record<string, number> = {};
-      const mine = new Set<string>();
-      for (const row of followsData ?? []) {
-        counts[row.place_id] = (counts[row.place_id] ?? 0) + 1;
-        if (user && row.user_id === user.id) mine.add(row.place_id);
-      }
+      for (const row of countData ?? []) counts[row.place_id] = Number(row.follower_count);
+      const mine = new Set<string>((myFollows ?? []).map((r) => r.place_id));
       setFollowerCounts(counts);
       setFollowing(mine);
       setLoading(false);
