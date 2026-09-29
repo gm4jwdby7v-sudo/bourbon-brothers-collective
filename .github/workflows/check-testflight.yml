@@ -1,6 +1,11 @@
 name: Check TestFlight Groups
 on:
   workflow_dispatch:
+    inputs:
+      setup_external:
+        description: 'Set up external tester group and submit for beta review'
+        required: false
+        default: 'false'
 jobs:
   check:
     runs-on: macos-latest
@@ -11,6 +16,7 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
           BUNDLE_ID: app.bourbonconnect.mobile
+          SETUP_EXTERNAL: ${{ inputs.setup_external }}
         run: |
           set -euo pipefail
           if printf '%s' "$ASC_PRIVATE_KEY" | grep -q "BEGIN PRIVATE KEY"; then
@@ -19,6 +25,11 @@ jobs:
             printf '%s' "$ASC_PRIVATE_KEY" | base64 -d > /tmp/AuthKey.p8
           fi
           python3 -m pip install -q --break-system-packages pyjwt cryptography 2>&1 | tail -1 || true
+          if [ "$SETUP_EXTERNAL" = "true" ]; then
+            echo "=== Setting up external testers ==="
+          else
+            echo "=== Check mode (no changes) ==="
+          fi
           python3 - <<'PYEOF'
           import json, time, urllib.request, urllib.error, os
           import jwt
@@ -43,34 +54,53 @@ jobs:
               except urllib.error.HTTPError as e:
                   return e.code, e.read()[:800].decode(errors="replace")
           bundle = os.environ["BUNDLE_ID"]
+          setup_external = os.environ.get("SETUP_EXTERNAL") == "true"
           _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
-          app = apps["data"][0]; aid = app["id"]
-          print(f"App: {app['attributes'].get('name')} id={aid}")
-          _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=8&fields[builds]=version,uploadedDate,processingState")
-          all_builds = builds.get("data", [])
-          for b in all_builds:
-              a = b["attributes"]
-              print(f"  build id={b['id']} version={a.get('version')} uploaded={a.get('uploadedDate')} state={a.get('processingState')}")
-          _, groups = api(f"/v1/apps/{aid}/betaGroups?fields[betaGroups]=name,isInternalGroup")
-          internal_gid = None
+          aid = apps["data"][0]["id"]
+          print(f"App id={aid}")
+          _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&fields[builds]=version,processingState")
+          latest = next(b for b in builds["data"] if b["attributes"].get("processingState") == "VALID")
+          print(f"Latest valid build: version={latest['attributes']['version']} id={latest['id']}")
+          _, groups = api(f"/v1/apps/{aid}/betaGroups?fields[betaGroups]=name,isInternalGroup,publicLinkEnabled,publicLink")
+          internal_gid, ext_gid, ext_link = None, None, None
           for g in groups.get("data", []):
               ga = g["attributes"]
-              print(f"Group: {ga.get('name')} internal={ga.get('isInternalGroup')} id={g['id']}")
+              print(f"Group: {ga.get('name')} internal={ga.get('isInternalGroup')} publicLink={ga.get('publicLink')}")
               if ga.get("isInternalGroup"):
                   internal_gid = g["id"]
-          if not internal_gid:
-              print("No internal group found"); raise SystemExit(1)
+                  _, gb = api(f"/v1/betaGroups/{g['id']}/builds?fields[builds]=version&limit=20")
+                  print(f"  builds in group: {sorted(b['attributes'].get('version') for b in gb.get('data', []))}")
+              else:
+                  ext_gid = g["id"]; ext_link = ga.get("publicLink")
+          # Always ensure latest valid build is in the internal group
           _, gb = api(f"/v1/betaGroups/{internal_gid}/builds?fields[builds]=version&limit=20")
           in_group = {b["attributes"].get("version") for b in gb.get("data", [])}
-          print(f"Builds currently in internal group: {sorted(in_group)}")
-          # Add latest VALID build not yet in the group
-          for b in all_builds:
+          for b in builds["data"]:
               ver = b["attributes"].get("version")
-              state = b["attributes"].get("processingState")
-              if state == "VALID" and ver not in in_group:
-                  s, resp = api(f"/v1/betaGroups/{internal_gid}/relationships/builds",
-                                method="POST", body={"data": [{"type": "builds", "id": b["id"]}]})
-                  print(f"Added build version={ver} to internal group: status={s} resp={str(resp)[:300]}")
-                  in_group.add(ver)
+              if b["attributes"].get("processingState") == "VALID" and ver not in in_group:
+                  s, _ = api(f"/v1/betaGroups/{internal_gid}/relationships/builds", method="POST",
+                             body={"data": [{"type": "builds", "id": b["id"]}]})
+                  print(f"Added build {ver} to internal group: status={s}")
+          if setup_external:
+              if not ext_gid:
+                  s, grp = api("/v1/betaGroups", method="POST", body={
+                      "data": {"type": "betaGroups",
+                               "attributes": {"name": "Family Testers", "isInternalGroup": False,
+                                              "publicLinkEnabled": True, "publicLinkLimitEnabled": False},
+                               "relationships": {"app": {"data": {"type": "apps", "id": aid}}}}})
+                  print(f"Created external group: status={s}")
+                  ext_gid = grp["data"]["id"] if s in (200, 201) else None
+              if ext_gid:
+                  s, _ = api(f"/v1/betaGroups/{ext_gid}/relationships/builds", method="POST",
+                             body={"data": [{"type": "builds", "id": latest["id"]}]})
+                  print(f"Added build {latest['attributes']['version']} to external group: status={s}")
+                  s, sub = api("/v1/betaAppReviewSubmissions", method="POST",
+                               body={"data": {"type": "betaAppReviewSubmissions",
+                                              "relationships": {"build": {"data": {"type": "builds", "id": latest["id"]}}}}})
+                  print(f"Beta review submission: status={s} resp={str(sub)[:400]}")
+                  _, groups = api(f"/v1/apps/{aid}/betaGroups?fields[betaGroups]=name,publicLink")
+                  for g in groups.get("data", []):
+                      if g["id"] == ext_gid:
+                          print(f"PUBLIC LINK: {g['attributes'].get('publicLink')}")
           print("Done.")
           PYEOF
