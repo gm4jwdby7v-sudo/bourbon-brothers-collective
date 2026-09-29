@@ -1,0 +1,1 @@
+import{s as t}from"./index-Bt5z5RnF.js";const n="review-images";async function i(r,a=3600){const{data:e,error:s}=await t.storage.from(n).createSignedUrl(r,a);return s||!e?null:e.signedUrl}async function g(r,a=3600){return Promise.all(r.map(e=>i(e,a)))}export{n as R,g};

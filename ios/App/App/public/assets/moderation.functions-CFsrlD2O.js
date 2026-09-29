@@ -1,0 +1,1 @@
+import{c as e,b as a,d}from"./index-Bt5z5RnF.js";const c=e({method:"POST"}).middleware([a]).handler(d("af110ccea516b360945ad895edac615ca7d98b8687657abf7d4fc794f0e3fdec")),b=e({method:"POST"}).middleware([a]).handler(d("c9918511515b25673f18b082fba02f4fdb54a6a7a4d539e297bca897e9e4bd6f"));export{b as moderateReviewImage,c as resubmitReviewImage};

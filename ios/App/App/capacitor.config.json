@@ -1,0 +1,13 @@
+{
+	"appId": "app.bourbonconnect.mobile",
+	"appName": "Bourbon Brothers",
+	"webDir": "dist/client",
+	"ios": {
+		"contentInset": "always",
+		"backgroundColor": "#1a1410"
+	},
+	"android": {
+		"backgroundColor": "#1a1410"
+	},
+	"packageClassList": []
+}
