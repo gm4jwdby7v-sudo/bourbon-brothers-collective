@@ -34,15 +34,23 @@ export function Hero() {
             retailers — all in one beautifully crafted home for bourbon lovers.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/auth">
-              <Button
-                size="lg"
-                className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
-              >
+            <Button
+              asChild
+              size="lg"
+              className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
+            >
+              <Link to="/auth">
                 Join the community <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="border-border/80">
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-border/80"
+              onClick={() =>
+                document.getElementById("business")?.scrollIntoView({ behavior: "smooth" })
+              }
+            >
               <Users className="mr-2 h-4 w-4" /> For retailers & distilleries
             </Button>
           </div>

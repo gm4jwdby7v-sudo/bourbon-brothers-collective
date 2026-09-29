@@ -14,14 +14,13 @@ export function CTA() {
           <p className="text-muted-foreground max-w-xl mx-auto mb-8">
             Free to join. 21+ only. Drink responsibly.
           </p>
-          <Link to="/auth">
-            <Button
-              size="lg"
-              className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
-            >
-              Create your account
-            </Button>
-          </Link>
+          <Button
+            asChild
+            size="lg"
+            className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
+          >
+            <Link to="/auth">Create your account</Link>
+          </Button>
         </div>
       </div>
     </section>

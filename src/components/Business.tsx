@@ -25,7 +25,7 @@ const tiers = [
 
 export function Business() {
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section id="business" className="relative py-24 overflow-hidden">
       <div className="absolute inset-0">
         <img
           src={rickhouse}

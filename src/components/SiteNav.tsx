@@ -26,7 +26,7 @@ export function SiteNav() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border">
+    <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border pt-[env(safe-area-inset-top,0px)]">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-md bg-gradient-amber shadow-glow flex items-center justify-center font-display text-primary-foreground font-bold">
@@ -70,19 +70,16 @@ export function SiteNav() {
             </DropdownMenu>
           ) : (
             <>
-              <Link to="/auth">
-                <Button variant="ghost" size="sm">
-                  Sign in
-                </Button>
-              </Link>
-              <Link to="/auth">
-                <Button
-                  size="sm"
-                  className="bg-gradient-amber text-primary-foreground hover:opacity-90"
-                >
-                  Join the pour
-                </Button>
-              </Link>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/auth">Sign in</Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                className="bg-gradient-amber text-primary-foreground hover:opacity-90"
+              >
+                <Link to="/auth">Join the pour</Link>
+              </Button>
             </>
           )}
         </div>
@@ -104,16 +101,20 @@ export function SiteNav() {
               </Button>
             ) : (
               <>
-                <Link to="/auth" className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full">
+                <Button asChild variant="outline" size="sm" className="flex-1">
+                  <Link to="/auth" className="w-full">
                     Sign in
-                  </Button>
-                </Link>
-                <Link to="/auth" className="flex-1">
-                  <Button size="sm" className="w-full bg-gradient-amber text-primary-foreground">
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="sm"
+                  className="flex-1 bg-gradient-amber text-primary-foreground"
+                >
+                  <Link to="/auth" className="w-full">
                     Join
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </>
             )}
           </div>
