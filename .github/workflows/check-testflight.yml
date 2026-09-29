@@ -1,13 +1,11 @@
-name: Check TestFlight Build Status
-
+name: Check TestFlight Groups
 on:
   workflow_dispatch:
-
 jobs:
   check:
     runs-on: macos-latest
     steps:
-      - name: Query App Store Connect for recent builds
+      - name: Query beta groups and testers
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
@@ -15,76 +13,45 @@ jobs:
           BUNDLE_ID: app.bourbonconnect.mobile
         run: |
           set -euo pipefail
-          # The private key secret may be raw .p8 or base64; normalize to a file
           if printf '%s' "$ASC_PRIVATE_KEY" | grep -q "BEGIN PRIVATE KEY"; then
             printf '%s' "$ASC_PRIVATE_KEY" > /tmp/AuthKey.p8
           else
             printf '%s' "$ASC_PRIVATE_KEY" | base64 -d > /tmp/AuthKey.p8
           fi
-          python3 - <<'EOF'
-          import base64, json, time, urllib.request
-          from pathlib import Path
-
+          python3 - <<'PYEOF'
+          import base64, json, time, urllib.request, subprocess, os
           def b64url(b: bytes) -> str:
               return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
-
-          # Build JWT manually with openssl for ES256 signing
-          import subprocess, os
-          kid = os.environ["ASC_KEY_ID"]
-          iss = os.environ["ASC_ISSUER_ID"]
+          kid = os.environ["ASC_KEY_ID"]; iss = os.environ["ASC_ISSUER_ID"]
           now = int(time.time())
-          header = b64url(json.dumps({"alg": "ES256", "kid": kid, "typ": "JWT"}).encode())
-          payload = b64url(json.dumps({"iss": iss, "iat": now, "exp": now + 1200, "aud": "appstoreconnect-v1"}).encode())
-          signing_input = f"{header}.{payload}".encode()
-          # openssl dgst -sha256 -sign gives DER; JWT needs raw R||S
-          der = subprocess.run(
-              ["openssl", "dgst", "-sha256", "-sign", "/tmp/AuthKey.p8"],
-              input=signing_input, capture_output=True, check=True,
-          ).stdout
-          # Convert DER to raw 64-byte signature
+          header = b64url(json.dumps({"alg":"ES256","kid":kid,"typ":"JWT"}).encode())
+          payload = b64url(json.dumps({"iss":iss,"iat":now,"exp":now+1200,"aud":"appstoreconnect-v1"}).encode())
+          si = f"{header}.{payload}".encode()
+          der = subprocess.run(["openssl","dgst","-sha256","-sign","/tmp/AuthKey.p8"], input=si, capture_output=True, check=True).stdout
           def der_to_raw(der: bytes) -> bytes:
-              assert der[0] == 0x30
               idx = 2
-              if der[1] & 0x80:
-                  n = der[1] & 0x7F
-                  idx = 2 + n
-              assert der[idx] == 0x02
-              idx += 1
-              ln = der[idx]; idx += 1
-              r = der[idx:idx+ln]; idx += ln
-              assert der[idx] == 0x02
-              idx += 1
-              ln = der[idx]; idx += 1
-              s = der[idx:idx+ln]
-              return r.rjust(32, b"\0")[-32:] + s.rjust(32, b"\0")[-32:]
-          sig = b64url(der_to_raw(der))
-          token = f"{header}.{payload}.{sig}"
-
+              if der[1] & 0x80: idx = 2 + (der[1] & 0x7F)
+              idx += 2; ln = der[idx]; idx += 1; r = der[idx:idx+ln]; idx += ln
+              idx += 2; ln = der[idx]; idx += 1; s = der[idx:idx+ln]
+              return r.rjust(32,b"\0")[-32:] + s.rjust(32,b"\0")[-32:]
+          token = f"{header}.{payload}.{b64url(der_to_raw(der))}"
           def api(path: str):
-              req = urllib.request.Request(
-                  f"https://api.appstoreconnect.apple.com{path}",
-                  headers={"Authorization": f"Bearer {token}"},
-              )
-              with urllib.request.urlopen(req) as r:
-                  return json.load(r)
-
+              req = urllib.request.Request(f"https://api.appstoreconnect.apple.com{path}", headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(req) as r: return json.load(r)
           bundle = os.environ["BUNDLE_ID"]
-          apps = api(f"/v1/apps?filter[bundleId]={bundle}&fields[apps]=name,bundleId")
-          if not apps["data"]:
-              print(f"No app found with bundleId {bundle}")
-              raise SystemExit(1)
-          app = apps["data"][0]
-          print(f"App: {app['attributes']['name']} ({app['id']})")
-          builds = api(
-              f"/v1/builds?filter[app]={app['id']}&sort=-uploadedDate&limit=8"
-              f"&fields[builds]=version,uploadedDate,processingState,usesNonExemptEncryption"
-          )
-          print(f"\nRecent builds (newest first):")
-          for b in builds["data"]:
-              a = b["attributes"]
-              print(
-                  f"  version={a.get('version')} uploaded={a.get('uploadedDate')} "
-                  f"processingState={a.get('processingState')} "
-                  f"usesNonExemptEncryption={a.get('usesNonExemptEncryption')}"
-              )
-          EOF
+          app = api(f"/v1/apps?filter[bundleId]={bundle}")["data"][0]
+          aid = app["id"]
+          print(f"App id: {aid}")
+          groups = api(f"/v1/apps/{aid}/betaGroups?fields[betaGroups]=name,isInternalGroup,publicLinkEnabled")
+          for g in groups["data"]:
+              ga = g["attributes"]
+              print(f"\nGroup: {ga['name']} internal={ga['isInternalGroup']} publicLink={ga.get('publicLinkEnabled')}")
+              builds = api(f"/v1/betaGroups/{g['id']}/builds?fields[builds]=version,processingState&limit=10")
+              for b in builds["data"]:
+                  ba = b["attributes"]
+                  print(f"  build in group: version={ba.get('version')} state={ba.get('processingState')}")
+              testers = api(f"/v1/betaGroups/{g['id']}/betaTesters?fields[betaTesters]=email,firstName&limit=10")
+              for t in testers["data"]:
+                  ta = t["attributes"]
+                  print(f"  tester: {ta.get('firstName')} <{ta.get('email')}>")
+          PYEOF
