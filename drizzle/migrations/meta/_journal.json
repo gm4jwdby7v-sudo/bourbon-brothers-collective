@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790645990573,
+      "tag": "0000_restrict_profiles_and_place_follows_select",
+      "breakpoints": true
+    }
+  ]
+}
