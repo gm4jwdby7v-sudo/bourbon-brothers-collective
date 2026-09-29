@@ -1,7 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 export function CTA() {
+  const { user } = useAuth();
+  // Signed-in members don't need a "create your account" pitch.
+  if (user) return null;
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
       <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-card to-secondary p-12 md:p-20 text-center grain">
@@ -65,8 +69,9 @@ export function Footer() {
           {
             h: "Business",
             l: [
-              { label: "For Retailers", to: "/", hash: "business" as string | undefined },
-              { label: "For Distilleries", to: "/", hash: "business" as string | undefined },
+              { label: "For Retailers", to: "/business", hash: "tier-retailer" as string | undefined },
+              { label: "For Distilleries", to: "/business", hash: "tier-distillery" as string | undefined },
+              { label: "For Event Hosts", to: "/business", hash: "tier-event-host" as string | undefined },
             ],
           },
         ].map((c) => (

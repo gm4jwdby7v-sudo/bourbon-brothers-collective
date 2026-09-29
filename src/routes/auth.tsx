@@ -67,7 +67,7 @@ function AuthPage() {
         // fall through to home
       }
     }
-    goHome();
+    navigate({ to: "/" });
   }
 
   // Redirect away if already signed in AND email confirmed

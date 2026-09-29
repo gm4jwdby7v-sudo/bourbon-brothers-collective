@@ -5,7 +5,6 @@ import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
 import { Feed } from "@/components/Feed";
 import { Exchange } from "@/components/Exchange";
-import { Business } from "@/components/Business";
 import { CTA, Footer } from "@/components/CTA";
 import { VerifyEmailBanner } from "@/components/VerifyEmailGate";
 
@@ -39,7 +38,6 @@ function Index() {
         <Features />
         <Feed />
         <Exchange />
-        <Business />
         <CTA />
       </main>
       <Footer />

@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import hero from "@/assets/hero-bourbon.jpg";
 
 export function Hero() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0">
@@ -34,22 +37,32 @@ export function Hero() {
             retailers — all in one beautifully crafted home for bourbon lovers.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button
-              asChild
-              size="lg"
-              className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
-            >
-              <Link to="/auth">
-                Join the community <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            {user ? (
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
+              >
+                <Link to="/discover">
+                  Explore bottles <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
+              >
+                <Link to="/auth">
+                  Join the community <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
             <Button
               size="lg"
               variant="outline"
               className="border-border/80"
-              onClick={() =>
-                document.getElementById("business")?.scrollIntoView({ behavior: "smooth" })
-              }
+              onClick={() => void navigate({ to: "/business" })}
             >
               <Users className="mr-2 h-4 w-4" /> For retailers & distilleries
             </Button>

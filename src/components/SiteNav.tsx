@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, X, LogOut, User as UserIcon } from "lucide-react";
+import { Menu, X, LogOut, User as UserIcon, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,6 +19,12 @@ const links = [
   { to: "/marketplace", label: "Marketplace", params: undefined },
   { to: "/messages", label: "Messages", params: undefined },
   { to: "/events/$eventId/checkout", label: "Events", params: { eventId: "featured" } },
+] as const;
+
+const businessLinks = [
+  { to: "/business", hash: "tier-retailer", label: "For Retailers" },
+  { to: "/business", hash: "tier-distillery", label: "For Distilleries" },
+  { to: "/business", hash: "tier-event-host", label: "For Event Hosts" },
 ] as const;
 
 export function SiteNav() {
@@ -47,6 +53,22 @@ export function SiteNav() {
               {l.label}
             </Link>
           ))}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                Business <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              {businessLinks.map((b) => (
+                <DropdownMenuItem key={b.label} asChild>
+                  <Link to={b.to} hash={b.hash}>
+                    {b.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
         <div className="hidden md:flex items-center gap-3">
           {user && <NotificationsBell />}
@@ -104,6 +126,13 @@ export function SiteNav() {
               {l.label}
             </Link>
           ))}
+          <Link
+            to="/business"
+            onClick={() => setOpen(false)}
+            className="block text-sm py-1"
+          >
+            Business
+          </Link>
           <div className="pt-3 flex gap-2">
             {user ? (
               <Button

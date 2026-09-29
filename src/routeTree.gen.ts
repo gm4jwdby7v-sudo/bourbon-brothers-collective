@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BusinessRouteImport } from './routes/business'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as ReviewsRouteImport } from './routes/reviews'
@@ -40,6 +41,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BusinessRoute = BusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiscoverRoute = DiscoverRouteImport.update({
@@ -131,6 +137,7 @@ const AuthenticatedVerifiedReviewsReviewIdAppealRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
   '/reviews': typeof ReviewsRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
   '/reviews': typeof ReviewsRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/business': typeof BusinessRoute
   '/discover': typeof DiscoverRoute
   '/marketplace': typeof MarketplaceRoute
   '/reviews': typeof ReviewsRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/business'
     | '/discover'
     | '/marketplace'
     | '/reviews'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/business'
     | '/discover'
     | '/marketplace'
     | '/reviews'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/business'
     | '/discover'
     | '/marketplace'
     | '/reviews'
@@ -246,6 +258,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BusinessRoute: typeof BusinessRoute
   DiscoverRoute: typeof DiscoverRoute
   MarketplaceRoute: typeof MarketplaceRoute
   ReviewsRoute: typeof ReviewsRoute
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/business': {
+      id: '/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof BusinessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/discover': {
@@ -450,6 +470,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BusinessRoute: BusinessRoute,
   DiscoverRoute: DiscoverRoute,
   MarketplaceRoute: MarketplaceRoute,
   ReviewsRoute: ReviewsRoute,

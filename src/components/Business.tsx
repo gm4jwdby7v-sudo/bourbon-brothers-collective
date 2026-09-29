@@ -6,12 +6,14 @@ import { toast } from "sonner";
 const tiers = [
   {
     name: "Retailer",
+    id: "tier-retailer",
     price: "$149",
     period: "/mo",
     perks: ["Storefront listing", "Inventory drops", "Lead notifications", "Basic analytics"],
   },
   {
     name: "Distillery",
+    id: "tier-distillery",
     price: "$499",
     period: "/mo",
     perks: ["Brand hub", "Sponsored releases", "Event promotion", "Audience insights"],
@@ -19,6 +21,7 @@ const tiers = [
   },
   {
     name: "Event Host",
+    id: "tier-event-host",
     price: "$79",
     period: "/event",
     perks: ["Featured listing", "RSVP management", "Cross-promotion", "Post-event recap"],
@@ -65,7 +68,8 @@ export function Business() {
           {tiers.map((t) => (
             <div
               key={t.name}
-              className={`relative rounded-2xl border p-8 ${t.featured ? "border-primary/60 bg-card shadow-glow" : "border-border bg-card/60 backdrop-blur"}`}
+              id={t.id}
+              className={`relative rounded-2xl border p-8 scroll-mt-24 ${t.featured ? "border-primary/60 bg-card shadow-glow" : "border-border bg-card/60 backdrop-blur"}`}
             >
               {t.featured && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.2em] bg-gradient-amber text-primary-foreground px-3 py-1 rounded-full">
