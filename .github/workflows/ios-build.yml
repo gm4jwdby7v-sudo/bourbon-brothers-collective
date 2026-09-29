@@ -1,0 +1,98 @@
+# Builds the Capacitor iOS app on a cloud Mac and uploads to TestFlight.
+# No Mac required. Runs on every push to ios-capacitor, or manually via "Run workflow".
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   VITE_BACKEND_URL                  Your published Lovable app URL, e.g. https://xyz.lovable.app
+#   APPLE_TEAM_ID                     10-character Apple Developer Team ID
+#   APP_STORE_CONNECT_API_KEY_ID      App Store Connect API Key ID
+#   APP_STORE_CONNECT_API_ISSUER_ID   App Store Connect Issuer ID
+#   APP_STORE_CONNECT_API_PRIVATE_KEY Contents of the downloaded .p8 API key file
+#
+# One-time Apple setup (see docs/IOS_CLOUD_BUILD.md):
+#   1. Register bundle ID app.bourbonconnect.mobile
+#   2. Create the app record in App Store Connect
+#   3. Create an App Store Connect API key (App Manager role or higher)
+
+name: iOS Build & TestFlight Upload
+
+on:
+  push:
+    branches: [ios-capacitor]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build web app for Capacitor
+        env:
+          CAPACITOR_BUILD: "1"
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+        run: bun run build:ios
+
+      - name: Sync Capacitor iOS
+        run: bunx cap sync ios
+
+      - name: Install App Store Connect API key
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s' "${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}" \
+            > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+
+      - name: Archive (automatic signing)
+        run: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$PWD/build/BourbonBrothers.xcarchive" \
+            archive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8" \
+            -authenticationKeyID "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+
+      - name: Export IPA
+        run: |
+          cat > ExportOptions.plist <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>signingStyle</key>
+              <string>automatic</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$PWD/build/BourbonBrothers.xcarchive" \
+            -exportPath "$PWD/build/export" \
+            -exportOptionsPlist ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8" \
+            -authenticationKeyID "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}"
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: build/export/App.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
