@@ -5,7 +5,7 @@ jobs:
   check:
     runs-on: macos-latest
     steps:
-      - name: Submit for beta review
+      - name: Remove build from external group
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
@@ -37,23 +37,19 @@ jobs:
               except urllib.error.HTTPError as e:
                   return e.code, e.read().decode(errors="replace")
           bundle = os.environ["BUNDLE_ID"]
-          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}&include=betaAppReviewDetail")
+          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
           aid = apps["data"][0]["id"]
-          detail_id = apps["included"][0]["id"]
-          # set every beta review field explicitly
-          s, _ = api(f"/v1/betaAppReviewDetails/{detail_id}", method="PATCH", body={
-              "data": {"type": "betaAppReviewDetails", "id": detail_id,
-                       "attributes": {"contactFirstName": "Brian", "contactLastName": "Pitts",
-                                      "contactPhone": "7039463903", "contactEmail": "brian.pitts81@gmail.com",
-                                      "demoAccountRequired": False,
-                                      "notes": "Bourbon enthusiast community app with marketplace, reviews, and events. All features work without a demo account; testers can create their own free account."}}})
-          print(f"Review details update: status={s}")
-          _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=3&fields[builds]=version,processingState")
-          latest = next(b for b in builds["data"] if b["attributes"].get("processingState") == "VALID")
-          s, resp = api("/v1/betaAppReviewSubmissions", method="POST",
-              body={"data": {"type": "betaAppReviewSubmissions",
-                             "relationships": {"build": {"data": {"type": "builds", "id": latest["id"]}}}}})
-          print(f"SUBMIT build={latest['attributes']['version']} status={s}")
-          print(f"BODY={str(resp)[:400]}")
+          _, groups = api(f"/v1/apps/{aid}/relationships/betaGroups")
+          ext_gid = None
+          for g in groups["data"]:
+              _, gd = api(f"/v1/betaGroups/{g['id']}")
+              if gd["data"]["attributes"].get("isInternalGroup") is False:
+                  ext_gid = g["id"]
+          _, gb = api(f"/v1/betaGroups/{ext_gid}/relationships/builds")
+          # remove all builds from external group so Brian can re-add via UI
+          for b in gb["data"]:
+              s, _ = api(f"/v1/betaGroups/{ext_gid}/relationships/builds", method="DELETE",
+                  body={"data": [{"type": "builds", "id": b["id"]}]})
+              print(f"Removed build {b['id']}: status={s}")
           print("Done.")
           PYEOF
