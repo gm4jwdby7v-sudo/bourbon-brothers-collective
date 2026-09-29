@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { isNativeApp } from "@/lib/native";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -260,31 +261,36 @@ function AuthPage() {
                 </div>
               </div>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogle}
-              disabled={loading}
-            >
-              <GoogleIcon /> Continue with Google
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mt-2"
-              onClick={handleApple}
-              disabled={loading}
-            >
-              <AppleIcon /> Continue with Apple
-            </Button>
+            {/* OAuth redirect flows can't return to the native shell, so the app
+                build uses email auth only. */}
+            {!isNativeApp() && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogle}
+                  disabled={loading}
+                >
+                  <GoogleIcon /> Continue with Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={handleApple}
+                  disabled={loading}
+                >
+                  <AppleIcon /> Continue with Apple
+                </Button>
 
-
-            <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              or with email
-              <div className="h-px flex-1 bg-border" />
-            </div>
+                <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  or with email
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+              </>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (

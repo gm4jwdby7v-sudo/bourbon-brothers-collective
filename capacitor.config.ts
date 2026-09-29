@@ -16,8 +16,9 @@ const config: CapacitorConfig = {
   appId: "app.bourbonconnect.mobile",
   appName: "Bourbon Brothers",
   // Capacitor bundles the contents of `webDir` into the native app.
-  // For a static SPA export, point this at the built assets folder.
-  webDir: "dist",
+  // `build:ios` produces a client-only SPA in dist/client; its entry is the
+  // SPA shell, copied to index.html by the build script.
+  webDir: "dist/client",
   ios: {
     contentInset: "always",
     backgroundColor: "#1a1410",
