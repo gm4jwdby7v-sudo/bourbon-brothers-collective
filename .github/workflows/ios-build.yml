@@ -48,7 +48,22 @@ jobs:
           printf '%s' "${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}" \
             > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
 
-      - name: Archive (automatic signing)
+      - name: Install distribution signing
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          security create-keychain -p actions "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p actions "$KEYCHAIN"
+          echo "${{ secrets.IOS_DIST_CERT_P12_B64 }}" | base64 -d > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "${{ secrets.IOS_DIST_CERT_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE_B64 }}" | base64 -d > "$HOME/Library/MobileDevice/Provisioning Profiles/6ed93ffd-5a0d-4e2c-8451-557fd12bb255.mobileprovision"
+          rm -f "$RUNNER_TEMP/dist.p12"
+
+      - name: Archive (manual distribution signing)
         run: |
           xcodebuild \
             -project ios/App/App.xcodeproj \
@@ -57,11 +72,9 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath "$PWD/build/BourbonBrothers.xcarchive" \
             archive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8" \
-            -authenticationKeyID "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}" \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="Bourbon Brothers App Store"
 
       - name: Export IPA
         run: |
@@ -73,7 +86,12 @@ jobs:
               <key>method</key>
               <string>app-store</string>
               <key>signingStyle</key>
-              <string>automatic</string>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>app.bourbonconnect.mobile</key>
+                  <string>Bourbon Brothers App Store</string>
+              </dict>
               <key>stripSwiftSymbols</key>
               <true/>
           </dict>
@@ -83,11 +101,7 @@ jobs:
             -exportArchive \
             -archivePath "$PWD/build/BourbonBrothers.xcarchive" \
             -exportPath "$PWD/build/export" \
-            -exportOptionsPlist ExportOptions.plist \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8" \
-            -authenticationKeyID "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}"
+            -exportOptionsPlist ExportOptions.plist
 
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v1
