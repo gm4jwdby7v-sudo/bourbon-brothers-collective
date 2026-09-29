@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 
 export function CTA() {
@@ -13,12 +14,14 @@ export function CTA() {
           <p className="text-muted-foreground max-w-xl mx-auto mb-8">
             Free to join. 21+ only. Drink responsibly.
           </p>
-          <Button
-            size="lg"
-            className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
-          >
-            Create your account
-          </Button>
+          <Link to="/auth">
+            <Button
+              size="lg"
+              className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
+            >
+              Create your account
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
