@@ -39,10 +39,17 @@ jobs:
           bundle = os.environ["BUNDLE_ID"]
           _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
           aid = apps["data"][0]["id"]
-          _, subs = api(f"/v1/betaAppReviewSubmissions?filter[app]={aid}&include=build&limit=10")
-          print(f"SUBMISSION_COUNT={len(subs['data'])}")
-          for s in subs["data"]:
-              st = s["attributes"].get("betaReviewState")
-              print(f"Submission {s['id']}: state={st}")
+          # get builds for this app to map ids -> version numbers
+          _, builds = api(f"/v1/builds?filter[app]={aid}&limit=10&fields[builds]=version")
+          bmap = {b["id"]: b["attributes"].get("version") for b in builds["data"]}
+          s, subs = api("/v1/betaAppReviewSubmissions?limit=20&include=build")
+          if s != 200 or not isinstance(subs, dict):
+              print(f"SUBMISSION_QUERY_FAILED status={s} body={str(subs)[:200]}")
+          else:
+              print(f"SUBMISSION_COUNT={len(subs['data'])}")
+              for x in subs["data"]:
+                  st = x["attributes"].get("betaReviewState")
+                  bid = x["relationships"]["build"]["data"]["id"]
+                  print(f"RESULT build={bmap.get(bid, bid)} state={st}")
           print("Done.")
           PYEOF
