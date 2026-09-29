@@ -1,15 +1,6 @@
 name: Check TestFlight Groups
 on:
   workflow_dispatch:
-    inputs:
-      setup_external:
-        description: 'Set up external tester group and submit for beta review'
-        required: false
-        default: 'false'
-      contact_phone:
-        description: 'Contact phone for beta review'
-        required: false
-        default: ''
 jobs:
   check:
     runs-on: macos-latest
@@ -20,8 +11,6 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
           BUNDLE_ID: app.bourbonconnect.mobile
-          SETUP_EXTERNAL: ${{ inputs.setup_external }}
-          CONTACT_PHONE: ${{ inputs.contact_phone }}
         run: |
           set -euo pipefail
           if printf '%s' "$ASC_PRIVATE_KEY" | grep -q "BEGIN PRIVATE KEY"; then
@@ -48,26 +37,24 @@ jobs:
               except urllib.error.HTTPError as e:
                   return e.code, e.read().decode(errors="replace")
           bundle = os.environ["BUNDLE_ID"]
-          setup_external = os.environ.get("SETUP_EXTERNAL") == "true"
-          phone = os.environ.get("CONTACT_PHONE", "")
-          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}&include=betaAppReviewDetail")
-          app = apps["data"][0]; aid = app["id"]
-          detail_id = apps["included"][0]["id"] if apps.get("included") else None
-          print(f"App id={aid} reviewDetail id={detail_id}")
-          if setup_external and phone and detail_id:
-              s, resp = api(f"/v1/betaAppReviewDetails/{detail_id}", method="PATCH", body={
-                  "data": {"type": "betaAppReviewDetails", "id": detail_id,
-                           "attributes": {"contactFirstName": "Brian", "contactLastName": "Pitts",
-                                          "contactPhone": phone, "contactEmail": "brian.pitts81@gmail.com",
-                                          "notes": "Bourbon enthusiast community app with marketplace, reviews, and events."}}})
-              print(f"Updated review contact info: status={s}")
-              # now submit latest valid build for beta review
-              _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&fields[builds]=version,processingState")
-              latest = next(b for b in builds["data"] if b["attributes"].get("processingState") == "VALID")
-              s, resp = api("/v1/betaAppReviewSubmissions", method="POST",
-                  body={"data": {"type": "betaAppReviewSubmissions",
-                                 "relationships": {"build": {"data": {"type": "builds", "id": latest["id"]}}}}})
-              print(f"Beta review submission for build {latest['attributes']['version']}: status={s}")
-              print(f"Response: {str(resp)[:500]}")
+          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
+          aid = apps["data"][0]["id"]
+          _, builds = api(f"/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&fields[builds]=version,processingState,usesNonExemptEncryption,uploadedDate")
+          for b in builds["data"]:
+              a = b["attributes"]
+              print(f"Build {a.get('version')}: state={a.get('processingState')} encryption={a.get('usesNonExemptEncryption')}")
+          latest = next(b for b in builds["data"] if b["attributes"].get("processingState") == "VALID")
+          print(f"LATEST_VALID={latest['attributes']['version']}")
+          # add latest valid build to external Family Testers group
+          _, groups = api(f"/v1/apps/{aid}/relationships/betaGroups")
+          ext_gid = None
+          for g in groups["data"]:
+              _, gd = api(f"/v1/betaGroups/{g['id']}")
+              if gd["data"]["attributes"].get("isInternalGroup") is False:
+                  ext_gid = g["id"]; print(f"External group: {gd['data']['attributes']['name']}")
+          if ext_gid:
+              s, _ = api(f"/v1/betaGroups/{ext_gid}/relationships/builds", method="POST",
+                  body={"data": [{"type": "builds", "id": latest["id"]}]})
+              print(f"Added build {latest['attributes']['version']} to external group: status={s}")
           print("Done.")
           PYEOF
