@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { SiteNav } from "@/components/SiteNav";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { REVIEW_BUCKET } from "@/lib/review-images";
@@ -124,7 +123,6 @@ function AppealPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteNav />
       <main className="mx-auto max-w-2xl px-6 py-10">
         <header className="mb-6 flex items-center gap-3">
           <ShieldAlert className="h-7 w-7 text-primary" />

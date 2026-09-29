@@ -17,6 +17,9 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Bourbon Brothers account. 21+ only." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   component: AuthPage,
 });
 
@@ -41,6 +44,7 @@ const signInSchema = z.object({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -48,12 +52,29 @@ function AuthPage() {
   const [appleError, setAppleError] = useState<string | null>(null);
   const [appleRetrying, setAppleRetrying] = useState(false);
 
+  // Return the user to where they were headed before the auth gate,
+  // or home. Only same-origin destinations are honored.
+  function goHome() {
+    if (redirect) {
+      try {
+        const url = new URL(redirect, window.location.origin);
+        if (url.origin === window.location.origin) {
+          const to = url.pathname + url.search + url.hash;
+          if (to !== "/auth") navigate({ to });
+          return;
+        }
+      } catch {
+        // fall through to home
+      }
+    }
+    goHome();
+  }
 
   // Redirect away if already signed in AND email confirmed
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
-      if (u && (u.email_confirmed_at || u.confirmed_at)) navigate({ to: "/" });
+      if (u && (u.email_confirmed_at || u.confirmed_at)) goHome();
     });
   }, [navigate]);
 
@@ -107,7 +128,7 @@ function AuthPage() {
           toast.success("Check your email to confirm your account.");
           return;
         }
-        navigate({ to: "/" });
+        goHome();
       } else {
         const parsed = signInSchema.safeParse({
           email: fd.get("email"),
@@ -128,7 +149,7 @@ function AuthPage() {
           toast.message("Please confirm your email to continue.");
           return;
         }
-        navigate({ to: "/" });
+        goHome();
       }
     } finally {
       setLoading(false);
@@ -148,7 +169,7 @@ function AuthPage() {
       setLoading(false);
       return;
     }
-    if (!result.redirected) navigate({ to: "/" });
+    if (!result.redirected) goHome();
   }
 
   async function handleApple() {
@@ -167,7 +188,7 @@ function AuthPage() {
         toast.error(msg);
         return;
       }
-      if (!result.redirected) navigate({ to: "/" });
+      if (!result.redirected) goHome();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sign in with Apple failed";
       setAppleError(msg);

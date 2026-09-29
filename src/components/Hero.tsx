@@ -21,8 +21,8 @@ export function Hero() {
       <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-32 md:pt-32 md:pb-44 grid md:grid-cols-2 gap-12 items-center">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 backdrop-blur px-3 py-1 text-xs text-muted-foreground mb-6">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            Now pouring · 12,400 enthusiasts online
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            The home for bourbon lovers everywhere
           </div>
           <h1 className="font-display text-5xl md:text-7xl leading-[1.05] tracking-tight">
             The nation's <span className="text-gradient-copper italic">bourbon</span>

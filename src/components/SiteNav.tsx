@@ -94,19 +94,33 @@ export function SiteNav() {
       {open && (
         <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3">
           {links.map((l) => (
-            <Link key={l.label} to={l.to} params={l.params as never} className="block text-sm py-1">
+            <Link
+              key={l.label}
+              to={l.to}
+              params={l.params as never}
+              onClick={() => setOpen(false)}
+              className="block text-sm py-1"
+            >
               {l.label}
             </Link>
           ))}
           <div className="pt-3 flex gap-2">
             {user ? (
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => signOut()}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setOpen(false);
+                  signOut();
+                }}
+              >
                 Sign out
               </Button>
             ) : (
               <>
                 <Button asChild variant="outline" size="sm" className="flex-1">
-                  <Link to="/auth" className="w-full">
+                  <Link to="/auth" className="w-full" onClick={() => setOpen(false)}>
                     Sign in
                   </Link>
                 </Button>
@@ -115,7 +129,7 @@ export function SiteNav() {
                   size="sm"
                   className="flex-1 bg-gradient-amber text-primary-foreground"
                 >
-                  <Link to="/auth" className="w-full">
+                  <Link to="/auth" className="w-full" onClick={() => setOpen(false)}>
                     Join
                   </Link>
                 </Button>

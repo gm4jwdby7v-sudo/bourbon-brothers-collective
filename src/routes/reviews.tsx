@@ -114,15 +114,15 @@ function ReviewsPage() {
             </p>
           </div>
           {user ? (
-            <Link to="/reviews/new">
-              <Button className="bg-gradient-amber text-primary-foreground hover:opacity-90">
+            <Button asChild className="bg-gradient-amber text-primary-foreground hover:opacity-90">
+              <Link to="/reviews/new">
                 <PlusCircle className="mr-2 h-4 w-4" /> New review
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           ) : (
-            <Link to="/auth">
-              <Button variant="outline">Sign in to post</Button>
-            </Link>
+            <Button asChild variant="outline">
+              <Link to="/auth">Sign in to post</Link>
+            </Button>
           )}
         </header>
 

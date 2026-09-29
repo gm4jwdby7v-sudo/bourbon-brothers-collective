@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { SiteNav } from "@/components/SiteNav";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { REVIEW_BUCKET } from "@/lib/review-images";
@@ -138,7 +137,6 @@ function NewReviewPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteNav />
       <main className="mx-auto max-w-2xl px-6 py-10">
         <h1 className="font-display text-3xl md:text-4xl tracking-tight">Post a review</h1>
         <p className="mt-2 text-sm text-muted-foreground">
