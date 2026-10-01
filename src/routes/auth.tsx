@@ -51,6 +51,10 @@ function AuthPage() {
   const [resending, setResending] = useState(false);
   const [appleError, setAppleError] = useState<string | null>(null);
   const [appleRetrying, setAppleRetrying] = useState(false);
+  // Password reset via emailed 6-digit code (works on native — no link to open).
+  const [resetStep, setResetStep] = useState<null | "email" | "code" | "newPassword">(null);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resendingCode, setResendingCode] = useState(false);
 
   // Return the user to where they were headed before the auth gate,
   // or home. Only same-origin destinations are honored.
@@ -156,6 +160,97 @@ function AuthPage() {
     }
   }
 
+  async function sendResetCode(email: string): Promise<boolean> {
+    const parsed = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
+      return false;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data);
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+      setResetEmail(parsed.data);
+      return true;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResetRequest(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const ok = await sendResetCode(String(fd.get("email") ?? ""));
+    if (ok) {
+      setResetStep("code");
+      toast.success("We sent a 6-digit reset code to your email.");
+    }
+  }
+
+  async function handleResendCode() {
+    if (!resetEmail || resendingCode) return;
+    setResendingCode(true);
+    const ok = await sendResetCode(resetEmail);
+    setResendingCode(false);
+    if (ok) toast.success("New code sent. Check your inbox.");
+  }
+
+  async function handleVerifyCode(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const code = String(fd.get("code") ?? "").replace(/\s/g, "");
+    if (!/^\d{6}$/.test(code)) {
+      toast.error("Enter the 6-digit code from your email.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: resetEmail,
+        token: code,
+        type: "recovery",
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setResetStep("newPassword");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleNewPassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const password = String(fd.get("password") ?? "");
+    const confirm = String(fd.get("confirm") ?? "");
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirm) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Password updated. You're signed in.");
+      setResetStep(null);
+      goHome();
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleGoogle() {
     // Confirm 21+ for OAuth sign-ups too (we can't capture DOB before the redirect)
     const ok = window.confirm("Confirm you are 21 or older to continue.");
@@ -217,16 +312,28 @@ function AuthPage() {
           <h1 className="font-display text-3xl mb-2">
             {pendingEmail
               ? "Check your inbox"
-              : mode === "signin"
-                ? "Welcome back"
-                : "Join the community"}
+              : resetStep === "email"
+                ? "Reset your password"
+                : resetStep === "code"
+                  ? "Enter your code"
+                  : resetStep === "newPassword"
+                    ? "Choose a new password"
+                    : mode === "signin"
+                      ? "Welcome back"
+                      : "Join the community"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {pendingEmail
               ? `We sent a verification link to ${pendingEmail}.`
-              : mode === "signin"
-                ? "Sign in to your account"
-                : "Free to join · 21+ only"}
+              : resetStep === "email"
+                ? "Enter your account email and we'll send you a reset code."
+                : resetStep === "code"
+                  ? `We sent a 6-digit code to ${resetEmail}.`
+                  : resetStep === "newPassword"
+                    ? "Pick a new password for your account."
+                    : mode === "signin"
+                      ? "Sign in to your account"
+                      : "Free to join · 21+ only"}
           </p>
         </div>
 
@@ -252,6 +359,94 @@ function AuthPage() {
               className="w-full text-sm text-muted-foreground hover:text-foreground"
               onClick={() => {
                 setPendingEmail(null);
+                setMode("signin");
+              }}
+            >
+              Back to sign in
+            </button>
+          </div>
+        ) : resetStep ? (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            {resetStep === "email" && (
+              <form onSubmit={handleResetRequest} className="space-y-4">
+                <Field name="email" type="email" label="Email" placeholder="you@example.com" />
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Send reset code
+                </Button>
+              </form>
+            )}
+            {resetStep === "code" && (
+              <form onSubmit={handleVerifyCode} className="space-y-4">
+                <div>
+                  <Label
+                    htmlFor="code"
+                    className="text-xs uppercase tracking-wider text-muted-foreground"
+                  >
+                    6-digit code
+                  </Label>
+                  <Input
+                    id="code"
+                    name="code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="123456"
+                    required
+                    maxLength={6}
+                    className="mt-1.5 bg-input/40 text-center text-2xl tracking-[0.5em]"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Verify code
+                </Button>
+                <button
+                  type="button"
+                  disabled={resendingCode}
+                  onClick={handleResendCode}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+                >
+                  {resendingCode ? "Sending…" : "Didn't get a code? Resend it"}
+                </button>
+              </form>
+            )}
+            {resetStep === "newPassword" && (
+              <form onSubmit={handleNewPassword} className="space-y-4">
+                <Field
+                  name="password"
+                  type="password"
+                  label="New password"
+                  placeholder="At least 8 characters"
+                />
+                <Field
+                  name="confirm"
+                  type="password"
+                  label="Confirm new password"
+                  placeholder="Repeat your new password"
+                />
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Update password
+                </Button>
+              </form>
+            )}
+            <button
+              type="button"
+              className="w-full mt-5 text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setResetStep(null);
                 setMode("signin");
               }}
             >
@@ -326,6 +521,17 @@ function AuthPage() {
                 label="Password"
                 placeholder={mode === "signup" ? "At least 8 characters" : ""}
               />
+              {mode === "signin" && (
+                <div className="-mt-2 text-right">
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setResetStep("email")}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
               {mode === "signup" && (
                 <div>
                   <Field name="dob" type="date" label="Date of birth" />
