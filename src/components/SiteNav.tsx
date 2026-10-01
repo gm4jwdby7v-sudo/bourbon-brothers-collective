@@ -109,9 +109,45 @@ export function SiteNav() {
             </>
           )}
         </div>
-        <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          {user ? (
+            <>
+              <NotificationsBell />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Account"
+                    className="h-8 w-8 rounded-full bg-gradient-amber flex items-center justify-center text-primary-foreground text-xs font-bold"
+                  >
+                    {(user.email ?? "?")[0].toUpperCase()}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings/notifications">
+                      <UserIcon className="mr-2 h-4 w-4" /> Notification settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <Button
+              asChild
+              size="sm"
+              className="bg-gradient-amber text-primary-foreground hover:opacity-90"
+            >
+              <Link to="/auth">Sign in</Link>
+            </Button>
+          )}
+          <button onClick={() => setOpen(!open)} aria-label="Menu">
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
       {open && (
         <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3">
