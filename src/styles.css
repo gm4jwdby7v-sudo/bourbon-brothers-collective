@@ -44,7 +44,7 @@
   --radius: 0.5rem;
 
   /* Bourbon-inspired dark palette — lifted for readability */
-  --background: oklch(0.24 0.022 50);
+  --background: oklch(0.26 0.028 53);
   --foreground: oklch(0.94 0.02 75);
 
   --card: oklch(0.30 0.025 50);

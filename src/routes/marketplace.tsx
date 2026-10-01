@@ -85,10 +85,10 @@ const AVAILABILITY_LABEL: Record<Availability, string> = {
 };
 
 const AVAILABILITY_TONE: Record<Availability, string> = {
-  in_stock: "bg-primary/15 text-primary border-primary/30",
+  in_stock: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   allocated: "bg-amber-500/15 text-amber-300 border-amber-500/30",
   waitlist: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-  sold_out: "bg-muted text-muted-foreground border-border",
+  sold_out: "bg-muted/50 text-muted-foreground/60 border-border/50",
 };
 
 type ComplianceStatus = "eligible" | "limited" | "not_eligible";
