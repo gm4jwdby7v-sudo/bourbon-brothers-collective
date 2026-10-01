@@ -51,10 +51,13 @@ function AuthPage() {
   const [resending, setResending] = useState(false);
   const [appleError, setAppleError] = useState<string | null>(null);
   const [appleRetrying, setAppleRetrying] = useState(false);
-  // Password reset via emailed 6-digit code (works on native — no link to open).
-  const [resetStep, setResetStep] = useState<null | "email" | "code" | "newPassword">(null);
+  // Password reset via emailed link. The link opens the deployed web app
+  // (even from the native shell) at /auth with a recovery session, and this
+  // page shows the new-password form when that happens.
+  const [resetStep, setResetStep] = useState<null | "email" | "sent">(null);
   const [resetEmail, setResetEmail] = useState("");
-  const [resendingCode, setResendingCode] = useState(false);
+  const [resendingLink, setResendingLink] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(false);
 
   // Return the user to where they were headed before the auth gate,
   // or home. Only same-origin destinations are honored.
@@ -74,8 +77,16 @@ function AuthPage() {
     navigate({ to: "/" });
   }
 
-  // Redirect away if already signed in AND email confirmed
+  // Redirect away if already signed in AND email confirmed — unless this is a
+  // password-recovery landing (the link carries type=recovery in the hash),
+  // which needs the new-password form instead of a redirect.
   useEffect(() => {
+    if (window.location.hash.includes("type=recovery")) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) setIsRecovery(true);
+      });
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
       if (u && (u.email_confirmed_at || u.confirmed_at)) goHome();
@@ -160,7 +171,7 @@ function AuthPage() {
     }
   }
 
-  async function sendResetCode(email: string): Promise<boolean> {
+  async function sendResetLink(email: string): Promise<boolean> {
     const parsed = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
@@ -168,7 +179,11 @@ function AuthPage() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data);
+      // The link lands on /auth of the deployed web app (not the native
+      // webview), where the recovery session shows the new-password form.
+      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+        redirectTo: `${emailRedirectBase()}/auth`,
+      });
       if (error) {
         toast.error(error.message);
         return false;
@@ -183,44 +198,19 @@ function AuthPage() {
   async function handleResetRequest(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const ok = await sendResetCode(String(fd.get("email") ?? ""));
+    const ok = await sendResetLink(String(fd.get("email") ?? ""));
     if (ok) {
-      setResetStep("code");
-      toast.success("We sent a 6-digit reset code to your email.");
+      setResetStep("sent");
+      toast.success("Password reset link sent. Check your email.");
     }
   }
 
-  async function handleResendCode() {
-    if (!resetEmail || resendingCode) return;
-    setResendingCode(true);
-    const ok = await sendResetCode(resetEmail);
-    setResendingCode(false);
-    if (ok) toast.success("New code sent. Check your inbox.");
-  }
-
-  async function handleVerifyCode(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const code = String(fd.get("code") ?? "").replace(/\s/g, "");
-    if (!/^\d{6}$/.test(code)) {
-      toast.error("Enter the 6-digit code from your email.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: resetEmail,
-        token: code,
-        type: "recovery",
-      });
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      setResetStep("newPassword");
-    } finally {
-      setLoading(false);
-    }
+  async function handleResendLink() {
+    if (!resetEmail || resendingLink) return;
+    setResendingLink(true);
+    const ok = await sendResetLink(resetEmail);
+    setResendingLink(false);
+    if (ok) toast.success("New link sent. Check your inbox.");
   }
 
   async function handleNewPassword(e: React.FormEvent<HTMLFormElement>) {
@@ -245,6 +235,9 @@ function AuthPage() {
       }
       toast.success("Password updated. You're signed in.");
       setResetStep(null);
+      setIsRecovery(false);
+      // Clear the recovery hash so a refresh doesn't re-trigger recovery mode.
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
       goHome();
     } finally {
       setLoading(false);
@@ -312,12 +305,12 @@ function AuthPage() {
           <h1 className="font-display text-3xl mb-2">
             {pendingEmail
               ? "Check your inbox"
-              : resetStep === "email"
-                ? "Reset your password"
-                : resetStep === "code"
-                  ? "Enter your code"
-                  : resetStep === "newPassword"
-                    ? "Choose a new password"
+              : isRecovery
+                ? "Choose a new password"
+                : resetStep === "email"
+                  ? "Reset your password"
+                  : resetStep === "sent"
+                    ? "Check your email"
                     : mode === "signin"
                       ? "Welcome back"
                       : "Join the community"}
@@ -325,19 +318,44 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground">
             {pendingEmail
               ? `We sent a verification link to ${pendingEmail}.`
-              : resetStep === "email"
-                ? "Enter your account email and we'll send you a reset code."
-                : resetStep === "code"
-                  ? `We sent a 6-digit code to ${resetEmail}.`
-                  : resetStep === "newPassword"
-                    ? "Pick a new password for your account."
+              : isRecovery
+                ? "Pick a new password for your account."
+                : resetStep === "email"
+                  ? "Enter your account email and we'll send you a password reset link."
+                  : resetStep === "sent"
+                    ? `We sent a reset link to ${resetEmail}.`
                     : mode === "signin"
                       ? "Sign in to your account"
                       : "Free to join · 21+ only"}
           </p>
         </div>
 
-        {pendingEmail ? (
+        {isRecovery ? (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            <form onSubmit={handleNewPassword} className="space-y-4">
+              <Field
+                name="password"
+                type="password"
+                label="New password"
+                placeholder="At least 8 characters"
+              />
+              <Field
+                name="confirm"
+                type="password"
+                label="Confirm new password"
+                placeholder="Repeat your new password"
+              />
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update password
+              </Button>
+            </form>
+          </div>
+        ) : pendingEmail ? (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-soft space-y-4">
             <p className="text-sm text-muted-foreground">
               Click the link in the email to confirm your account. You must verify your email before
@@ -376,71 +394,26 @@ function AuthPage() {
                   className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send reset code
+                  Send reset link
                 </Button>
               </form>
             )}
-            {resetStep === "code" && (
-              <form onSubmit={handleVerifyCode} className="space-y-4">
-                <div>
-                  <Label
-                    htmlFor="code"
-                    className="text-xs uppercase tracking-wider text-muted-foreground"
-                  >
-                    6-digit code
-                  </Label>
-                  <Input
-                    id="code"
-                    name="code"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="123456"
-                    required
-                    maxLength={6}
-                    className="mt-1.5 bg-input/40 text-center text-2xl tracking-[0.5em]"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
-                >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Verify code
-                </Button>
+            {resetStep === "sent" && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Tap the link in the email to choose a new password.
+                  {isNativeApp() &&
+                    " The link opens in your browser — after setting your new password, come back here and sign in."}
+                </p>
                 <button
                   type="button"
-                  disabled={resendingCode}
-                  onClick={handleResendCode}
+                  disabled={resendingLink}
+                  onClick={handleResendLink}
                   className="w-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
-                  {resendingCode ? "Sending…" : "Didn't get a code? Resend it"}
+                  {resendingLink ? "Sending…" : "Didn't get the link? Resend it"}
                 </button>
-              </form>
-            )}
-            {resetStep === "newPassword" && (
-              <form onSubmit={handleNewPassword} className="space-y-4">
-                <Field
-                  name="password"
-                  type="password"
-                  label="New password"
-                  placeholder="At least 8 characters"
-                />
-                <Field
-                  name="confirm"
-                  type="password"
-                  label="Confirm new password"
-                  placeholder="Repeat your new password"
-                />
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
-                >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update password
-                </Button>
-              </form>
+              </div>
             )}
             <button
               type="button"

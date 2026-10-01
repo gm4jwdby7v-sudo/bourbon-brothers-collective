@@ -141,6 +141,19 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Password-recovery links land wherever Supabase's redirect allow-list
+  // permits (site root if /auth isn't listed). Forward any recovery landing
+  // to /auth, preserving the hash so the session and type=recovery survive.
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.location.hash.includes("type=recovery") &&
+      !window.location.pathname.startsWith("/auth")
+    ) {
+      window.location.replace(`/auth${window.location.hash}`);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     import("@/integrations/supabase/client").then(({ supabase }) => {
