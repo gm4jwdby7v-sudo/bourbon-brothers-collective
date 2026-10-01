@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AgeGate } from "@/components/AgeGate";
 import { SiteNav } from "@/components/SiteNav";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
 import { Feed } from "@/components/Feed";
@@ -32,6 +33,7 @@ function Index() {
     <div className="min-h-screen">
       <AgeGate />
       <SiteNav />
+      <BottomTabBar />
       <VerifyEmailBanner />
       <main>
         <Hero />

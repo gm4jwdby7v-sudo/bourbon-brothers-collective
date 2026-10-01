@@ -116,6 +116,12 @@
 }
 
 @layer utilities {
+  /* Room for the fixed mobile bottom tab bar (+ iPhone home indicator). */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
   .text-gradient-copper {
     background: var(--gradient-amber);
     -webkit-background-clip: text;

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteNav } from "@/components/SiteNav";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { Business } from "@/components/Business";
 import { Footer } from "@/components/CTA";
 import { VerifyEmailBanner } from "@/components/VerifyEmailGate";
@@ -28,6 +29,7 @@ function BusinessPage() {
   return (
     <div className="min-h-screen">
       <SiteNav />
+      <BottomTabBar />
       <VerifyEmailBanner />
       <main>
         <Business />
