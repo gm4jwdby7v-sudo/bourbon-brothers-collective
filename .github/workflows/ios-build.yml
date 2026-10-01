@@ -37,6 +37,9 @@ jobs:
         env:
           CAPACITOR_BUILD: "1"
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          # RevenueCat public iOS API key (repo secret). Empty until Brian adds it —
+          # the app then treats everyone as Free and the paywall shows "coming soon".
+          VITE_REVENUECAT_IOS_KEY: ${{ secrets.VITE_REVENUECAT_IOS_KEY }}
         run: bun run build:ios
 
       - name: Sync Capacitor iOS

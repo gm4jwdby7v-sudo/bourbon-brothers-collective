@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useMembership } from "@/hooks/use-membership";
 import { useServerFn } from "@tanstack/react-start";
 import { sendDmPush } from "@/lib/push.functions";
 
@@ -52,6 +53,7 @@ async function fetchThread(threadId: string): Promise<ThreadData> {
 function ThreadPage() {
   const { threadId } = Route.useParams();
   const { user } = useAuth();
+  const { isReserve, loading: membershipLoading, openPaywall } = useMembership();
   const viewerId = user?.id ?? "";
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["dm-thread", threadId] as const, [threadId]);
@@ -133,6 +135,11 @@ function ThreadPage() {
   const send = async () => {
     const body = draft.trim();
     if (!body || sending || !viewerId) return;
+    // Replies are a Reserve perk — free members get the paywall.
+    if (!membershipLoading && !isReserve) {
+      openPaywall();
+      return;
+    }
     setSending(true);
     try {
       const { data: inserted, error: insErr } = await supabase

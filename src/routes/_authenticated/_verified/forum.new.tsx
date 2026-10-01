@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { useMembership } from "@/hooks/use-membership";
 
 export const Route = createFileRoute("/_authenticated/_verified/forum/new")({
   head: () => ({ meta: [{ title: "New post — Bourbon Brothers" }] }),
@@ -10,7 +11,14 @@ export const Route = createFileRoute("/_authenticated/_verified/forum/new")({
 });
 
 function NewForumPost() {
+  const { isReserve, loading: membershipLoading, openPaywall } = useMembership();
+
   function handlePublish() {
+    // Joining/posting in communities is a Reserve perk.
+    if (!membershipLoading && !isReserve) {
+      openPaywall();
+      return;
+    }
     toast("Discussions are coming soon", {
       description:
         "We're putting the finishing touches on the community forum. Your draft isn't saved — check back soon to post for real.",

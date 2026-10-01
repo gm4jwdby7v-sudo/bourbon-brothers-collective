@@ -321,6 +321,7 @@ export type Database = {
           date_of_birth: string
           display_name: string | null
           id: string
+          membership_tier: string
           updated_at: string
           username: string | null
         }
@@ -331,6 +332,7 @@ export type Database = {
           date_of_birth: string
           display_name?: string | null
           id: string
+          membership_tier?: string
           updated_at?: string
           username?: string | null
         }
@@ -341,6 +343,7 @@ export type Database = {
           date_of_birth?: string
           display_name?: string | null
           id?: string
+          membership_tier?: string
           updated_at?: string
           username?: string | null
         }

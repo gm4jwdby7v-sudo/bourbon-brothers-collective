@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, X, LogOut, User as UserIcon, ChevronDown } from "lucide-react";
+import { Menu, X, LogOut, User as UserIcon, ChevronDown, Crown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useMembership } from "@/hooks/use-membership";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import {
   DropdownMenu,
@@ -30,6 +31,7 @@ const businessLinks = [
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isReserve, openPaywall } = useMembership();
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border pt-[env(safe-area-inset-top,0px)]">
@@ -83,6 +85,11 @@ export function SiteNav() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                {!isReserve && (
+                  <DropdownMenuItem onClick={openPaywall} data-testid="nav-go-reserve">
+                    <Crown className="mr-2 h-4 w-4 text-primary" /> Go Reserve
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <Link to="/settings/notifications">
                     <UserIcon className="mr-2 h-4 w-4" /> Notification settings
@@ -123,6 +130,11 @@ export function SiteNav() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  {!isReserve && (
+                    <DropdownMenuItem onClick={openPaywall} data-testid="nav-go-reserve-mobile">
+                      <Crown className="mr-2 h-4 w-4 text-primary" /> Go Reserve
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link to="/settings/notifications">
                       <UserIcon className="mr-2 h-4 w-4" /> Notification settings

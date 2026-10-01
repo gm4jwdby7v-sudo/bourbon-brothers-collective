@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { MembershipProvider } from "@/hooks/use-membership";
+import { PaywallDialog } from "@/components/Paywall";
 import { DmAlerts } from "@/components/dm-alerts";
 
 function NotFoundComponent() {
@@ -160,9 +162,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <DmAlerts />
-      <Toaster theme="dark" position="top-center" />
+      <MembershipProvider>
+        <Outlet />
+        <DmAlerts />
+        <PaywallDialog />
+        <Toaster theme="dark" position="top-center" />
+      </MembershipProvider>
     </QueryClientProvider>
   );
 }

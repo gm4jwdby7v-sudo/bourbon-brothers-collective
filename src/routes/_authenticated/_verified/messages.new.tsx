@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useMembership } from "@/hooks/use-membership";
 
 export const Route = createFileRoute("/_authenticated/_verified/messages/new")({
   head: () => ({ meta: [{ title: "New Message — Bourbon Brothers" }] }),
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/_verified/messages/new")({
 
 function NewMessagePage() {
   const { user } = useAuth();
+  const { isReserve, loading: membershipLoading, openPaywall } = useMembership();
   const navigate = useNavigate();
   const [recipient, setRecipient] = useState("");
   const [body, setBody] = useState("");
@@ -25,6 +27,11 @@ function NewMessagePage() {
     const name = recipient.trim().replace(/^@/, "");
     if (!me) {
       toast.error("You must be signed in to message.");
+      return;
+    }
+    // Messaging is a Reserve perk — free members get the paywall.
+    if (!membershipLoading && !isReserve) {
+      openPaywall();
       return;
     }
     if (!name) {
