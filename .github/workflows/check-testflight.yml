@@ -1,16 +1,22 @@
 name: Check TestFlight Groups
 on:
   workflow_dispatch:
+    inputs:
+      action:
+        description: "check = report status; distribute = add latest build to Family Testers (triggers Beta App Review)"
+        required: false
+        default: "check"
 jobs:
   check:
     runs-on: macos-latest
     steps:
-      - name: Check beta review status
+      - name: Query App Store Connect
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
           BUNDLE_ID: app.bourbonconnect.mobile
+          ACTION: ${{ inputs.action }}
         run: |
           set -euo pipefail
           if printf '%s' "$ASC_PRIVATE_KEY" | grep -q "BEGIN PRIVATE KEY"; then
@@ -18,35 +24,63 @@ jobs:
           else
             printf '%s' "$ASC_PRIVATE_KEY" | base64 -d > /tmp/AuthKey.p8
           fi
-          python3 -m pip install -q --break-system-packages pyjwt cryptography 2>&1 | tail -1 || true
           python3 - <<'PYEOF'
-          import json, time, urllib.request, urllib.error, os
-          import jwt
+          import base64, json, time, urllib.request, urllib.error, subprocess, os
+          def b64url(b: bytes) -> str:
+              return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
           kid = os.environ["ASC_KEY_ID"]; iss = os.environ["ASC_ISSUER_ID"]
           now = int(time.time())
-          with open("/tmp/AuthKey.p8") as f: key = f.read()
-          token = jwt.encode({"iss": iss, "iat": now, "exp": now + 1200, "aud": "appstoreconnect-v1"},
-              key, algorithm="ES256", headers={"kid": kid, "typ": "JWT"})
-          def api(path, method="GET", body=None):
-              data = json.dumps(body).encode() if body is not None else None
-              req = urllib.request.Request(f"https://api.appstoreconnect.apple.com{path}", data=data, method=method,
-                  headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+          header = b64url(json.dumps({"alg":"ES256","kid":kid,"typ":"JWT"}).encode())
+          payload = b64url(json.dumps({"iss":iss,"iat":now,"exp":now+1200,"aud":"appstoreconnect-v1"}).encode())
+          si = f"{header}.{payload}".encode()
+          der = subprocess.run(["openssl","dgst","-sha256","-sign","/tmp/AuthKey.p8"], input=si, capture_output=True, check=True).stdout
+          def der_to_raw(der: bytes) -> bytes:
+              idx = 2
+              if der[1] & 0x80: idx = 2 + (der[1] & 0x7F)
+              idx += 2; ln = der[idx]; idx += 1; r = der[idx:idx+ln]; idx += ln
+              idx += 2; ln = der[idx]; idx += 1; s = der[idx:idx+ln]
+              return r.rjust(32,b"\0")[-32:] + s.rjust(32,b"\0")[-32:]
+          token = f"{header}.{payload}.{b64url(der_to_raw(der))}"
+          def api(path: str, method: str = "GET", body=None):
+              req = urllib.request.Request(
+                  f"https://api.appstoreconnect.apple.com{path}",
+                  data=json.dumps(body).encode() if body is not None else None,
+                  headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                  method=method)
               try:
                   with urllib.request.urlopen(req) as r:
-                      return r.status, json.load(r) if r.status != 204 else {}
+                      return json.load(r)
               except urllib.error.HTTPError as e:
-                  return e.code, e.read().decode(errors="replace")
+                  if e.code == 404:
+                      return None
+                  raise
           bundle = os.environ["BUNDLE_ID"]
-          _, apps = api(f"/v1/apps?filter[bundleId]={bundle}")
-          aid = apps["data"][0]["id"]
-          _, builds = api(f"/v1/builds?filter[app]={aid}&limit=5&fields[builds]=version")
-          for b in builds["data"]:
-              bid = b["id"]; ver = b["attributes"].get("version")
-              s, subs = api(f"/v1/betaAppReviewSubmissions?filter[build]={bid}")
-              if s == 200 and isinstance(subs, dict) and subs["data"]:
-                  for x in subs["data"]:
-                      print(f"RESULT build={ver} state={x['attributes'].get('betaReviewState')}")
+          app = api(f"/v1/apps?filter[bundleId]={bundle}")["data"][0]
+          aid = app["id"]
+          builds = api(f"/v1/apps/{aid}/builds?sort=-uploadedDate&limit=5&fields[builds]=version,processingState,uploadedDate")["data"]
+          print("Recent builds (newest first):")
+          for b in builds:
+              ba = b["attributes"]
+              print(f"  version={ba.get('version')} processing={ba.get('processingState')} uploaded={ba.get('uploadedDate')}")
+          latest = builds[0]
+          lv, lp = latest["attributes"]["version"], latest["attributes"]["processingState"]
+          groups = api(f"/v1/apps/{aid}/betaGroups?limit=50")["data"]
+          fam = next((g for g in groups if g["attributes"]["name"] == "Family Testers"), None)
+          if not fam:
+              print("Family Testers group NOT FOUND")
+              raise SystemExit(1)
+          rel = api(f"/v1/betaGroups/{fam['id']}/relationships/builds?limit=50")["data"]
+          in_group = any(x["id"] == latest["id"] for x in rel)
+          sub = api(f"/v1/builds/{latest['id']}/betaAppReviewSubmission")
+          review = sub["data"]["attributes"]["betaReviewState"] if sub else "NONE"
+          print(f"RESULT build={lv} processing={lp} inFamilyGroup={in_group} betaReview={review}")
+          if os.environ.get("ACTION") == "distribute":
+              if lp != "VALID":
+                  print(f"DISTRIBUTE skipped: latest build processing state is {lp}, not VALID")
+              elif in_group:
+                  print("DISTRIBUTE skipped: latest build already in Family Testers")
               else:
-                  print(f"RESULT build={ver} NO_SUBMISSION")
-          print("Done.")
+                  api(f"/v1/betaGroups/{fam['id']}/relationships/builds", method="POST",
+                      body={"data": [{"type": "builds", "id": latest["id"]}]})
+                  print(f"DISTRIBUTED build={lv} to Family Testers (Beta App Review submission triggered)")
           PYEOF
