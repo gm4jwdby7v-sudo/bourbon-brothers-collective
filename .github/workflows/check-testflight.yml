@@ -84,7 +84,7 @@ jobs:
           rel = api(f"/v1/betaGroups/{fam['id']}/relationships/builds?limit=50")["data"]
           in_group = any(x["id"] == latest["id"] for x in rel)
           sub = api(f"/v1/builds/{latest['id']}/betaAppReviewSubmission")
-          review = sub["data"]["attributes"]["betaReviewState"] if sub else "NONE"
+          review = sub["data"]["attributes"]["betaReviewState"] if sub and sub.get("data") else "NONE"
           print(f"RESULT build={lv} processing={lp} inFamilyGroup={in_group} betaReview={review}")
           if os.environ.get("ACTION") == "distribute":
               if lp != "VALID":
