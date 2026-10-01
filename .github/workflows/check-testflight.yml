@@ -34,12 +34,22 @@ jobs:
           payload = b64url(json.dumps({"iss":iss,"iat":now,"exp":now+1200,"aud":"appstoreconnect-v1"}).encode())
           si = f"{header}.{payload}".encode()
           der = subprocess.run(["openssl","dgst","-sha256","-sign","/tmp/AuthKey.p8"], input=si, capture_output=True, check=True).stdout
+          # Convert DER to raw 64-byte signature (R||S)
           def der_to_raw(der: bytes) -> bytes:
+              assert der[0] == 0x30
               idx = 2
-              if der[1] & 0x80: idx = 2 + (der[1] & 0x7F)
-              idx += 2; ln = der[idx]; idx += 1; r = der[idx:idx+ln]; idx += ln
-              idx += 2; ln = der[idx]; idx += 1; s = der[idx:idx+ln]
-              return r.rjust(32,b"\0")[-32:] + s.rjust(32,b"\0")[-32:]
+              if der[1] & 0x80:
+                  n = der[1] & 0x7F
+                  idx = 2 + n
+              assert der[idx] == 0x02
+              idx += 1
+              ln = der[idx]; idx += 1
+              r = der[idx:idx+ln]; idx += ln
+              assert der[idx] == 0x02
+              idx += 1
+              ln = der[idx]; idx += 1
+              s = der[idx:idx+ln]
+              return r.rjust(32, b"\0")[-32:] + s.rjust(32, b"\0")[-32:]
           token = f"{header}.{payload}.{b64url(der_to_raw(der))}"
           def api(path: str, method: str = "GET", body=None):
               req = urllib.request.Request(
