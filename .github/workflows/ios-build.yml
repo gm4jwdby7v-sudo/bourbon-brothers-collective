@@ -86,9 +86,12 @@ jobs:
             archive \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="Bourbon Brothers App Store" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+          # NOTE: PROVISIONING_PROFILE_SPECIFIER is intentionally NOT passed here.
+          # It lives on the App target's Release config in the pbxproj instead —
+          # a command-line value would also hit SPM package targets (RevenueCat),
+          # which do not support provisioning profiles and fail the archive.
 
       - name: Export IPA
         run: |
