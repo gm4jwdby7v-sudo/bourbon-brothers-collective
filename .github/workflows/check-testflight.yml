@@ -67,7 +67,9 @@ jobs:
           bundle = os.environ["BUNDLE_ID"]
           app = api(f"/v1/apps?filter[bundleId]={bundle}")["data"][0]
           aid = app["id"]
-          builds = api(f"/v1/apps/{aid}/builds?sort=-uploadedDate&limit=5&fields[builds]=version,processingState,uploadedDate")["data"]
+          builds = api(f"/v1/apps/{aid}/builds?limit=10&fields[builds]=version,processingState,uploadedDate")["data"]
+          builds.sort(key=lambda b: b["attributes"].get("uploadedDate") or "", reverse=True)
+          builds = builds[:5]
           print("Recent builds (newest first):")
           for b in builds:
               ba = b["attributes"]
