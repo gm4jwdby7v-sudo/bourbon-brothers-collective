@@ -83,52 +83,73 @@ function ThreadPage() {
     markRead().catch(() => {});
   }, [data?.messages.length, markRead, data]);
 
-  // Realtime subscriptions
+  // Realtime subscriptions. Channel names are deduped by topic: a leftover
+  // channel from a previous mount (its async removal may still be in flight)
+  // is handed back by channel() already-subscribed, and adding callbacks to
+  // it throws — crashing the page. Clear any straggler before subscribing,
+  // and never let a realtime hiccup take the page down.
   useEffect(() => {
     if (!viewerId) return;
-    const channel = supabase
-      .channel(`dm-thread-${threadId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "dm_messages",
-          filter: `thread_id=eq.${threadId}`,
-        },
-        (payload) => {
-          const next = payload.new as MessageRow;
-          queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
-            if (!prev) return prev;
-            if (prev.messages.some((m) => m.id === next.id)) return prev;
-            return { ...prev, messages: [...prev.messages, next] };
-          });
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "dm_thread_participants",
-          filter: `thread_id=eq.${threadId}`,
-        },
-        (payload) => {
-          const next = payload.new as ParticipantRow;
-          queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              participants: prev.participants.map((p) =>
-                p.user_id === next.user_id ? { ...p, last_read_at: next.last_read_at } : p,
-              ),
-            };
-          });
-        },
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const topic = `realtime:dm-thread-${threadId}`;
+        await Promise.all(
+          supabase
+            .getChannels()
+            .filter((c) => c.topic === topic)
+            .map((c) => supabase.removeChannel(c)),
+        );
+        if (cancelled) return;
+        channel = supabase
+          .channel(`dm-thread-${threadId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "dm_messages",
+              filter: `thread_id=eq.${threadId}`,
+            },
+            (payload) => {
+              const next = payload.new as MessageRow;
+              queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
+                if (!prev) return prev;
+                if (prev.messages.some((m) => m.id === next.id)) return prev;
+                return { ...prev, messages: [...prev.messages, next] };
+              });
+            },
+          )
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "dm_thread_participants",
+              filter: `thread_id=eq.${threadId}`,
+            },
+            (payload) => {
+              const next = payload.new as ParticipantRow;
+              queryClient.setQueryData<ThreadData>(queryKey, (prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  participants: prev.participants.map((p) =>
+                    p.user_id === next.user_id ? { ...p, last_read_at: next.last_read_at } : p,
+                  ),
+                };
+              });
+            },
+          )
+          .subscribe();
+      } catch (e) {
+        console.warn("[messages] realtime setup skipped:", e);
+      }
+    })();
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [threadId, queryClient, queryKey, viewerId]);
 

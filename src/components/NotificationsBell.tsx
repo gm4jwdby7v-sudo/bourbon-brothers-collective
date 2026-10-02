@@ -32,34 +32,71 @@ function timeAgo(iso: string) {
 
 export function NotificationsBell() {
   const { user } = useAuth();
+  const userId = user?.id;
   const [items, setItems] = useState<NotificationRow[]>([]);
   const unread = items.filter((n) => !n.read_at).length;
 
   const load = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     const { data } = await supabase
       .from("notifications")
       .select("id, type, title, body, link, read_at, created_at")
       .order("created_at", { ascending: false })
       .limit(20);
     setItems((data ?? []) as NotificationRow[]);
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
+    if (!userId) return;
     void load();
-    if (!user) return;
-    const channel = supabase
-      .channel(`notifs-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        () => void load(),
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        // Realtime dedupes channel names by topic: a leftover channel from
+        // a previous mount (its async removal may still be in flight) is
+        // handed back by channel() already-subscribed, and adding callbacks
+        // to it throws — taking the whole page down with it. Clear any
+        // stragglers before subscribing, and never let a realtime hiccup
+        // crash the page.
+        const topic = `realtime:notifs-${userId}`;
+        await Promise.all(
+          supabase
+            .getChannels()
+            .filter((c) => c.topic === topic)
+            .map((c) => supabase.removeChannel(c)),
+        );
+        if (cancelled) return;
+        const ch = supabase.channel(`notifs-${userId}`);
+        // The header mounts this bell twice (desktop + mobile bars) and
+        // channel() dedupes by topic, so both instances share one channel.
+        // Only attach + subscribe while it's still closed: once a sibling
+        // has subscribed, .on() throws. There is no await between the check
+        // and the subscribe, so the two instances cannot interleave into
+        // the throwing state.
+        if (ch.state === "closed") {
+          ch.on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "notifications",
+              filter: `user_id=eq.${userId}`,
+            },
+            () => void load(),
+          );
+          ch.subscribe();
+        }
+        channel = ch;
+      } catch (e) {
+        console.warn("[notifications] realtime setup skipped:", e);
+      }
+    })();
     return () => {
-      void supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) void supabase.removeChannel(channel);
     };
-  }, [user, load]);
+  }, [userId, load]);
 
   async function markAllRead() {
     if (!user || unread === 0) return;
