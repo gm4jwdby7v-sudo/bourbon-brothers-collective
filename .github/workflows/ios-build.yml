@@ -1,0 +1,129 @@
+# Builds the Capacitor iOS app on a cloud Mac and uploads to TestFlight.
+# No Mac required. Runs on every push to ios-capacitor, or manually via "Run workflow".
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   VITE_BACKEND_URL                  Your published Lovable app URL, e.g. https://xyz.lovable.app
+#   APPLE_TEAM_ID                     10-character Apple Developer Team ID
+#   APP_STORE_CONNECT_API_KEY_ID      App Store Connect API Key ID
+#   APP_STORE_CONNECT_API_ISSUER_ID   App Store Connect Issuer ID
+#   APP_STORE_CONNECT_API_PRIVATE_KEY Contents of the downloaded .p8 API key file
+#
+# One-time Apple setup (see docs/IOS_CLOUD_BUILD.md):
+#   1. Register bundle ID app.bourbonconnect.mobile
+#   2. Create the app record in App Store Connect
+#   3. Create an App Store Connect API key (App Manager role or higher)
+
+name: iOS Build & TestFlight Upload
+
+on:
+  push:
+    branches: [ios-capacitor]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build web app for Capacitor
+        env:
+          CAPACITOR_BUILD: "1"
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          # RevenueCat public iOS API key (repo secret). Empty until Brian adds it —
+          # the app then treats everyone as Free and the paywall shows "coming soon".
+          VITE_REVENUECAT_IOS_KEY: ${{ secrets.VITE_REVENUECAT_IOS_KEY }}
+        run: bun run build:ios
+
+      - name: Sync Capacitor iOS
+        run: bunx cap sync ios
+
+      - name: Install App Store Connect API key
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s' "${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}" \
+            > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+
+      - name: Select Xcode 26+
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then echo "No Xcode 26+ found on runner:"; ls /Applications | grep -i xcode; exit 1; fi
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Install distribution signing
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          security create-keychain -p actions "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p actions "$KEYCHAIN"
+          echo "${{ secrets.IOS_DIST_CERT_P12_B64 }}" | base64 -d > "$RUNNER_TEMP/dist.p12"
+          openssl pkcs12 -in "$RUNNER_TEMP/dist.p12" -noout -passin pass:"${{ secrets.IOS_DIST_CERT_PASSWORD }}" && echo "p12 password OK"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "${{ secrets.IOS_DIST_CERT_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE_B64 }}" | base64 -d > "$HOME/Library/MobileDevice/Provisioning Profiles/6ed93ffd-5a0d-4e2c-8451-557fd12bb255.mobileprovision"
+          rm -f "$RUNNER_TEMP/dist.p12"
+
+      - name: Archive (manual distribution signing)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$PWD/build/BourbonBrothers.xcarchive" \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+          # NOTE: PROVISIONING_PROFILE_SPECIFIER is intentionally NOT passed here.
+          # It lives on the App target's Release config in the pbxproj instead —
+          # a command-line value would also hit SPM package targets (RevenueCat),
+          # which do not support provisioning profiles and fail the archive.
+
+      - name: Export IPA
+        run: |
+          cat > ExportOptions.plist <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>app.bourbonconnect.mobile</key>
+                  <string>Bourbon Brothers App Store</string>
+              </dict>
+              <key>stripSwiftSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$PWD/build/BourbonBrothers.xcarchive" \
+            -exportPath "$PWD/build/export" \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: build/export/App.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}

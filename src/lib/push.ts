@@ -6,6 +6,8 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getMessaging, getToken, onMessage, isSupported, type Messaging } from "firebase/messaging";
 
+import { backendUrl, isNativeApp } from "./native";
+
 interface FirebaseWebConfig {
   apiKey: string;
   authDomain: string;
@@ -21,7 +23,9 @@ let messagingPromise: Promise<Messaging | null> | null = null;
 
 async function loadConfig(): Promise<FirebaseWebConfig> {
   if (!configPromise) {
-    configPromise = fetch("/api/public/firebase-config")
+    // In the native app the config lives on the deployed backend (this route
+    // already sends `access-control-allow-origin: *`).
+    configPromise = fetch(backendUrl("/api/public/firebase-config"))
       .then((r) => {
         if (!r.ok) throw new Error("Failed to load Firebase config");
         return r.json() as Promise<FirebaseWebConfig>;
@@ -73,6 +77,9 @@ export async function getPushStatus(): Promise<PushStatus> {
 export async function enablePushNotifications(): Promise<string | null> {
   if (typeof window === "undefined") return null;
   if (!("Notification" in window)) return null;
+  // Web push relies on service workers, which don't exist in the Capacitor
+  // shell. Native push (APNs via a Capacitor plugin) is a separate setup.
+  if (isNativeApp()) return null;
 
   const messaging = await getMessagingInstance();
   if (!messaging) return null;

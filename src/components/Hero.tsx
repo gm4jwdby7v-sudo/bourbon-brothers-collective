@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import hero from "@/assets/hero-bourbon.jpg";
 
 export function Hero() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0">
@@ -21,8 +24,8 @@ export function Hero() {
       <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-32 md:pt-32 md:pb-44 grid md:grid-cols-2 gap-12 items-center">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 backdrop-blur px-3 py-1 text-xs text-muted-foreground mb-6">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            Now pouring · 12,400 enthusiasts online
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            The home for bourbon lovers everywhere
           </div>
           <h1 className="font-display text-5xl md:text-7xl leading-[1.05] tracking-tight">
             The nation's <span className="text-gradient-copper italic">bourbon</span>
@@ -34,15 +37,33 @@ export function Hero() {
             retailers — all in one beautifully crafted home for bourbon lovers.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/auth">
+            {user ? (
               <Button
+                asChild
                 size="lg"
                 className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
               >
-                Join the community <ArrowRight className="ml-2 h-4 w-4" />
+                <Link to="/discover">
+                  Explore bottles <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="border-border/80">
+            ) : (
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
+              >
+                <Link to="/auth">
+                  Join the community <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-border/80"
+              onClick={() => void navigate({ to: "/business" })}
+            >
               <Users className="mr-2 h-4 w-4" /> For retailers & distilleries
             </Button>
           </div>
@@ -74,7 +95,9 @@ export function Hero() {
             </p>
             <div className="mt-5 pt-5 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
               <span>1,284 tasting notes</span>
-              <span className="text-primary">Hunt this bottle →</span>
+              <Link to="/discover" className="text-primary hover:underline">
+                Hunt this bottle →
+              </Link>
             </div>
           </div>
           <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-2xl bg-gradient-amber blur-2xl opacity-40" />

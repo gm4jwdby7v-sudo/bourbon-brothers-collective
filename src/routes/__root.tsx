@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { MembershipProvider } from "@/hooks/use-membership";
+import { PaywallDialog } from "@/components/Paywall";
 import { DmAlerts } from "@/components/dm-alerts";
 
 function NotFoundComponent() {
@@ -62,12 +64,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           >
             Try again
           </button>
-          <a
-            href="/"
+          <Link
+            to="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -139,6 +141,19 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Password-recovery links land wherever Supabase's redirect allow-list
+  // permits (site root if /auth isn't listed). Forward any recovery landing
+  // to /auth, preserving the hash so the session and type=recovery survive.
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.location.hash.includes("type=recovery") &&
+      !window.location.pathname.startsWith("/auth")
+    ) {
+      window.location.replace(`/auth${window.location.hash}`);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     import("@/integrations/supabase/client").then(({ supabase }) => {
@@ -160,9 +175,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <DmAlerts />
-      <Toaster theme="dark" position="top-center" />
+      <MembershipProvider>
+        <Outlet />
+        <DmAlerts />
+        <PaywallDialog />
+        <Toaster theme="dark" position="top-center" />
+      </MembershipProvider>
     </QueryClientProvider>
   );
 }

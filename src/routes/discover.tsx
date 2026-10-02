@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { SiteNav } from "@/components/SiteNav";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -162,6 +163,7 @@ function DiscoverPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
+      <BottomTabBar />
       <main className="mx-auto max-w-6xl px-6 py-10">
         <header className="mb-8">
           <h1 className="font-display text-4xl md:text-5xl tracking-tight">Discover</h1>

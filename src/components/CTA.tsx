@@ -1,6 +1,11 @@
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 export function CTA() {
+  const { user } = useAuth();
+  // Signed-in members don't need a "create your account" pitch.
+  if (user) return null;
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
       <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-card to-secondary p-12 md:p-20 text-center grain">
@@ -14,10 +19,11 @@ export function CTA() {
             Free to join. 21+ only. Drink responsibly.
           </p>
           <Button
+            asChild
             size="lg"
             className="bg-gradient-amber text-primary-foreground hover:opacity-90 shadow-glow"
           >
-            Create your account
+            <Link to="/auth">Create your account</Link>
           </Button>
         </div>
       </div>
@@ -42,18 +48,41 @@ export function Footer() {
           </p>
         </div>
         {[
-          { h: "Community", l: ["Forums", "Members", "Groups", "Events"] },
-          { h: "Discover", l: ["Database", "Reviews", "Releases", "Exchange (soon)"] },
-          { h: "Business", l: ["For Retailers", "For Distilleries", "Advertise", "Compliance"] },
+          {
+            h: "Community",
+            l: [
+              { label: "Join the community", to: "/auth", hash: undefined as string | undefined },
+              { label: "Sign in", to: "/auth", hash: undefined as string | undefined },
+              { label: "Messages", to: "/messages", hash: undefined as string | undefined },
+              { label: "Start a discussion", to: "/forum/new", hash: undefined as string | undefined },
+            ],
+          },
+          {
+            h: "Discover",
+            l: [
+              { label: "Bottle database", to: "/discover", hash: undefined as string | undefined },
+              { label: "Reviews", to: "/reviews", hash: undefined as string | undefined },
+              { label: "Write a review", to: "/reviews/new", hash: undefined as string | undefined },
+              { label: "Marketplace", to: "/marketplace", hash: undefined as string | undefined },
+            ],
+          },
+          {
+            h: "Business",
+            l: [
+              { label: "For Retailers", to: "/business", hash: "tier-retailer" as string | undefined },
+              { label: "For Distilleries", to: "/business", hash: "tier-distillery" as string | undefined },
+              { label: "For Event Hosts", to: "/business", hash: "tier-event-host" as string | undefined },
+            ],
+          },
         ].map((c) => (
           <div key={c.h}>
             <div className="text-xs uppercase tracking-widest text-primary mb-3">{c.h}</div>
             <ul className="space-y-2 text-muted-foreground">
               {c.l.map((i) => (
-                <li key={i}>
-                  <a href="#" className="hover:text-foreground">
-                    {i}
-                  </a>
+                <li key={i.label}>
+                  <Link to={i.to} hash={i.hash} className="hover:text-foreground">
+                    {i.label}
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteNav } from "@/components/SiteNav";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,7 @@ function ReviewsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
+      <BottomTabBar />
       <main className="mx-auto max-w-5xl px-6 py-10">
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -114,15 +116,15 @@ function ReviewsPage() {
             </p>
           </div>
           {user ? (
-            <Link to="/reviews/new">
-              <Button className="bg-gradient-amber text-primary-foreground hover:opacity-90">
+            <Button asChild className="bg-gradient-amber text-primary-foreground hover:opacity-90">
+              <Link to="/reviews/new">
                 <PlusCircle className="mr-2 h-4 w-4" /> New review
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           ) : (
-            <Link to="/auth">
-              <Button variant="outline">Sign in to post</Button>
-            </Link>
+            <Button asChild variant="outline">
+              <Link to="/auth">Sign in to post</Link>
+            </Button>
           )}
         </header>
 

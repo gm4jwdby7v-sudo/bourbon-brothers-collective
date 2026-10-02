@@ -1,15 +1,19 @@
 import rickhouse from "@/assets/rickhouse.jpg";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 const tiers = [
   {
     name: "Retailer",
+    id: "tier-retailer",
     price: "$149",
     period: "/mo",
     perks: ["Storefront listing", "Inventory drops", "Lead notifications", "Basic analytics"],
   },
   {
     name: "Distillery",
+    id: "tier-distillery",
     price: "$499",
     period: "/mo",
     perks: ["Brand hub", "Sponsored releases", "Event promotion", "Audience insights"],
@@ -17,6 +21,7 @@ const tiers = [
   },
   {
     name: "Event Host",
+    id: "tier-event-host",
     price: "$79",
     period: "/event",
     perks: ["Featured listing", "RSVP management", "Cross-promotion", "Post-event recap"],
@@ -24,8 +29,20 @@ const tiers = [
 ];
 
 export function Business() {
+  const navigate = useNavigate();
+
+  function handleGetStarted(tier: string) {
+    toast(`${tier} plan — coming soon`, {
+      description: "Business onboarding is on the way. Create your account and we'll notify you.",
+      action: {
+        label: "Create account",
+        onClick: () => void navigate({ to: "/auth" }),
+      },
+    });
+  }
+
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section id="business" className="relative py-24 overflow-hidden">
       <div className="absolute inset-0">
         <img
           src={rickhouse}
@@ -51,7 +68,8 @@ export function Business() {
           {tiers.map((t) => (
             <div
               key={t.name}
-              className={`relative rounded-2xl border p-8 ${t.featured ? "border-primary/60 bg-card shadow-glow" : "border-border bg-card/60 backdrop-blur"}`}
+              id={t.id}
+              className={`relative rounded-2xl border p-8 scroll-mt-24 ${t.featured ? "border-primary/60 bg-card shadow-glow" : "border-border bg-card/60 backdrop-blur"}`}
             >
               {t.featured && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.2em] bg-gradient-amber text-primary-foreground px-3 py-1 rounded-full">
@@ -76,6 +94,7 @@ export function Business() {
                   t.featured ? "w-full bg-gradient-amber text-primary-foreground" : "w-full"
                 }
                 variant={t.featured ? "default" : "outline"}
+                onClick={() => handleGetStarted(t.name)}
               >
                 Get started
               </Button>

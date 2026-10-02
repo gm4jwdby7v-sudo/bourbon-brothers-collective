@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { isNativeApp, emailRedirectBase } from "@/lib/native";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,9 @@ export const Route = createFileRoute("/auth")({
       { title: "Sign in · Bourbon Brothers" },
       { name: "description", content: "Sign in or create your Bourbon Brothers account. 21+ only." },
     ],
+  }),
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   component: AuthPage,
 });
@@ -40,19 +44,52 @@ const signInSchema = z.object({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [appleError, setAppleError] = useState<string | null>(null);
   const [appleRetrying, setAppleRetrying] = useState(false);
+  // Password reset via emailed link. The link opens the deployed web app
+  // (even from the native shell) at /auth with a recovery session, and this
+  // page shows the new-password form when that happens.
+  const [resetStep, setResetStep] = useState<null | "email" | "sent">(null);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resendingLink, setResendingLink] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(false);
 
+  // Return the user to where they were headed before the auth gate,
+  // or home. Only same-origin destinations are honored.
+  function goHome() {
+    if (redirect) {
+      try {
+        const url = new URL(redirect, window.location.origin);
+        if (url.origin === window.location.origin) {
+          const to = url.pathname + url.search + url.hash;
+          if (to !== "/auth") navigate({ to });
+          return;
+        }
+      } catch {
+        // fall through to home
+      }
+    }
+    navigate({ to: "/" });
+  }
 
-  // Redirect away if already signed in AND email confirmed
+  // Redirect away if already signed in AND email confirmed — unless this is a
+  // password-recovery landing (the link carries type=recovery in the hash),
+  // which needs the new-password form instead of a redirect.
   useEffect(() => {
+    if (window.location.hash.includes("type=recovery")) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) setIsRecovery(true);
+      });
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
-      if (u && (u.email_confirmed_at || u.confirmed_at)) navigate({ to: "/" });
+      if (u && (u.email_confirmed_at || u.confirmed_at)) goHome();
     });
   }, [navigate]);
 
@@ -62,7 +99,7 @@ function AuthPage() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: pendingEmail,
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: { emailRedirectTo: `${emailRedirectBase()}/` },
     });
     setResending(false);
     if (error) toast.error(error.message);
@@ -89,7 +126,7 @@ function AuthPage() {
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${emailRedirectBase()}/`,
             data: {
               display_name: parsed.data.displayName,
               date_of_birth: parsed.data.dob,
@@ -106,7 +143,7 @@ function AuthPage() {
           toast.success("Check your email to confirm your account.");
           return;
         }
-        navigate({ to: "/" });
+        goHome();
       } else {
         const parsed = signInSchema.safeParse({
           email: fd.get("email"),
@@ -127,8 +164,81 @@ function AuthPage() {
           toast.message("Please confirm your email to continue.");
           return;
         }
-        navigate({ to: "/" });
+        goHome();
       }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function sendResetLink(email: string): Promise<boolean> {
+    const parsed = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
+      return false;
+    }
+    setLoading(true);
+    try {
+      // The link lands on /auth of the deployed web app (not the native
+      // webview), where the recovery session shows the new-password form.
+      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+        redirectTo: `${emailRedirectBase()}/auth`,
+      });
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+      setResetEmail(parsed.data);
+      return true;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResetRequest(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const ok = await sendResetLink(String(fd.get("email") ?? ""));
+    if (ok) {
+      setResetStep("sent");
+      toast.success("Password reset link sent. Check your email.");
+    }
+  }
+
+  async function handleResendLink() {
+    if (!resetEmail || resendingLink) return;
+    setResendingLink(true);
+    const ok = await sendResetLink(resetEmail);
+    setResendingLink(false);
+    if (ok) toast.success("New link sent. Check your inbox.");
+  }
+
+  async function handleNewPassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const password = String(fd.get("password") ?? "");
+    const confirm = String(fd.get("confirm") ?? "");
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirm) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Password updated. You're signed in.");
+      setResetStep(null);
+      setIsRecovery(false);
+      // Clear the recovery hash so a refresh doesn't re-trigger recovery mode.
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      goHome();
     } finally {
       setLoading(false);
     }
@@ -147,7 +257,7 @@ function AuthPage() {
       setLoading(false);
       return;
     }
-    if (!result.redirected) navigate({ to: "/" });
+    if (!result.redirected) goHome();
   }
 
   async function handleApple() {
@@ -166,7 +276,7 @@ function AuthPage() {
         toast.error(msg);
         return;
       }
-      if (!result.redirected) navigate({ to: "/" });
+      if (!result.redirected) goHome();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sign in with Apple failed";
       setAppleError(msg);
@@ -195,24 +305,63 @@ function AuthPage() {
           <h1 className="font-display text-3xl mb-2">
             {pendingEmail
               ? "Check your inbox"
-              : mode === "signin"
-                ? "Welcome back"
-                : "Join the community"}
+              : isRecovery
+                ? "Choose a new password"
+                : resetStep === "email"
+                  ? "Reset your password"
+                  : resetStep === "sent"
+                    ? "Check your email"
+                    : mode === "signin"
+                      ? "Welcome back"
+                      : "Join the community"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {pendingEmail
               ? `We sent a verification link to ${pendingEmail}.`
-              : mode === "signin"
-                ? "Sign in to your account"
-                : "Free to join · 21+ only"}
+              : isRecovery
+                ? "Pick a new password for your account."
+                : resetStep === "email"
+                  ? "Enter your account email and we'll send you a password reset link."
+                  : resetStep === "sent"
+                    ? `We sent a reset link to ${resetEmail}.`
+                    : mode === "signin"
+                      ? "Sign in to your account"
+                      : "Free to join · 21+ only"}
           </p>
         </div>
 
-        {pendingEmail ? (
+        {isRecovery ? (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            <form onSubmit={handleNewPassword} className="space-y-4">
+              <Field
+                name="password"
+                type="password"
+                label="New password"
+                placeholder="At least 8 characters"
+              />
+              <Field
+                name="confirm"
+                type="password"
+                label="Confirm new password"
+                placeholder="Repeat your new password"
+              />
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update password
+              </Button>
+            </form>
+          </div>
+        ) : pendingEmail ? (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-soft space-y-4">
             <p className="text-sm text-muted-foreground">
               Click the link in the email to confirm your account. You must verify your email before
               you can post in the forums or message other members.
+              {isNativeApp() &&
+                " The link opens in your browser — after confirming, come back here and sign in."}
             </p>
             <Button
               type="button"
@@ -228,6 +377,49 @@ function AuthPage() {
               className="w-full text-sm text-muted-foreground hover:text-foreground"
               onClick={() => {
                 setPendingEmail(null);
+                setMode("signin");
+              }}
+            >
+              Back to sign in
+            </button>
+          </div>
+        ) : resetStep ? (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            {resetStep === "email" && (
+              <form onSubmit={handleResetRequest} className="space-y-4">
+                <Field name="email" type="email" label="Email" placeholder="you@example.com" />
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-amber text-primary-foreground hover:opacity-90"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Send reset link
+                </Button>
+              </form>
+            )}
+            {resetStep === "sent" && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Tap the link in the email to choose a new password.
+                  {isNativeApp() &&
+                    " The link opens in your browser — after setting your new password, come back here and sign in."}
+                </p>
+                <button
+                  type="button"
+                  disabled={resendingLink}
+                  onClick={handleResendLink}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+                >
+                  {resendingLink ? "Sending…" : "Didn't get the link? Resend it"}
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              className="w-full mt-5 text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setResetStep(null);
                 setMode("signin");
               }}
             >
@@ -260,31 +452,36 @@ function AuthPage() {
                 </div>
               </div>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogle}
-              disabled={loading}
-            >
-              <GoogleIcon /> Continue with Google
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mt-2"
-              onClick={handleApple}
-              disabled={loading}
-            >
-              <AppleIcon /> Continue with Apple
-            </Button>
+            {/* OAuth redirect flows can't return to the native shell, so the app
+                build uses email auth only. */}
+            {!isNativeApp() && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogle}
+                  disabled={loading}
+                >
+                  <GoogleIcon /> Continue with Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={handleApple}
+                  disabled={loading}
+                >
+                  <AppleIcon /> Continue with Apple
+                </Button>
 
-
-            <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              or with email
-              <div className="h-px flex-1 bg-border" />
-            </div>
+                <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  or with email
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+              </>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
@@ -297,6 +494,17 @@ function AuthPage() {
                 label="Password"
                 placeholder={mode === "signup" ? "At least 8 characters" : ""}
               />
+              {mode === "signin" && (
+                <div className="-mt-2 text-right">
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setResetStep("email")}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
               {mode === "signup" && (
                 <div>
                   <Field name="dob" type="date" label="Date of birth" />

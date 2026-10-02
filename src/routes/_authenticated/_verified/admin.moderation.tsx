@@ -1,7 +1,6 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { SiteNav } from "@/components/SiteNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +78,6 @@ function ModerationPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteNav />
       <main className="mx-auto max-w-5xl px-6 py-10">
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -91,11 +89,9 @@ function ModerationPage() {
               </p>
             </div>
           </div>
-          <Link to="/reviews">
-            <Button variant="outline" size="sm">
-              View public feed
+            <Button asChild variant="outline" size="sm">
+              <Link to="/reviews">View public feed</Link>
             </Button>
-          </Link>
         </header>
 
         {loading ? (

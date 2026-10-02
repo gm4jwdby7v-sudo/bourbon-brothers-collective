@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, X, LogOut, User as UserIcon } from "lucide-react";
+import { Menu, X, LogOut, User as UserIcon, ChevronDown, Crown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useMembership } from "@/hooks/use-membership";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import {
   DropdownMenu,
@@ -21,17 +22,26 @@ const links = [
   { to: "/events/$eventId/checkout", label: "Events", params: { eventId: "featured" } },
 ] as const;
 
+const businessLinks = [
+  { to: "/business", hash: "tier-retailer", label: "For Retailers" },
+  { to: "/business", hash: "tier-distillery", label: "For Distilleries" },
+  { to: "/business", hash: "tier-event-host", label: "For Event Hosts" },
+] as const;
+
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isReserve, openPaywall } = useMembership();
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border">
+    <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border pt-[env(safe-area-inset-top,0px)]">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-gradient-amber shadow-glow flex items-center justify-center font-display text-primary-foreground font-bold">
-            B
-          </div>
+          <img
+            src="/app-icon-512.png"
+            alt="Bourbon Brothers"
+            className="h-8 w-8 rounded-md shadow-glow"
+          />
           <span className="font-display text-lg tracking-tight">Bourbon Brothers</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -45,6 +55,22 @@ export function SiteNav() {
               {l.label}
             </Link>
           ))}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                Business <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              {businessLinks.map((b) => (
+                <DropdownMenuItem key={b.label} asChild>
+                  <Link to={b.to} hash={b.hash}>
+                    {b.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
         <div className="hidden md:flex items-center gap-3">
           {user && <NotificationsBell />}
@@ -59,8 +85,15 @@ export function SiteNav() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>
-                  <UserIcon className="mr-2 h-4 w-4" /> Profile
+                {!isReserve && (
+                  <DropdownMenuItem onClick={openPaywall} data-testid="nav-go-reserve">
+                    <Crown className="mr-2 h-4 w-4 text-primary" /> Go Reserve
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link to="/settings/notifications">
+                    <UserIcon className="mr-2 h-4 w-4" /> Notification settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
@@ -70,50 +103,113 @@ export function SiteNav() {
             </DropdownMenu>
           ) : (
             <>
-              <Link to="/auth">
-                <Button variant="ghost" size="sm">
-                  Sign in
-                </Button>
-              </Link>
-              <Link to="/auth">
-                <Button
-                  size="sm"
-                  className="bg-gradient-amber text-primary-foreground hover:opacity-90"
-                >
-                  Join the pour
-                </Button>
-              </Link>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/auth">Sign in</Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                className="bg-gradient-amber text-primary-foreground hover:opacity-90"
+              >
+                <Link to="/auth">Join the pour</Link>
+              </Button>
             </>
           )}
         </div>
-        <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          {user ? (
+            <>
+              <NotificationsBell />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Account"
+                    className="h-8 w-8 rounded-full bg-gradient-amber flex items-center justify-center text-primary-foreground text-xs font-bold"
+                  >
+                    {(user.email ?? "?")[0].toUpperCase()}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {!isReserve && (
+                    <DropdownMenuItem onClick={openPaywall} data-testid="nav-go-reserve-mobile">
+                      <Crown className="mr-2 h-4 w-4 text-primary" /> Go Reserve
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings/notifications">
+                      <UserIcon className="mr-2 h-4 w-4" /> Notification settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <Button
+              asChild
+              size="sm"
+              className="bg-gradient-amber text-primary-foreground hover:opacity-90"
+            >
+              <Link to="/auth">Sign in</Link>
+            </Button>
+          )}
+          <button onClick={() => setOpen(!open)} aria-label="Menu">
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
       {open && (
         <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3">
           {links.map((l) => (
-            <Link key={l.label} to={l.to} params={l.params as never} className="block text-sm py-1">
+            <Link
+              key={l.label}
+              to={l.to}
+              params={l.params as never}
+              onClick={() => setOpen(false)}
+              className="block text-sm py-1"
+            >
               {l.label}
             </Link>
           ))}
+          <Link
+            to="/business"
+            onClick={() => setOpen(false)}
+            className="block text-sm py-1"
+          >
+            Business
+          </Link>
           <div className="pt-3 flex gap-2">
             {user ? (
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => signOut()}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setOpen(false);
+                  signOut();
+                }}
+              >
                 Sign out
               </Button>
             ) : (
               <>
-                <Link to="/auth" className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full">
+                <Button asChild variant="outline" size="sm" className="flex-1">
+                  <Link to="/auth" className="w-full" onClick={() => setOpen(false)}>
                     Sign in
-                  </Button>
-                </Link>
-                <Link to="/auth" className="flex-1">
-                  <Button size="sm" className="w-full bg-gradient-amber text-primary-foreground">
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="sm"
+                  className="flex-1 bg-gradient-amber text-primary-foreground"
+                >
+                  <Link to="/auth" className="w-full" onClick={() => setOpen(false)}>
                     Join
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </>
             )}
           </div>

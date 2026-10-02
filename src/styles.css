@@ -44,7 +44,7 @@
   --radius: 0.5rem;
 
   /* Bourbon-inspired dark palette — lifted for readability */
-  --background: oklch(0.24 0.022 50);
+  --background: oklch(0.26 0.028 53);
   --foreground: oklch(0.94 0.02 75);
 
   --card: oklch(0.30 0.025 50);
@@ -116,6 +116,12 @@
 }
 
 @layer utilities {
+  /* Room for the fixed mobile bottom tab bar (+ iPhone home indicator). */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
   .text-gradient-copper {
     background: var(--gradient-amber);
     -webkit-background-clip: text;
@@ -125,6 +131,10 @@
   .bg-gradient-amber { background: var(--gradient-amber); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
+  /* Keep top-center toasts clear of the iPhone status bar / notch. */
+  [data-sonner-toaster][data-y-position="top"] {
+    top: max(env(safe-area-inset-top, 0px) + 8px, 16px);
+  }
   .grain::before {
     content: "";
     position: absolute; inset: 0;

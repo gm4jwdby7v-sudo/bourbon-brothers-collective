@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { SiteNav } from "@/components/SiteNav";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -84,10 +85,10 @@ const AVAILABILITY_LABEL: Record<Availability, string> = {
 };
 
 const AVAILABILITY_TONE: Record<Availability, string> = {
-  in_stock: "bg-primary/15 text-primary border-primary/30",
+  in_stock: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   allocated: "bg-amber-500/15 text-amber-300 border-amber-500/30",
   waitlist: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-  sold_out: "bg-muted text-muted-foreground border-border",
+  sold_out: "bg-muted/50 text-muted-foreground/60 border-border/50",
 };
 
 type ComplianceStatus = "eligible" | "limited" | "not_eligible";
@@ -367,6 +368,7 @@ function MarketplacePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
+      <BottomTabBar />
       <main className="mx-auto max-w-7xl px-6 py-10">
         <header className="mb-8">
           <h1 className="font-display text-4xl md:text-5xl tracking-tight">Marketplace</h1>
