@@ -41,28 +41,6 @@ export function DmAlerts() {
         if (data) prefsRef.current = { ...DEFAULT_PREFS, ...data };
       });
 
-    // Live-update prefs when the user changes them in settings.
-    const prefsChannel = supabase
-      .channel(`notification-prefs-${viewerId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notification_preferences",
-          filter: `user_id=eq.${viewerId}`,
-        },
-        (payload) => {
-          if (payload.new) {
-            prefsRef.current = {
-              ...DEFAULT_PREFS,
-              ...(payload.new as Partial<NotificationPrefs>),
-            };
-          }
-        },
-      )
-      .subscribe();
-
     const handleIncoming = async (msg: DmMessagePayload) => {
       if (!msg || msg.sender_id === viewerId) return;
 
@@ -102,16 +80,65 @@ export function DmAlerts() {
       });
     };
 
-    const channel = supabase
-      .channel(`dm-alerts-${viewerId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "dm_messages" },
-        (payload) => {
-          void handleIncoming(payload.new as DmMessagePayload);
-        },
-      )
-      .subscribe();
+    // Realtime subscriptions. Channel names are deduped by topic: a leftover
+    // channel from a previous mount (its async removal may still be in
+    // flight) is handed back by channel() already-subscribed, and adding
+    // callbacks to it throws — which crashes the whole app shell, since this
+    // component lives in the root layout. Clear any stragglers before
+    // subscribing, and never let a realtime hiccup take the app down.
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+    let prefsChannel: ReturnType<typeof supabase.channel> | undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const topics = [
+          `realtime:notification-prefs-${viewerId}`,
+          `realtime:dm-alerts-${viewerId}`,
+        ];
+        await Promise.all(
+          supabase
+            .getChannels()
+            .filter((c) => topics.includes(c.topic))
+            .map((c) => supabase.removeChannel(c)),
+        );
+        if (cancelled) return;
+
+        // Live-update prefs when the user changes them in settings.
+        prefsChannel = supabase
+          .channel(`notification-prefs-${viewerId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "notification_preferences",
+              filter: `user_id=eq.${viewerId}`,
+            },
+            (payload) => {
+              if (payload.new) {
+                prefsRef.current = {
+                  ...DEFAULT_PREFS,
+                  ...(payload.new as Partial<NotificationPrefs>),
+                };
+              }
+            },
+          )
+          .subscribe();
+
+        channel = supabase
+          .channel(`dm-alerts-${viewerId}`)
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "dm_messages" },
+            (payload) => {
+              void handleIncoming(payload.new as DmMessagePayload);
+            },
+          )
+          .subscribe();
+      } catch (e) {
+        console.warn("[dm-alerts] realtime setup skipped:", e);
+      }
+    })();
 
     // Test-only bridge: lets E2E tests simulate a realtime DM insert by
     // dispatching a `dm-alerts:test-inject` CustomEvent with the payload.
@@ -131,12 +158,13 @@ export function DmAlerts() {
     }
 
     return () => {
+      cancelled = true;
       if (import.meta.env.DEV) {
         window.removeEventListener("dm-alerts:test-inject", onTestInject);
         window.removeEventListener("dm-alerts:test-update-prefs", onTestUpdatePrefs);
       }
-      supabase.removeChannel(channel);
-      supabase.removeChannel(prefsChannel);
+      if (channel) void supabase.removeChannel(channel);
+      if (prefsChannel) void supabase.removeChannel(prefsChannel);
     };
   }, [user?.id, router]);
 
