@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "check = report status; distribute = add latest build to Family Testers (triggers Beta App Review)"
+        description: "check = report status; distribute = add latest build to Family Testers; submit = file Beta App Review submission"
         required: false
         default: "check"
 jobs:
@@ -86,7 +86,27 @@ jobs:
           sub = api(f"/v1/builds/{latest['id']}/betaAppReviewSubmission")
           review = sub["data"]["attributes"]["betaReviewState"] if sub and sub.get("data") else "NONE"
           print(f"RESULT build={lv} processing={lp} inFamilyGroup={in_group} betaReview={review}")
-          if os.environ.get("ACTION") == "distribute":
+          action = os.environ.get("ACTION")
+          if action == "submit":
+              # Submit the newest VALID build that is in Family Testers for Beta App Review.
+              target = next((b for b in builds
+                             if b["attributes"].get("processingState") == "VALID"
+                             and any(x["id"] == b["id"] for x in rel)), None)
+              if not target:
+                  print("SUBMIT skipped: no VALID build in Family Testers found")
+                  raise SystemExit(1)
+              tid, tv = target["id"], target["attributes"]["version"]
+              try:
+                  api("/v1/betaAppReviewSubmissions", method="POST",
+                      body={"data": {"type": "betaAppReviewSubmissions",
+                                     "relationships": {"build": {"data": {"type": "builds", "id": tid}}}}})
+                  print(f"SUBMITTED build={tv} for Beta App Review")
+              except urllib.error.HTTPError as e:
+                  if e.code == 409:
+                      print(f"SUBMIT skipped: build={tv} already has a review submission")
+                  else:
+                      raise
+          if action == "distribute":
               if lp != "VALID":
                   print(f"DISTRIBUTE skipped: latest build processing state is {lp}, not VALID")
               elif in_group:
